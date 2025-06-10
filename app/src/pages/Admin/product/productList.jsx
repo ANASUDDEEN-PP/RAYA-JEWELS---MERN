@@ -10,6 +10,7 @@ import {
   X,
   Upload,
   Check,
+  Loader2,
 } from "lucide-react";
 
 import Sidebar from "../Components/sideBar";
@@ -17,6 +18,7 @@ import NavBar from "../Components/navBar";
 
 const ProductListPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showSizeAlert, setShowSizeAlert] = useState(false);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -89,7 +91,7 @@ const ProductListPage = () => {
     material: "",
     size: "",
     images: [],
-  }); 
+  });
 
   // Available collections
   const collections = [
@@ -138,14 +140,12 @@ const ProductListPage = () => {
     }));
   };
 
-  // Handle size checkbox changes
-  const handleSizeChange = (size) => {
-    setFormData((prev) => ({
-      ...prev,
-      sizes: prev.sizes.includes(size)
-        ? prev.sizes.filter((s) => s !== size)
-        : [...prev.sizes, size],
-    }));
+  // Handle size input focus
+  const handleSizeFocus = () => {
+    setShowSizeAlert(true);
+    setTimeout(() => {
+      setShowSizeAlert(false);
+    }, 10000);
   };
 
   // Simulate image upload to backend
@@ -255,7 +255,7 @@ const ProductListPage = () => {
         offerPrice: "",
         quantity: "",
         material: "",
-        sizes: [],
+        size: "",
         images: [],
       });
       setShowAddProductModal(false);
@@ -681,16 +681,22 @@ const ProductListPage = () => {
                   {/* Size Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Size
-                      </label>
-                      <input
-                        type="text"
-                        name="material"
-                        value={formData.size}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        placeholder="Enter material"
-                      />
+                      Size
+                    </label>
+                    <input
+                      type="text"
+                      name="size"
+                      value={formData.size}
+                      onChange={handleInputChange}
+                      onFocus={handleSizeFocus}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      placeholder="Enter size (e.g., S, M, L, XL)"
+                    />
+                    {showSizeAlert && (
+                      <div className="mt-2 p-2 bg-blue-100 text-blue-800 text-sm rounded-lg">
+                        Please enter sizes separated by commas (e.g., S, M, L, XL)
+                      </div>
+                    )}
                   </div>
 
                   {/* Image Upload */}

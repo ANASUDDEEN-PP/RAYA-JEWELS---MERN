@@ -19,7 +19,7 @@ const JewelryAuthPage = () => {
     const navigate = useNavigate();
 
     const handleBack = async () => {
-        navigate(-1);
+        navigate('/');
     }
 
     const handleInputChange = (e) => {

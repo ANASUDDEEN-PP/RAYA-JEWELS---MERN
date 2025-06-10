@@ -402,6 +402,7 @@ export default class NavBar extends Component {
                               Sign out
                             </button>
                           </div>
+                            {/* <p className="mt-3">Manually Login <Link className="text-blue-800" to='/auth'>Click here</Link></p> */}
                         </div>
                       ) : (
                         // Show Login Section
