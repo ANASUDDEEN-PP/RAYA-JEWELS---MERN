@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Search, User, Heart, ShoppingBag, X, Menu, LogOut } from "lucide-react";
+import { Search, User, Heart, ShoppingBag, X, Menu, LogOut, UserX } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default class NavBar extends Component {
@@ -17,14 +17,16 @@ export default class NavBar extends Component {
         { id: 3, name: "Silver Necklace", price: 699, quantity: 2 }
       ],
       searchResults: [],
-      userProfile: {
-        name: "Alex Johnson",
-        email: "alex.johnson@example.com",
-        joinDate: "Joined March 2023",
-        phone: "+1 (555) 123-4567",
-        // Mock profile image - in a real app, this would come from your backend
-        imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-      }
+      // Simulating localStorage check - set to null to show login, or user object to show profile
+      userProfile: null, // Change this to test: null for login, or user object for profile
+      // Example user data:
+      // userProfile: {
+      //   name: "Alex Johnson",
+      //   email: "alex.johnson@example.com",
+      //   joinDate: "Joined March 2023",
+      //   phone: "+1 (555) 123-4567",
+      //   imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      // }
     };
   }
 
@@ -35,39 +37,55 @@ export default class NavBar extends Component {
   toggleSearch = () => {
     this.setState(prevState => ({ 
       isSearchOpen: !prevState.isSearchOpen,
-      isCartOpen: false, // Close cart if open
-      isProfileOpen: false // Close profile if open
+      isCartOpen: false,
+      isProfileOpen: false
     }));
   };
 
   toggleCart = () => {
     this.setState(prevState => ({ 
       isCartOpen: !prevState.isCartOpen,
-      isSearchOpen: false, // Close search if open
-      isProfileOpen: false // Close profile if open
+      isSearchOpen: false,
+      isProfileOpen: false
     }));
   };
 
   toggleProfile = () => {
     this.setState(prevState => ({ 
       isProfileOpen: !prevState.isProfileOpen,
-      isSearchOpen: false, // Close search if open
-      isCartOpen: false // Close cart if open
+      isSearchOpen: false,
+      isCartOpen: false
     }));
   };
 
+  handleLogin = () => {
+    // Simulate login - in real app, this would handle authentication
+    console.log("Login initiated");
+    this.setState({ 
+      isProfileOpen: false,
+      userProfile: {
+        name: "Alex Johnson",
+        email: "alex.johnson@example.com",
+        joinDate: "Joined March 2023",
+        phone: "+1 (555) 123-4567",
+        imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      }
+    });
+    // In a real app, you would redirect to login page or show login modal
+  };
+
   handleLogout = () => {
-    // In a real app, this would handle the logout process
     console.log("User logged out");
-    this.setState({ isProfileOpen: false });
-    // You would typically redirect to login page here
+    this.setState({ 
+      isProfileOpen: false,
+      userProfile: null 
+    });
   };
 
   handleSearchChange = (e) => {
     const query = e.target.value;
     this.setState({ searchQuery: query });
     
-    // Simulate search results
     if (query.length > 2) {
       const mockResults = [
         { id: 1, name: "Diamond Ring", price: 299 },
@@ -106,11 +124,9 @@ export default class NavBar extends Component {
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
               <div className="flex-shrink-0">
-                <Link to="/">
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
                   RAYA JEWELS
                 </h1>
-                </Link>
               </div>
 
               {/* Desktop Navigation */}
@@ -174,15 +190,14 @@ export default class NavBar extends Component {
                   )}
                 </div>
                 
-                <button onClick={this.toggleProfile}>
-                  <User className="h-6 w-6 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" />
+                <button className="flex justify-center gap-2" onClick={this.toggleProfile}>
+                  <User className="h-5 w-5 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" />
+                  <p className="hover:text-yellow-600">Anasuddeen</p>
                 </button>
-                
-                {/* <Heart className="h-6 w-6 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" /> */}
                 
                 <div className="relative">
                   <button onClick={this.toggleCart}>
-                    <ShoppingBag className="h-6 w-6 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" />
+                    <ShoppingBag className="h-6 w-6 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors ml-3" />
                     <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                       {cartItems.reduce((total, item) => total + item.quantity, 0)}
                     </span>
@@ -316,7 +331,7 @@ export default class NavBar extends Component {
           </div>
         )}
 
-        {/* Profile Sidebar */}
+        {/* Profile/Login Sidebar */}
         {isProfileOpen && (
           <div className="fixed inset-0 z-50 overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
@@ -329,7 +344,9 @@ export default class NavBar extends Component {
                   <div className="h-full flex flex-col bg-white shadow-xl">
                     <div className="flex-1 py-6 overflow-y-auto px-4 sm:px-6">
                       <div className="flex items-start justify-between">
-                        <h2 className="text-lg font-medium text-gray-900">My Profile</h2>
+                        <h2 className="text-lg font-medium text-gray-900">
+                          {userProfile ? "My Profile" : "Welcome"}
+                        </h2>
                         <button
                           type="button"
                           className="-mr-2 p-2 text-gray-400 hover:text-gray-500"
@@ -339,50 +356,99 @@ export default class NavBar extends Component {
                         </button>
                       </div>
 
-                      <div className="mt-8 flex flex-col items-center">
-                        {/* Profile Image */}
-                        <div className="mb-4">
-                          <img
-                            className="h-24 w-24 rounded-full object-cover"
-                            src={userProfile.imageUrl}
-                            alt="Profile"
-                          />
-                        </div>
-
-                        {/* User Name */}
-                        <h1 className="text-xl font-bold text-gray-900 mb-2">
-                          {userProfile.name}
-                        </h1>
-
-                        {/* User Details */}
-                        <div className="w-full mt-6 space-y-4">
-                          <div className="border-b pb-4">
-                            <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                            <p className="mt-1 text-sm text-gray-900">{userProfile.email}</p>
+                      {/* Conditional rendering based on userProfile */}
+                      {userProfile ? (
+                        // Show Profile Section
+                        <div className="mt-8 flex flex-col items-center">
+                          {/* Profile Image */}
+                          <div className="mb-4">
+                            <img
+                              className="h-24 w-24 rounded-full object-cover"
+                              src={userProfile.imageUrl}
+                              alt="Profile"
+                            />
                           </div>
-                          
-                          <div className="border-b pb-4">
-                            <h3 className="text-sm font-medium text-gray-500">Phone</h3>
-                            <p className="mt-1 text-sm text-gray-900">{userProfile.phone}</p>
-                          </div>
-                          
-                          <div className="border-b pb-4">
-                            <h3 className="text-sm font-medium text-gray-500">Member Since</h3>
-                            <p className="mt-1 text-sm text-gray-900">{userProfile.joinDate}</p>
-                          </div>
-                        </div>
 
-                        {/* Logout Button */}
-                        <div className="mt-8 w-full">
-                          <button
-                            onClick={this.handleLogout}
-                            className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
-                          >
-                            <LogOut className="h-4 w-4 mr-2" />
-                            Sign out
-                          </button>
+                          {/* User Name */}
+                          <h1 className="text-xl font-bold text-gray-900 mb-2">
+                            {userProfile.name}
+                          </h1>
+
+                          {/* User Details */}
+                          <div className="w-full mt-6 space-y-4">
+                            <div className="border-b pb-4">
+                              <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                              <p className="mt-1 text-sm text-gray-900">{userProfile.email}</p>
+                            </div>
+                            
+                            <div className="border-b pb-4">
+                              <h3 className="text-sm font-medium text-gray-500">Phone</h3>
+                              <p className="mt-1 text-sm text-gray-900">{userProfile.phone}</p>
+                            </div>
+                            
+                            <div className="border-b pb-4">
+                              <h3 className="text-sm font-medium text-gray-500">Member Since</h3>
+                              <p className="mt-1 text-sm text-gray-900">{userProfile.joinDate}</p>
+                            </div>
+                          </div>
+
+                          {/* Logout Button */}
+                          <div className="mt-8 w-full">
+                            <button
+                              onClick={this.handleLogout}
+                              className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                            >
+                              <LogOut className="h-4 w-4 mr-2" />
+                              Sign out
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        // Show Login Section
+                        <div className="mt-8 flex flex-col items-center">
+                          {/* Login Image */}
+                          <div className="mb-6">
+                            <div className="h-32 w-32 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                              <UserX className="h-16 w-16 text-gray-400" />
+                            </div>
+                          </div>
+
+                          {/* Login Message */}
+                          <div className="text-center mb-8">
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                              HOOO....
+                            </h1>
+                            <p className="text-lg text-gray-600 mb-1">
+                              You Don't Login
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Please sign in to access your account and enjoy personalized features
+                            </p>
+                          </div>
+
+                          {/* Login Button */}
+                          <div className="w-full">
+                            <Link to='/auth'
+                              className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-yellow-600 hover:bg-yellow-700 transition-colors"
+                            >
+                              <User className="h-5 w-5 mr-2" />
+                              Sign In
+                            </Link>
+                          </div>
+
+                          {/* Additional Options */}
+                          <div className="mt-6 w-full">
+                            <div className="text-center">
+                              <p className="text-sm text-gray-500">
+                                Don't have an account?{' '}
+                                <button className="font-medium text-yellow-600 hover:text-yellow-500">
+                                  Sign up
+                                </button>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

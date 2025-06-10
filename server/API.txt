@@ -1,0 +1,2 @@
+Authentication:
+    UserRegister : POST : /auth/register
