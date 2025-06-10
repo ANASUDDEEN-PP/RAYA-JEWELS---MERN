@@ -1,13 +1,12 @@
-import React, { Component } from 'react'
-import { useState } from 'react';
-import { 
-  Home, 
-  Users, 
-  Package, 
-  ShoppingCart, 
-  Grid, 
+import React, { useState } from 'react'; // No need for { Component } if you're using functional components
+import {
+  Home,
+  Users,
+  Package,
+  ShoppingCart,
+  Grid,
   UserCheck,
-  Menu, 
+  Menu,
   X,
   User,
   Settings,
@@ -15,16 +14,37 @@ import {
   LogOut,
   ChevronDown
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // Navbar Component
 const Navbar = ({ toggleSidebar }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // --- START: Added handleLogout function ---
+  const handleLogout = () => {
+    console.log("User logged out");
+    // Clear relevant data from localStorage
+    localStorage.removeItem('adminCode');
+    navigate('/auth')
+    // Close the profile dropdown
+    setIsProfileOpen(false);
+
+    // You might also want to redirect the user to a login page
+    // For example, if you're using React Router:
+    // history.push('/login');
+    // Or simply reload the page to clear all state:
+    // window.location.reload();
+  };
+  // --- END: Added handleLogout function ---
 
   const profileMenuItems = [
-    { icon: User, label: 'Profile Details' },
-    { icon: Settings, label: 'Settings' },
-    { icon: HelpCircle, label: 'Help' },
-    { icon: LogOut, label: 'Logout', className: 'text-red-600 hover:text-red-700' },
+    { icon: User, label: 'Profile Details', onClick: () => console.log('Profile Details clicked') },
+    { icon: Settings, label: 'Settings', onClick: () => console.log('Settings clicked') },
+    { icon: HelpCircle, label: 'Help', onClick: () => console.log('Help clicked') },
+    // --- START: Modified Logout item to use handleLogout ---
+    { icon: LogOut, label: 'Logout', className: 'text-red-600 hover:text-red-700', onClick: handleLogout },
+    // --- END: Modified Logout item ---
   ];
 
   return (
@@ -65,9 +85,8 @@ const Navbar = ({ toggleSidebar }) => {
                       item.className || 'text-gray-700 hover:text-gray-900'
                     }`}
                     onClick={() => {
-                      setIsProfileOpen(false);
-                      // Handle menu item click here
-                      console.log(`Clicked: ${item.label}`);
+                      setIsProfileOpen(false); // Close dropdown on any item click
+                      item.onClick && item.onClick(); // Execute the specific item's onClick handler
                     }}
                   >
                     <IconComponent size={16} className="mr-3" />

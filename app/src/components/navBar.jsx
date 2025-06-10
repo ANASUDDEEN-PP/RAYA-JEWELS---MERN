@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { Search, User, Heart, ShoppingBag, X, Menu, LogOut, UserX } from "lucide-react";
+import { Search, User, Heart, ShoppingBag, X, Menu, LogOut, UserX, Fingerprint } from "lucide-react";
 import { Link } from "react-router-dom";
+import ProfileIcon from "../assets/images/profile.png"
 
 export default class NavBar extends Component {
   constructor(props) {
@@ -18,7 +19,7 @@ export default class NavBar extends Component {
       ],
       searchResults: [],
       // Simulating localStorage check - set to null to show login, or user object to show profile
-      userProfile: null, // Change this to test: null for login, or user object for profile
+      userProfile: JSON.parse(localStorage.getItem('userProfile')) || null // Change this to test: null for login, or user object for profile
       // Example user data:
       // userProfile: {
       //   name: "Alex Johnson",
@@ -35,7 +36,7 @@ export default class NavBar extends Component {
   };
 
   toggleSearch = () => {
-    this.setState(prevState => ({ 
+    this.setState(prevState => ({
       isSearchOpen: !prevState.isSearchOpen,
       isCartOpen: false,
       isProfileOpen: false
@@ -43,7 +44,7 @@ export default class NavBar extends Component {
   };
 
   toggleCart = () => {
-    this.setState(prevState => ({ 
+    this.setState(prevState => ({
       isCartOpen: !prevState.isCartOpen,
       isSearchOpen: false,
       isProfileOpen: false
@@ -51,7 +52,7 @@ export default class NavBar extends Component {
   };
 
   toggleProfile = () => {
-    this.setState(prevState => ({ 
+    this.setState(prevState => ({
       isProfileOpen: !prevState.isProfileOpen,
       isSearchOpen: false,
       isCartOpen: false
@@ -59,39 +60,54 @@ export default class NavBar extends Component {
   };
 
   handleLogin = () => {
-    // Simulate login - in real app, this would handle authentication
-    console.log("Login initiated");
-    this.setState({ 
+    // In a real app, this would be set after successful authentication
+    const userData = {
+      name: "Alex Johnson",
+      email: "alex.johnson@example.com",
+      joinDate: "Joined March 2023",
+      phone: "+1 (555) 123-4567",
+      imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+    };
+
+    localStorage.setItem('userProfile', JSON.stringify(userData));
+    this.setState({
       isProfileOpen: false,
-      userProfile: {
-        name: "Alex Johnson",
-        email: "alex.johnson@example.com",
-        joinDate: "Joined March 2023",
-        phone: "+1 (555) 123-4567",
-        imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-      }
+      userProfile: userData
     });
-    // In a real app, you would redirect to login page or show login modal
+  };
+
+  handleLogout = () => {
+    localStorage.removeItem('userProfile');
+    this.setState({
+      isProfileOpen: false,
+      userProfile: null
+    });
   };
 
   handleLogout = () => {
     console.log("User logged out");
-    this.setState({ 
+    const logoutMsg = confirm("Are your sure want to Logout");
+    // console.log(logoutMsg)
+    if(logoutMsg == true){
+      this.setState({
       isProfileOpen: false,
-      userProfile: null 
+      userProfile: null
     });
+    localStorage.removeItem('userProfile');
+    localStorage.removeItem('isLoggedIn');
+    }
   };
 
   handleSearchChange = (e) => {
     const query = e.target.value;
     this.setState({ searchQuery: query });
-    
+
     if (query.length > 2) {
       const mockResults = [
         { id: 1, name: "Diamond Ring", price: 299 },
         { id: 2, name: "Gold Necklace", price: 499 },
         { id: 3, name: "Silver Earrings", price: 199 }
-      ].filter(item => 
+      ].filter(item =>
         item.name.toLowerCase().includes(query.toLowerCase())
       );
       this.setState({ searchResults: mockResults });
@@ -101,15 +117,15 @@ export default class NavBar extends Component {
   };
 
   render() {
-    const { 
-      isMenuOpen, 
-      isSearchOpen, 
-      isCartOpen, 
+    const {
+      isMenuOpen,
+      isSearchOpen,
+      isCartOpen,
       isProfileOpen,
-      searchQuery, 
-      searchResults, 
+      searchQuery,
+      searchResults,
       cartItems,
-      userProfile 
+      userProfile
     } = this.state;
 
     return (
@@ -172,11 +188,11 @@ export default class NavBar extends Component {
                       placeholder="Search jewelry..."
                       className="bg-transparent outline-none text-sm w-40"
                       value={searchQuery}
-                      onChange={this.handleSearchChange}    
+                      onChange={this.handleSearchChange}
                       onFocus={this.toggleSearch}
                     />
                   </div>
-                  
+
                   {/* Search dropdown */}
                   {isSearchOpen && searchResults.length > 0 && (
                     <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
@@ -189,12 +205,12 @@ export default class NavBar extends Component {
                     </div>
                   )}
                 </div>
-                
+
                 <button className="flex justify-center gap-2" onClick={this.toggleProfile}>
-                  <User className="h-5 w-5 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" />
-                  <p className="hover:text-yellow-600">Anasuddeen</p>
+                  {userProfile ? <User className="h-5 w-5 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" /> : <Fingerprint className="mt-[2px] h-5 w-5 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" />}
+                  <p className="hover:text-yellow-600">{userProfile ? userProfile.Name : "SignIn"}</p>
                 </button>
-                
+
                 <div className="relative">
                   <button onClick={this.toggleCart}>
                     <ShoppingBag className="h-6 w-6 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors ml-3" />
@@ -247,8 +263,8 @@ export default class NavBar extends Component {
         {isCartOpen && (
           <div className="fixed inset-0 z-50 overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
-              <div 
-                className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+              <div
+                className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
                 onClick={this.toggleCart}
               ></div>
               <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex">
@@ -335,8 +351,8 @@ export default class NavBar extends Component {
         {isProfileOpen && (
           <div className="fixed inset-0 z-50 overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
-              <div 
-                className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+              <div
+                className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
                 onClick={this.toggleProfile}
               ></div>
               <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex">
@@ -364,34 +380,18 @@ export default class NavBar extends Component {
                           <div className="mb-4">
                             <img
                               className="h-24 w-24 rounded-full object-cover"
-                              src={userProfile.imageUrl}
+                              src={userProfile.imageUrl || ProfileIcon}
                               alt="Profile"
                             />
                           </div>
 
                           {/* User Name */}
                           <h1 className="text-xl font-bold text-gray-900 mb-2">
-                            {userProfile.name}
+                            {userProfile.Name || "UserName"}
                           </h1>
-
-                          {/* User Details */}
-                          <div className="w-full mt-6 space-y-4">
-                            <div className="border-b pb-4">
-                              <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                              <p className="mt-1 text-sm text-gray-900">{userProfile.email}</p>
-                            </div>
-                            
-                            <div className="border-b pb-4">
-                              <h3 className="text-sm font-medium text-gray-500">Phone</h3>
-                              <p className="mt-1 text-sm text-gray-900">{userProfile.phone}</p>
-                            </div>
-                            
-                            <div className="border-b pb-4">
-                              <h3 className="text-sm font-medium text-gray-500">Member Since</h3>
-                              <p className="mt-1 text-sm text-gray-900">{userProfile.joinDate}</p>
-                            </div>
-                          </div>
-
+                          <p className="mt-1 text-sm text-gray-900">{userProfile.Email}</p>
+                          <p className="mt-1 text-sm text-gray-900">{userProfile.Mobile}</p>
+                          <p className="mt-1 text-sm text-gray-900">{userProfile.createdDate}</p>
                           {/* Logout Button */}
                           <div className="mt-8 w-full">
                             <button
