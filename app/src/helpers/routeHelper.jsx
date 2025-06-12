@@ -10,6 +10,11 @@ import LoginPage from "../pages/Auth/login";
 import AdminDashboard from "../pages/Admin/Dashboard/Dahsboard";
 import UserListPage from "../pages/Admin/Users/userList";
 import ProductList from "../pages/Admin/product/productList"
+import OrderList from "../pages/Admin/Orders/orders"
+import SettingsMain from "../pages/Admin/Settings/settings";
+import AboutUs from "../pages/Admin/Settings/settingsSub";
+import ProfileSettings from "../pages/Admin/Settings/profileSettings"
+import CollectionSettings from "../pages/Admin/Settings/collectionSettings";
 
 const routeHelper = [
   {
@@ -43,6 +48,26 @@ const routeHelper = [
   {
     path: "/admin-product",
     comp: <ProductList />,
+  },
+  {
+    path: "/admin-orders",
+    comp: <OrderList />,
+  },
+  {
+    path: "/admin-settings",
+    comp: <SettingsMain />,
+  },
+  {
+    path: "/admin-settings-about",
+    comp: <AboutUs />,
+  },
+  {
+    path: "/admin-settings-profile",
+    comp: <ProfileSettings />,
+  },
+  {
+    path: "/admin-settings-collections",
+    comp: <CollectionSettings />,
   },
 ];
 

@@ -39,8 +39,8 @@ const Navbar = ({ toggleSidebar }) => {
   // --- END: Added handleLogout function ---
 
   const profileMenuItems = [
-    { icon: User, label: 'Profile Details', onClick: () => console.log('Profile Details clicked') },
-    { icon: Settings, label: 'Settings', onClick: () => console.log('Settings clicked') },
+    // { icon: User, label: 'Profile Details', onClick: () => console.log('Profile Details clicked') },
+    { icon: Settings, label: 'Settings', onClick: () => navigate('/admin-settings') },
     { icon: HelpCircle, label: 'Help', onClick: () => console.log('Help clicked') },
     // --- START: Modified Logout item to use handleLogout ---
     { icon: LogOut, label: 'Logout', className: 'text-red-600 hover:text-red-700', onClick: handleLogout },

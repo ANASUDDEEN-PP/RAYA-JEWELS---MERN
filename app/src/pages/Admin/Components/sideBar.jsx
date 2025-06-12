@@ -21,9 +21,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { icon: Home, label: 'Home', path: '/admin-dash' },
     { icon: Users, label: 'Users', path: '/admin-user' },
     { icon: Package, label: 'Products', path: '/admin-product' },
-    { icon: ShoppingCart, label: 'Orders', path: '/orders' },
-    { icon: Grid, label: 'Collections', path: '/collections' },
-    { icon: UserCheck, label: 'Admins', path: '/admins' },
+    { icon: ShoppingCart, label: 'Orders', path: '/admin-orders' },
+    // { icon: Grid, label: 'Collections', path: '/collections' },
+    // { icon: UserCheck, label: 'Admins', path: '/admins' },
   ];
 
   return (
