@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Search,
   Edit,
@@ -15,6 +15,8 @@ import {
 
 import Sidebar from "../Components/sideBar";
 import NavBar from "../Components/navBar";
+import axios from "axios";
+import baseUrl from "../../../url";
 
 const ProductListPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -92,18 +94,6 @@ const ProductListPage = () => {
     size: "",
     images: [],
   });
-
-  // Available collections
-  const collections = [
-    "Electronics",
-    "Clothing",
-    "Footwear",
-    "Home & Kitchen",
-    "Sports",
-    "Books",
-    "Beauty",
-    "Automotive",
-  ];
 
   // Available sizes
   const availableSizes = Array.from({ length: 18 }, (_, i) => i + 1);
@@ -243,7 +233,8 @@ const ProductListPage = () => {
 
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const responce = await axios.post(`${baseUrl}/product/create`, formData);
+      console.log(responce)
 
       console.log("Product data saved:", formData);
 
@@ -305,6 +296,23 @@ const ProductListPage = () => {
 
     return buttons;
   };
+
+  const [collections, setCollections] = useState([]);
+
+useEffect(() => {
+  const fetchCollectionName = async () => {
+    try {
+      const response = await axios.get(`${baseUrl}/collection/get/collection/name`);
+      // console.log(response.data);
+      setCollections(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Error fetching collections:", error);
+      setCollections([]);
+    }
+  };
+  fetchCollectionName();
+}, []);
+
 
   const handleAction = (action, product) => {
     alert(
@@ -603,8 +611,8 @@ const ProductListPage = () => {
                       >
                         <option value="">Select Collection</option>
                         {collections.map((collection) => (
-                          <option key={collection} value={collection}>
-                            {collection}
+                          <option key={collection.CollectionName} value={collection.CollectionName}>
+                            {collection.CollectionName}
                           </option>
                         ))}
                       </select>
