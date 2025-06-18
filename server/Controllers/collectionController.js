@@ -1,4 +1,6 @@
 const collectionModel = require("../Models/collectionModel");
+const productModel = require("../Models/productModel");
+
 
 exports.createCollection = async(req, res) => {
     try{
@@ -67,3 +69,28 @@ exports.getCollectionName = async(req, res) => {
         })
     }
 }
+
+exports.getAllCollectionWithCount = async (req, res) => {
+    try {
+        const collectionData = await collectionModel.find({});
+        const collectionWithCounts = await Promise.all(
+            collectionData.map(async (collection) => {
+                const productCount = await productModel.countDocuments({ CollectionName: collection.CollectionName });
+                return {
+                    id : collection._id,
+                    name: collection.CollectionName,
+                    image: collection.File,
+                    count: productCount
+                };
+            })
+        );
+
+        return res.status(200).json({ collections: collectionWithCounts });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+};

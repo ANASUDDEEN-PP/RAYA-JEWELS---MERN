@@ -1,20 +1,36 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Heart,
   Star,
   ChevronLeft,
   ChevronRight,
   Menu,
-  X,
+  X 
 } from "lucide-react";
 import Footer from "../../components/footer";
 import NavBar from "../../components/navBar";
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import baseUrl from "../../url";
+import LoginWarning from "../../components/Alert/pleaseLoginWarning";
 
 const JewelryEcommerce = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [favorites, setFavorites] = useState(new Set());
+  const [categories, setCategories] = useState([]);
+  const scrollRef = useRef(null);
+  const navigate = useNavigate();
+  const [showLoginWarning, setShowLoginWarning] = useState(false);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -300 : 300,
+        behavior: "smooth",
+      });
+    }
+  };
 
   const heroSlides = [
     {
@@ -40,32 +56,18 @@ const JewelryEcommerce = () => {
     },
   ];
 
-  const categories = [
-    {
-      name: "Rings",
-      image:
-        "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=300&h=300&fit=crop",
-      count: "120+ pieces",
-    },
-    {
-      name: "Necklaces",
-      image:
-        "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=300&h=300&fit=crop",
-      count: "85+ pieces",
-    },
-    {
-      name: "Earrings",
-      image:
-        "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=300&h=300&fit=crop",
-      count: "95+ pieces",
-    },
-    {
-      name: "Bracelets",
-      image:
-        "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=300&h=300&fit=crop",
-      count: "60+ pieces",
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}/collection/home/get/collection`);
+        // console.log(response)
+        setCategories(response.data.collections);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    };
+    fetchData();
+  }, []);
 
   const featuredProducts = [
     {
@@ -117,9 +119,11 @@ const JewelryEcommerce = () => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroSlides.length]);
 
-  const toggleFavorite = (productId) => {
+  const toggleFavorite = (productId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const newFavorites = new Set(favorites);
     if (newFavorites.has(productId)) {
       newFavorites.delete(productId);
@@ -138,6 +142,15 @@ const JewelryEcommerce = () => {
       (prev) => (prev - 1 + heroSlides.length) % heroSlides.length
     );
   };
+
+  const handleClick = (name) => (e) => {
+    e.preventDefault();
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+      navigate(`/view/categories/${name}`);
+    } else {
+      setShowLoginWarning(true);
+    }
+};
 
   return (
     <div className="min-h-screen bg-white">
@@ -178,12 +191,14 @@ const JewelryEcommerce = () => {
         <button
           onClick={prevSlide}
           className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white p-2 rounded-full transition-all"
+          aria-label="Previous slide"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
         <button
           onClick={nextSlide}
           className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white p-2 rounded-full transition-all"
+          aria-label="Next slide"
         >
           <ChevronRight className="h-6 w-6" />
         </button>
@@ -197,13 +212,14 @@ const JewelryEcommerce = () => {
               className={`w-3 h-3 rounded-full transition-all ${
                 index === currentSlide ? "bg-white" : "bg-white bg-opacity-50"
               }`}
+              aria-label={`Go to slide ${index + 1}`}
             />
           ))}
         </div>
       </section>
 
       {/* Categories Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-gray-50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -214,28 +230,72 @@ const JewelryEcommerce = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {/* Arrow buttons */}
+          {categories.length > 4 && (
+            <>
+              <button
+                onClick={() => scroll("left")}
+                className="absolute mt-12 left-4 md:left-8 top-1/2 transform -translate-y-1/2 z-10 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
+                style={{
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                }}
+                aria-label="Scroll categories left"
+              >
+                <div className="relative h-8 w-8 flex items-center justify-center">
+                  <ChevronLeft className="w-6 h-6 text-gray-700 group-hover:text-black transition-colors" />
+                </div>
+              </button>
+              <button
+                onClick={() => scroll("right")}
+                className="absolute mt-12 right-4 md:right-8 top-1/2 transform -translate-y-1/2 z-10 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
+                style={{
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                }}
+                aria-label="Scroll categories right"
+              >
+                <div className="relative h-8 w-8 flex items-center justify-center">
+                  <ChevronRight className="w-6 h-6 text-gray-700 group-hover:text-black transition-colors" />
+                </div>
+              </button>
+            </>
+          )}
+
+          {/* Scrollable container */}
+          <div
+            ref={scrollRef}
+            className="flex space-x-6 overflow-x-auto scrollbar-hide scroll-smooth px-4 md:px-8"
+            aria-label="Categories list"
+          >
             {categories.map((category, index) => (
-              <a href="/view/categories">
-                <div key={index} className="group cursor-pointer">
+              <Link
+                to="#"
+                onClick={handleClick(category.id)}
+                key={index}
+                className="flex-shrink-0 w-60 group cursor-pointer"
+                aria-label={`View ${category.name} collection`}
+              >
                 <div className="relative overflow-hidden rounded-2xl mb-4">
                   <img
                     src={category.image}
                     alt={category.name}
-                    className="w-full h-48 md:h-60 object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300"></div>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-1">
                   {category.name}
                 </h3>
-                <p className="text-gray-600">{category.count}</p>
-              </div>
-              </a>
+                <p className="text-gray-600">{category.count}+ pieces</p>
+              </Link>
             ))}
           </div>
         </div>
       </section>
+
+      {showLoginWarning && (
+        <LoginWarning onClose={() => setShowLoginWarning(false)} />
+      )}
 
       {/* Featured Products */}
       <section className="py-16">
@@ -251,89 +311,100 @@ const JewelryEcommerce = () => {
 
           <div className="flex flex-wrap justify-center gap-8 mb-8">
             {featuredProducts.map((product) => (
-              <a href="/view/product">
-                <div
+              <Link 
+                to="/view/product" 
                 key={product.id}
-                className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden w-72"
+                className="group"
+                aria-label={`View ${product.name} details`}
               >
-                <div className="relative">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        product.badge === "Bestseller"
-                          ? "bg-green-100 text-green-800"
-                          : product.badge === "New"
-                          ? "bg-blue-100 text-blue-800"
-                          : product.badge === "Sale"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-purple-100 text-purple-800"
-                      }`}
-                    >
-                      {product.badge}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => toggleFavorite(product.id)}
-                    className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-all"
-                  >
-                    <Heart
-                      className={`h-5 w-5 ${
-                        favorites.has(product.id)
-                          ? "text-red-500 fill-current"
-                          : "text-gray-400"
-                      }`}
+                <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden w-72">
+                  <div className="relative">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
                     />
-                  </button>
-                </div>
-
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {product.name}
-                  </h3>
-
-                  <div className="flex items-center mb-3">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < Math.floor(product.rating)
-                              ? "text-yellow-400 fill-current"
-                              : "text-gray-300"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm text-gray-600 ml-2">
-                      ({product.reviews})
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-2xl font-bold text-gray-900">
-                        ${product.price}
+                    <div className="absolute top-4 left-4">
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          product.badge === "Bestseller"
+                            ? "bg-green-100 text-green-800"
+                            : product.badge === "New"
+                            ? "bg-blue-100 text-blue-800"
+                            : product.badge === "Sale"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-purple-100 text-purple-800"
+                        }`}
+                      >
+                        {product.badge}
                       </span>
-                      {product.originalPrice && (
-                        <span className="text-lg text-gray-500 line-through">
-                          ${product.originalPrice}
+                    </div>
+                    <button
+                      onClick={(e) => toggleFavorite(product.id, e)}
+                      className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-all"
+                      aria-label={
+                        favorites.has(product.id)
+                          ? `Remove ${product.name} from favorites`
+                          : `Add ${product.name} to favorites`
+                      }
+                    >
+                      <Heart
+                        className={`h-5 w-5 ${
+                          favorites.has(product.id)
+                            ? "text-red-500 fill-current"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {product.name}
+                    </h3>
+
+                    <div className="flex items-center mb-3">
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < Math.floor(product.rating)
+                                ? "text-yellow-400 fill-current"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-600 ml-2">
+                        ({product.reviews})
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl font-bold text-gray-900">
+                          ${product.price}
                         </span>
-                      )}
+                        {product.originalPrice && (
+                          <span className="text-lg text-gray-500 line-through">
+                            ${product.originalPrice}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              </a>
+              </Link>
             ))}
           </div>
 
           <div className="text-center">
-            <button className="bg-black hover:bg-gray-800 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105">
+            <button 
+              className="bg-black hover:bg-gray-800 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105"
+              aria-label="View all products"
+            >
               View All Products
             </button>
           </div>
@@ -356,8 +427,12 @@ const JewelryEcommerce = () => {
               type="email"
               placeholder="Enter your email"
               className="flex-1 px-6 py-4 rounded-full text-gray-900 outline-none focus:ring-4 focus:ring-yellow-300"
+              aria-label="Email for newsletter subscription"
             />
-            <button className="bg-black hover:bg-gray-800 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105">
+            <button 
+              className="bg-black hover:bg-gray-800 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105"
+              aria-label="Subscribe to newsletter"
+            >
               Subscribe
             </button>
           </div>

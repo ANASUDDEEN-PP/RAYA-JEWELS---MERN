@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Search, User, Heart, ShoppingBag, X, Menu, LogOut, UserX, Fingerprint } from "lucide-react";
 import { Link } from "react-router-dom";
-import ProfileIcon from "../assets/images/profile.png"
+import ProfileIcon from "../assets/images/profile.png";
 
 export default class NavBar extends Component {
   constructor(props) {
@@ -18,16 +18,8 @@ export default class NavBar extends Component {
         { id: 3, name: "Silver Necklace", price: 699, quantity: 2 }
       ],
       searchResults: [],
-      // Simulating localStorage check - set to null to show login, or user object to show profile
-      userProfile: JSON.parse(localStorage.getItem('userProfile')) || null // Change this to test: null for login, or user object for profile
-      // Example user data:
-      // userProfile: {
-      //   name: "Alex Johnson",
-      //   email: "alex.johnson@example.com",
-      //   joinDate: "Joined March 2023",
-      //   phone: "+1 (555) 123-4567",
-      //   imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-      // }
+      userProfile: JSON.parse(localStorage.getItem('userProfile')) || null,
+      isLoggedIn: localStorage.getItem('isLoggedIn') === 'true'
     };
   }
 
@@ -60,7 +52,6 @@ export default class NavBar extends Component {
   };
 
   handleLogin = () => {
-    // In a real app, this would be set after successful authentication
     const userData = {
       name: "Alex Johnson",
       email: "alex.johnson@example.com",
@@ -70,31 +61,24 @@ export default class NavBar extends Component {
     };
 
     localStorage.setItem('userProfile', JSON.stringify(userData));
+    localStorage.setItem('isLoggedIn', 'true');
     this.setState({
       isProfileOpen: false,
-      userProfile: userData
+      userProfile: userData,
+      isLoggedIn: true
     });
   };
 
   handleLogout = () => {
-    localStorage.removeItem('userProfile');
-    this.setState({
-      isProfileOpen: false,
-      userProfile: null
-    });
-  };
-
-  handleLogout = () => {
-    console.log("User logged out");
-    const logoutMsg = confirm("Are your sure want to Logout");
-    // console.log(logoutMsg)
-    if(logoutMsg == true){
+    const logoutMsg = confirm("Are you sure you want to logout?");
+    if (logoutMsg === true) {
       this.setState({
-      isProfileOpen: false,
-      userProfile: null
-    });
-    localStorage.removeItem('userProfile');
-    localStorage.removeItem('isLoggedIn');
+        isProfileOpen: false,
+        userProfile: null,
+        isLoggedIn: false
+      });
+      localStorage.removeItem('userProfile');
+      localStorage.removeItem('isLoggedIn');
     }
   };
 
@@ -125,7 +109,8 @@ export default class NavBar extends Component {
       searchQuery,
       searchResults,
       cartItems,
-      userProfile
+      userProfile,
+      isLoggedIn
     } = this.state;
 
     return (
@@ -139,42 +124,29 @@ export default class NavBar extends Component {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
-              <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                  RAYA JEWELS
-                </h1>
-              </div>
+              <Link to='/'>
+                <div className="flex-shrink-0">
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                    RAYA JEWELS
+                  </h1>
+                </div>
+              </Link>
 
               {/* Desktop Navigation */}
               <nav className="hidden md:flex space-x-8">
-                <a
-                  href="#"
-                  className="text-gray-700 hover:text-yellow-600 font-medium transition-colors"
-                >
+                <a href="#" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
                   Collections
                 </a>
-                <a
-                  href="#"
-                  className="text-gray-700 hover:text-yellow-600 font-medium transition-colors"
-                >
+                <a href="#" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
                   Rings
                 </a>
-                <a
-                  href="#"
-                  className="text-gray-700 hover:text-yellow-600 font-medium transition-colors"
-                >
+                <a href="#" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
                   Necklaces
                 </a>
-                <a
-                  href="#"
-                  className="text-gray-700 hover:text-yellow-600 font-medium transition-colors"
-                >
+                <a href="#" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
                   Earrings
                 </a>
-                <a
-                  href="#"
-                  className="text-gray-700 hover:text-yellow-600 font-medium transition-colors"
-                >
+                <a href="#" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
                   About
                 </a>
               </nav>
@@ -207,24 +179,27 @@ export default class NavBar extends Component {
                 </div>
 
                 <button className="flex justify-center gap-2" onClick={this.toggleProfile}>
-                  {userProfile ? <User className="h-5 w-5 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" /> : <Fingerprint className="mt-[2px] h-5 w-5 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" />}
-                  <p className="hover:text-yellow-600">{userProfile ? userProfile.Name : "SignIn"}</p>
+                  {userProfile ? (
+                    <User className="h-5 w-5 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" />
+                  ) : (
+                    <Fingerprint className="mt-[2px] h-5 w-5 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" />
+                  )}
+                  <p className="hover:text-yellow-600">{userProfile ? userProfile.Name : "Sign In"}</p>
                 </button>
 
-                <div className="relative">
-                  <button onClick={this.toggleCart}>
-                    <ShoppingBag className="h-6 w-6 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors ml-3" />
-                    <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {cartItems.reduce((total, item) => total + item.quantity, 0)}
-                    </span>
-                  </button>
-                </div>
+                {isLoggedIn && (
+                  <div className="relative">
+                    <button onClick={this.toggleCart}>
+                      <ShoppingBag className="h-6 w-6 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors ml-3" />
+                      <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {cartItems.reduce((total, item) => total + item.quantity, 0)}
+                      </span>
+                    </button>
+                  </div>
+                )}
 
                 {/* Mobile menu button */}
-                <button
-                  className="md:hidden"
-                  onClick={this.toggleMenu}
-                >
+                <button className="md:hidden" onClick={this.toggleMenu}>
                   {isMenuOpen ? (
                     <X className="h-6 w-6" />
                   ) : (
@@ -239,28 +214,18 @@ export default class NavBar extends Component {
           {isMenuOpen && (
             <div className="md:hidden bg-white border-t">
               <div className="px-4 py-2 space-y-2">
-                <a href="#" className="block py-2 text-gray-700">
-                  Collections
-                </a>
-                <a href="#" className="block py-2 text-gray-700">
-                  Rings
-                </a>
-                <a href="#" className="block py-2 text-gray-700">
-                  Necklaces
-                </a>
-                <a href="#" className="block py-2 text-gray-700">
-                  Earrings
-                </a>
-                <a href="#" className="block py-2 text-gray-700">
-                  About
-                </a>
+                <a href="#" className="block py-2 text-gray-700">Collections</a>
+                <a href="#" className="block py-2 text-gray-700">Rings</a>
+                <a href="#" className="block py-2 text-gray-700">Necklaces</a>
+                <a href="#" className="block py-2 text-gray-700">Earrings</a>
+                <a href="#" className="block py-2 text-gray-700">About</a>
               </div>
             </div>
           )}
         </header>
 
-        {/* Shopping Cart Sidebar */}
-        {isCartOpen && (
+        {/* Shopping Cart Sidebar - Only shown if logged in */}
+        {isLoggedIn && isCartOpen && (
           <div className="fixed inset-0 z-50 overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
               <div
@@ -372,11 +337,8 @@ export default class NavBar extends Component {
                         </button>
                       </div>
 
-                      {/* Conditional rendering based on userProfile */}
                       {userProfile ? (
-                        // Show Profile Section
                         <div className="mt-8 flex flex-col items-center">
-                          {/* Profile Image */}
                           <div className="mb-4">
                             <img
                               className="h-24 w-24 rounded-full object-cover"
@@ -385,14 +347,12 @@ export default class NavBar extends Component {
                             />
                           </div>
 
-                          {/* User Name */}
                           <h1 className="text-xl font-bold text-gray-900 mb-2">
                             {userProfile.Name || "UserName"}
                           </h1>
                           <p className="mt-1 text-sm text-gray-900">{userProfile.Email}</p>
                           <p className="mt-1 text-sm text-gray-900">{userProfile.Mobile}</p>
-                          <p className="mt-1 text-sm text-gray-900">{userProfile.createdDate}</p>
-                          {/* Logout Button */}
+                          <p className="mt-1 text-sm text-gray-900">{userProfile.joinDate}</p>
                           <div className="mt-8 w-full">
                             <button
                               onClick={this.handleLogout}
@@ -402,19 +362,15 @@ export default class NavBar extends Component {
                               Sign out
                             </button>
                           </div>
-                            {/* <p className="mt-3">Manually Login <Link className="text-blue-800" to='/auth'>Click here</Link></p> */}
                         </div>
                       ) : (
-                        // Show Login Section
                         <div className="mt-8 flex flex-col items-center">
-                          {/* Login Image */}
                           <div className="mb-6">
                             <div className="h-32 w-32 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                               <UserX className="h-16 w-16 text-gray-400" />
                             </div>
                           </div>
 
-                          {/* Login Message */}
                           <div className="text-center mb-8">
                             <h1 className="text-2xl font-bold text-gray-900 mb-2">
                               HOOO....
@@ -427,7 +383,6 @@ export default class NavBar extends Component {
                             </p>
                           </div>
 
-                          {/* Login Button */}
                           <div className="w-full">
                             <Link to='/auth'
                               className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-yellow-600 hover:bg-yellow-700 transition-colors"
@@ -437,7 +392,6 @@ export default class NavBar extends Component {
                             </Link>
                           </div>
 
-                          {/* Additional Options */}
                           <div className="mt-6 w-full">
                             <div className="text-center">
                               <p className="text-sm text-gray-500">

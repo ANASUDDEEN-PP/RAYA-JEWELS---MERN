@@ -26,7 +26,7 @@ const routeHelper = [
     comp: <ViewProductPage />,
   },
   {
-    path: "/view/categories",
+    path: "/view/categories/:id",
     comp: <CategoriesList />,
   },
   {
