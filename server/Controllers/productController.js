@@ -105,3 +105,16 @@ exports.getProductOrderedByCollection = async (req, res) => {
     });
   }
 }
+
+exports.getAllProducts = async(req, res) => {
+  try{
+    const products = await productModel.find({});
+    return res.status(200).json({
+      products
+    })
+  } catch(err){
+    return res.status(404).json({
+      message : "Internal Server Error"
+    })
+  }
+}
