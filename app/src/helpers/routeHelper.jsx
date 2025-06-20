@@ -15,6 +15,7 @@ import SettingsMain from "../pages/Admin/Settings/settings";
 import AboutUs from "../pages/Admin/Settings/settingsSub";
 import ProfileSettings from "../pages/Admin/Settings/profileSettings"
 import CollectionSettings from "../pages/Admin/Settings/collectionSettings";
+import ProductViewPage from "../pages/Admin/product/viewProduct"
 
 const routeHelper = [
   {
@@ -68,6 +69,10 @@ const routeHelper = [
   {
     path: "/admin-settings-collections",
     comp: <CollectionSettings />,
+  },
+  {
+    path: "/admin-product-view/:id",
+    comp: <ProductViewPage />,
   },
 ];
 

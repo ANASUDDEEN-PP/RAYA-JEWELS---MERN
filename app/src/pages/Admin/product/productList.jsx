@@ -5,6 +5,7 @@ import NavBar from "../Components/navBar";
 import axios from "axios";
 import baseUrl from "../../../url";
 import AddProductModal from "./addProductModal";
+import { useNavigate } from "react-router-dom";
 
 const ProductListPage = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -15,6 +16,7 @@ const ProductListPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const itemsPerPage = 10;
+    const navigate = useNavigate();
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
@@ -140,9 +142,9 @@ const ProductListPage = () => {
     };
 
     const handleAction = (action, product) => {
-        console.log(`${action} action for product:`, product);
-        alert(`${action} action clicked for ${product.productName}`);
-        // Implement actual view/edit/delete logic here
+      if(action == "View"){
+        navigate(`/admin-product-view/${product._id}`)
+      }
     };
 
     const handleProductAdded = (newProduct) => {
@@ -309,7 +311,7 @@ const ProductListPage = () => {
                                                             >
                                                                 <Eye className="h-4 w-4" />
                                                             </button>
-                                                            <button
+                                                            {/* <button
                                                                 onClick={() => handleAction("Edit", product)}
                                                                 className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-full transition-colors"
                                                                 title="Edit Product"
@@ -322,7 +324,7 @@ const ProductListPage = () => {
                                                                 title="Delete Product"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
-                                                            </button>
+                                                            </button> */}
                                                         </div>
                                                     </td>
                                                 </tr>
