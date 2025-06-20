@@ -1,64 +1,67 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import NavBar from "../Components/navBar";
 import Sidebar from "../Components/sideBar";
+import axios from 'axios';
+import baseUrl from '../../../url';
 
 const UserListPage = () => {
   // Sample user data
-  const [users] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john.doe@example.com",
-      phone: "+1 (555) 123-4567",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane.smith@example.com",
-      phone: "+1 (555) 987-6543",
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      email: "mike.johnson@example.com",
-      phone: "+1 (555) 456-7890",
-    },
-    {
-      id: 4,
-      name: "Sarah Wilson",
-      email: "sarah.wilson@example.com",
-      phone: "+1 (555) 321-0987",
-    },
-    {
-      id: 5,
-      name: "David Brown",
-      email: "david.brown@example.com",
-      phone: "+1 (555) 654-3210",
-    },
-    {
-      id: 6,
-      name: "Lisa Garcia",
-      email: "lisa.garcia@example.com",
-      phone: "+1 (555) 789-0123",
-    },
-    {
-      id: 7,
-      name: "Robert Miller",
-      email: "robert.miller@example.com",
-      phone: "+1 (555) 234-5678",
-    },
-    {
-      id: 8,
-      name: "Emily Davis",
-      email: "emily.davis@example.com",
-      phone: "+1 (555) 876-5432",
-    },
-  ]);
+  // const [users] = useState([
+  //   {
+  //     id: 1,
+  //     name: "John Doe",
+  //     email: "john.doe@example.com",
+  //     phone: "+1 (555) 123-4567",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Jane Smith",
+  //     email: "jane.smith@example.com",
+  //     phone: "+1 (555) 987-6543",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Mike Johnson",
+  //     email: "mike.johnson@example.com",
+  //     phone: "+1 (555) 456-7890",
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "Sarah Wilson",
+  //     email: "sarah.wilson@example.com",
+  //     phone: "+1 (555) 321-0987",
+  //   },
+  //   {
+  //     id: 5,
+  //     name: "David Brown",
+  //     email: "david.brown@example.com",
+  //     phone: "+1 (555) 654-3210",
+  //   },
+  //   {
+  //     id: 6,
+  //     name: "Lisa Garcia",
+  //     email: "lisa.garcia@example.com",
+  //     phone: "+1 (555) 789-0123",
+  //   },
+  //   {
+  //     id: 7,
+  //     name: "Robert Miller",
+  //     email: "robert.miller@example.com",
+  //     phone: "+1 (555) 234-5678",
+  //   },
+  //   {
+  //     id: 8,
+  //     name: "Emily Davis",
+  //     email: "emily.davis@example.com",
+  //     phone: "+1 (555) 876-5432",
+  //   },
+  // ]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [users, setUsers] = useState([]);
 
   // Filter users based on search term
   const filteredUsers = users.filter(
@@ -67,6 +70,18 @@ const UserListPage = () => {
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.phone.includes(searchTerm)
   );
+
+  useEffect(() => {
+    const fetchData = async() => {
+      try{
+        const responce = await axios.get(`${baseUrl}/auth/get/all`);
+        console.log(responce.data.users)
+      } catch(err){
+        console.log(err);
+      }
+    }
+    fetchData();
+  }, []);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);

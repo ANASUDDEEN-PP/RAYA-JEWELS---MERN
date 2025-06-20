@@ -95,3 +95,17 @@ exports.userRegister = async (req, res) => {
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+
+exports.getAllUsers = async (req, res) => {
+    try{
+        const users = await userModel.find({});
+        return res.status(200).json({
+            users
+        })
+    } catch(err){
+        return res.status(404).json({
+            message : "Internal Server Error"
+        })
+    }
+}
