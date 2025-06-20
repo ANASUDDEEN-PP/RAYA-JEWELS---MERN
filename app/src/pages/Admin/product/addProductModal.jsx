@@ -8,11 +8,11 @@ const AddProductModel = ({ isOpen, onClose, onProductAdded }) => {
     const [showSizeAlert, setShowSizeAlert] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploadingImages, setUploadingImages] = useState(new Set());
-    const [uploadProgress, setUploadProgress] = useState({});
 
     // Initial form state
     const initialFormData = {
         productName: "",
+        description: "",
         collection: "",
         normalPrice: "",
         offerPrice: "",
@@ -42,39 +42,63 @@ const AddProductModel = ({ isOpen, onClose, onProductAdded }) => {
         }
     }, [isOpen, fetchCollectionName]);
 
-    const uploadImageToBackend = async (file) => {
-        const formData = new FormData();
-        formData.append('image', file);
+    const convertToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    };
 
+    const handleImageUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        
         try {
-            const imageId = Date.now() + Math.random();
-            setUploadingImages(prev => new Set([...prev, imageId]));
-
-            const response = await axios.post(`${baseUrl}/upload`, formData, {
-                onUploadProgress: (progressEvent) => {
-                    const progress = Math.round(
-                        (progressEvent.loaded * 100) / progressEvent.total
-                    );
-                    setUploadProgress(prev => ({ ...prev, [imageId]: progress }));
-                }
-            });
-
-            setUploadingImages(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(imageId);
-                return newSet;
-            });
-
-            return {
-                id: imageId,
-                url: response.data.url,
-                name: file.name,
-                uploaded: true,
-            };
+            const imagePromises = files
+                .filter(file => file.type.startsWith("image/"))
+                .map(async (file) => {
+                    const imageId = Date.now() + Math.random();
+                    setUploadingImages(prev => new Set([...prev, imageId]));
+                    
+                    try {
+                        const base64 = await convertToBase64(file);
+                        
+                        setUploadingImages(prev => {
+                            const newSet = new Set(prev);
+                            newSet.delete(imageId);
+                            return newSet;
+                        });
+                        
+                        return {
+                            id: imageId,
+                            url: base64,
+                            name: file.name,
+                            uploaded: true,
+                        };
+                    } catch (error) {
+                        console.error("Conversion failed:", error);
+                        setUploadingImages(prev => {
+                            const newSet = new Set(prev);
+                            newSet.delete(imageId);
+                            return newSet;
+                        });
+                        throw error;
+                    }
+                });
+            
+            const uploadedImages = await Promise.all(imagePromises);
+            
+            setFormData(prev => ({
+                ...prev,
+                images: [...prev.images, ...uploadedImages],
+            }));
         } catch (error) {
             console.error("Upload failed:", error);
-            throw error;
+            alert("Some images failed to upload");
         }
+        
+        e.target.value = "";
     };
 
     const handleSizeFocus = () => {
@@ -93,43 +117,11 @@ const AddProductModel = ({ isOpen, onClose, onProductAdded }) => {
         }));
     };
 
-    const handleImageDelete = async (imageId) => {
-        try {
-            setFormData(prev => ({
-                ...prev,
-                images: prev.images.filter(img => img.id !== imageId),
-            }));
-
-            setUploadProgress(prev => {
-                const newProgress = { ...prev };
-                delete newProgress[imageId];
-                return newProgress;
-            });
-        } catch (error) {
-            console.error("Delete failed:", error);
-        }
-    };
-
-    const handleImageUpload = async (e) => {
-        const files = Array.from(e.target.files);
-
-        try {
-            const uploadPromises = files
-                .filter(file => file.type.startsWith("image/"))
-                .map(file => uploadImageToBackend(file));
-
-            const uploadedImages = await Promise.all(uploadPromises);
-
-            setFormData(prev => ({
-                ...prev,
-                images: [...prev.images, ...uploadedImages],
-            }));
-        } catch (error) {
-            console.error("Upload failed:", error);
-            alert("Some images failed to upload");
-        }
-
-        e.target.value = "";
+    const handleImageDelete = (imageId) => {
+        setFormData(prev => ({
+            ...prev,
+            images: prev.images.filter(img => img.id !== imageId),
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -147,14 +139,13 @@ const AddProductModel = ({ isOpen, onClose, onProductAdded }) => {
         }
 
         setIsSubmitting(true);
+        console.log(formData.images)
 
         try {
             const response = await axios.post(`${baseUrl}/product/create`, {
                 ...formData,
-                images: formData.images.map(img => img.url)
+                images: formData.images.map(img => img.url) // Send base64 strings
             });
-
-            console.log("Product created:", response.data);
 
             // Reset form
             setFormData(initialFormData);
@@ -205,6 +196,21 @@ const AddProductModel = ({ isOpen, onClose, onProductAdded }) => {
                                 required
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                 placeholder="Enter product name"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Product Description *
+                            </label>
+                            <input
+                                type="text"
+                                name="description"
+                                value={formData.description}
+                                onChange={handleInputChange}
+                                required
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                placeholder="Enter The product Description..."
                             />
                         </div>
 
@@ -362,37 +368,17 @@ const AddProductModel = ({ isOpen, onClose, onProductAdded }) => {
                                             <img
                                                 src={image.url}
                                                 alt={image.name}
-                                                className="w-full h-full object-cover transition-opacity duration-300"
-                                                style={{
-                                                    opacity: uploadingImages.has(image.id)
-                                                        ? (uploadProgress[image.id] || 1) / 100
-                                                        : 1,
-                                                }}
+                                                className="w-full h-full object-cover"
                                             />
                                         </div>
 
-                                        {/* Loading Overlay with Spinner and Progress */}
+                                        {/* Loading Overlay */}
                                         {uploadingImages.has(image.id) && (
                                             <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black bg-opacity-30">
                                                 <div className="text-center">
-                                                    <div className="relative mb-3">
-                                                        <Loader2 className="h-8 w-8 animate-spin text-white drop-shadow-lg" />
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            <span className="text-xs font-bold text-white drop-shadow-lg">
-                                                                {uploadProgress[image.id] || 0}%
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="w-24 bg-black bg-opacity-30 rounded-full h-2 mx-auto">
-                                                        <div
-                                                            className="bg-white rounded-full h-2 transition-all duration-300"
-                                                            style={{
-                                                                width: `${uploadProgress[image.id] || 0}%`,
-                                                            }}
-                                                        ></div>
-                                                    </div>
+                                                    <Loader2 className="h-8 w-8 animate-spin text-white drop-shadow-lg" />
                                                     <p className="text-xs text-white drop-shadow-lg mt-2 font-medium">
-                                                        Uploading...
+                                                        Processing...
                                                     </p>
                                                 </div>
                                             </div>

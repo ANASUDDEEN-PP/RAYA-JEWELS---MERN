@@ -58,7 +58,7 @@ const Navbar = ({ toggleSidebar }) => {
           >
             <Menu size={24} />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Raya</h1>
+          {/* <h1 className="text-2xl font-bold text-gray-900">Raya</h1> */}
         </div>
 
         {/* Right Side - Profile */}

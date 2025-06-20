@@ -36,7 +36,7 @@ const ProductListPage = () => {
             setIsLoading(true);
             setError(null);
             const response = await axios.get(`${baseUrl}/product/get/all`);
-            console.log(response)
+            console.log("Products :",response)
             const rawProducts = response.data.products || [];
             
             // Ensure all products have required fields with defaults

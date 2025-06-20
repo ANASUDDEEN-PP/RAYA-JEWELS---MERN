@@ -7,6 +7,9 @@ const productSchema = new Schema({
     ProductName : {
         type : String
     },
+    Description : {
+        type : String
+    },
     CollectionName : {
         type : String
     },
