@@ -45,41 +45,6 @@ const ProductView = () => {
           const getComments = await axios.get(`${baseUrl}/product/get/product/comments/${id}`);
           setComments(getComments.data.commets)
           console.log(getComments.data.commets)
-          // setComments([
-          //   {
-          //     id: 1,
-          //     user: "Sarah Johnson",
-          //     rating: 5,
-          //     comment:
-          //       "Absolutely stunning! The craftsmanship is incredible and it looks even better in person.",
-          //     date: "2 days ago",
-          //     likes: 12,
-          //     avatar:
-          //       "https://images.unsplash.com/photo-1494790108755-2616b612b567?w=40&h=40&fit=crop&crop=face",
-          //   },
-          //   {
-          //     id: 2,
-          //     user: "Michael Chen",
-          //     rating: 4,
-          //     comment:
-          //       "Great quality diamond ring. My fiancée loves it! Shipping was fast and packaging was beautiful.",
-          //     date: "1 week ago",
-          //     likes: 8,
-          //     avatar:
-          //       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-          //   },
-          //   {
-          //     id: 3,
-          //     user: "Emma Wilson",
-          //     rating: 5,
-          //     comment:
-          //       "Perfect for special occasions. The sparkle is amazing and it feels very premium.",
-          //     date: "2 weeks ago",
-          //     likes: 15,
-          //     avatar:
-          //       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-          //   },
-          // ]);
         }
       } catch (err) {
         console.log(err);
@@ -93,7 +58,7 @@ const ProductView = () => {
     if (newComment.trim()) {
       const comment = {
         id: id,
-        user: localUser._id,
+        user: localUser.Name,
         rating: 5,
         comment: newComment,
         date: Date.now(),
@@ -101,10 +66,11 @@ const ProductView = () => {
         avatar:
           "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
       };
-      console.log(comment)
+      // console.log(comment)
       const responce = await axios.post(`${ baseUrl }/product/post/product`, comment);
-      console.log(responce);
-      setComments([comment, ...comments]);
+      console.log("Datas :",responce);
+      const newCommentData = responce.data;
+      setComments(prevComments => [...prevComments, newCommentData]);
       setNewComment("");
     }
   };
