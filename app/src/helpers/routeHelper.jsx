@@ -2,6 +2,7 @@ import StartPage from "../pages/Home/home"
 import ViewProductPage from "../pages/viewProducts/viewProduct"
 import CategoriesList from "../pages/categories/categories";
 import CheckOut from "../pages/checkout/checkout"
+import ConfirmOrder from "../pages/checkout/OrderConfirmed/orderConfirmed"
 
 //Authentication pages
 import LoginPage from "../pages/Auth/login";
@@ -23,7 +24,7 @@ const routeHelper = [
     comp: <StartPage />,
   },
   {
-    path: "/view/product",
+    path: "/view/product/:id",
     comp: <ViewProductPage />,
   },
   {
@@ -33,6 +34,10 @@ const routeHelper = [
   {
     path: "/checkout",
     comp: <CheckOut />,
+  },
+  {
+    path: "/confirm-order",
+    comp: <ConfirmOrder />,
   },
   {
     path: "/auth",

@@ -3,7 +3,7 @@ import { ShoppingCart, Plus, Star, Heart, ShoppingBag } from 'lucide-react';
 import NavBar from "../../components/navBar";
 import Footer from "../../components/footer"
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import baseUrl from '../../url';
 
@@ -76,7 +76,7 @@ const RingCategoryList = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {console.log(ringCategories)}
         {ringCategories.map((product) => (
-          <a href="/view/product" key={product.id}>
+          <Link to={`/view/product/${product._id}`} key={product.id}>
             <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden w-72">
               <div className="relative">
                 <img
@@ -165,7 +165,7 @@ const RingCategoryList = () => {
                 </button>
               </div>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
 

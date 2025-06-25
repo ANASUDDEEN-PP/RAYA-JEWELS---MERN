@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Star,
   Heart,
@@ -11,75 +11,76 @@ import {
   User,
 } from "lucide-react";
 import NavBar from "../../components/navBar";
-import Footer from '../../components/footer'
-import { useNavigate } from "react-router-dom";
+import Footer from "../../components/footer";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import baseUrl from "../../url";
+import CommentsSection from "./CommentSection"; // We'll create this component separately
 
 const ProductView = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [newComment, setNewComment] = useState("");
-  const navigate = useNavigate();
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      user: "Sarah Johnson",
-      rating: 5,
-      comment:
-        "Absolutely stunning! The craftsmanship is incredible and it looks even better in person.",
-      date: "2 days ago",
-      likes: 12,
-      avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b567?w=40&h=40&fit=crop&crop=face",
-    },
-    {
-      id: 2,
-      user: "Michael Chen",
-      rating: 4,
-      comment:
-        "Great quality diamond ring. My fiancée loves it! Shipping was fast and packaging was beautiful.",
-      date: "1 week ago",
-      likes: 8,
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-    },
-    {
-      id: 3,
-      user: "Emma Wilson",
-      rating: 5,
-      comment:
-        "Perfect for special occasions. The sparkle is amazing and it feels very premium.",
-      date: "2 weeks ago",
-      likes: 15,
-      avatar:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-    },
-  ]);
+  const [product, setProduct] = useState(null);
+  const [images, setImages] = useState([]);
+  const [comments, setComments] = useState([]);
   const [likedComments, setLikedComments] = useState(new Set());
+  const navigate = useNavigate();
+  const { id } = useParams();
 
-  const product = {
-    id: 1,
-    name: "Diamond Eternity Ring",
-    description:
-      "Exquisite 18k white gold eternity ring featuring premium round-cut diamonds. Each diamond is carefully selected for maximum brilliance and fire. The ring showcases exceptional craftsmanship with a comfortable fit design that makes it perfect for everyday wear or special occasions. This timeless piece represents eternal love and commitment.",
-    originalPrice: 3299,
-    discountPrice: 2899,
-    rating: 4.9,
-    reviews: 124,
-    category: "Bestseller",
-    images: [
-      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=600&h=600&fit=crop",
-    ],
-    specifications: [
-      { label: "Metal", value: "18k White Gold" },
-      { label: "Stone", value: "Diamond" },
-      { label: "Carat Weight", value: "2.5 ct" },
-      { label: "Ring Size", value: "Adjustable" },
-    ],
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}/product/get/${id}`);
+        console.log(response.data);
+        setProduct(response.data.product);
+        setImages(response.data.images);
+
+        // Initialize with sample comments if none exist
+        if (!response.data.comments) {
+          setComments([
+            {
+              id: 1,
+              user: "Sarah Johnson",
+              rating: 5,
+              comment:
+                "Absolutely stunning! The craftsmanship is incredible and it looks even better in person.",
+              date: "2 days ago",
+              likes: 12,
+              avatar:
+                "https://images.unsplash.com/photo-1494790108755-2616b612b567?w=40&h=40&fit=crop&crop=face",
+            },
+            {
+              id: 2,
+              user: "Michael Chen",
+              rating: 4,
+              comment:
+                "Great quality diamond ring. My fiancée loves it! Shipping was fast and packaging was beautiful.",
+              date: "1 week ago",
+              likes: 8,
+              avatar:
+                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
+            },
+            {
+              id: 3,
+              user: "Emma Wilson",
+              rating: 5,
+              comment:
+                "Perfect for special occasions. The sparkle is amazing and it feels very premium.",
+              date: "2 weeks ago",
+              likes: 15,
+              avatar:
+                "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
+            },
+          ]);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, [id]);
 
   const handleAddComment = () => {
     if (newComment.trim()) {
@@ -109,7 +110,7 @@ const ProductView = () => {
   };
 
   const getBadgeStyle = (category) => {
-    switch (category.toLowerCase()) {
+    switch (category?.toLowerCase()) {
       case "bestseller":
         return "bg-green-100 text-green-800";
       case "premium":
@@ -120,6 +121,22 @@ const ProductView = () => {
         return "bg-blue-100 text-blue-800";
     }
   };
+
+  if (!product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  // Prepare specifications from the product data
+  const specifications = [
+    { label: "Collection", value: product.CollectionName },
+    { label: "Material", value: product.Material },
+    { label: "Sizes Available", value: product.Size },
+    { label: "Quantity Available", value: product.Quantity },
+  ];
 
   return (
     <div>
@@ -132,15 +149,18 @@ const ProductView = () => {
               <div className="space-y-4">
                 <div className="aspect-square overflow-hidden rounded-xl bg-gray-100">
                   <img
-                    src={product.images[selectedImage]}
-                    alt={product.name}
+                    src={
+                      images[selectedImage]?.ImageUrl ||
+                      "https://via.placeholder.com/600"
+                    }
+                    alt={product.ProductName}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   />
                 </div>
 
                 {/* Thumbnail Images */}
                 <div className="grid grid-cols-4 gap-3">
-                  {product.images.map((image, index) => (
+                  {images.map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
@@ -151,8 +171,10 @@ const ProductView = () => {
                       }`}
                     >
                       <img
-                        src={image}
-                        alt={`${product.name} ${index + 1}`}
+                        src={
+                          image.ImageUrl || "https://via.placeholder.com/150"
+                        }
+                        alt={`${product.ProductName} ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
                     </button>
@@ -166,10 +188,10 @@ const ProductView = () => {
                 <div className="flex items-center space-x-3">
                   <span
                     className={`px-3 py-1 text-sm font-semibold rounded-full ${getBadgeStyle(
-                      product.category
+                      product.CollectionName
                     )}`}
                   >
-                    {product.category}
+                    {product.CollectionName}
                   </span>
                   <button
                     onClick={() => setIsFavorite(!isFavorite)}
@@ -189,11 +211,8 @@ const ProductView = () => {
                 </div>
 
                 {/* Product Name */}
-                <h1
-                  className="text-3xl font-bold text-gray-900"
-                  style={{ fontSize: "30px" }}
-                >
-                  {product.name}
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {product.ProductName}
                 </h1>
 
                 {/* Rating */}
@@ -203,49 +222,53 @@ const ProductView = () => {
                       <Star
                         key={i}
                         className={`h-5 w-5 ${
-                          i < Math.floor(product.rating)
+                          i < 4 // Default to 4 stars if no rating exists
                             ? "text-yellow-400 fill-current"
                             : "text-gray-300"
                         }`}
                       />
                     ))}
                   </div>
-                  <span className="text-lg font-medium">{product.rating}</span>
+                  <span className="text-lg font-medium">4.9</span>
                   <span className="text-gray-500">
-                    ({product.reviews} reviews)
+                    ({comments.length} reviews)
                   </span>
                 </div>
 
                 {/* Pricing */}
                 <div className="space-y-2">
                   <div className="flex items-center space-x-4">
-                    <span
-                      className="text-gray-500 line-through"
-                      style={{ fontSize: "20px" }}
-                    >
-                      ${product.originalPrice}
+                    <span className="text-gray-500 line-through text-xl">
+                      ${product.NormalPrice}
                     </span>
-                    <span
-                      className="text-green-600 font-bold"
-                      style={{ fontSize: "35px" }}
-                    >
-                      ${product.discountPrice}
+                    <span className="text-green-600 font-bold text-3xl">
+                      ${product.OfferPrice}
                     </span>
                   </div>
                   <p className="text-sm text-green-600 font-medium">
-                    Save ${product.originalPrice - product.discountPrice} (12%
-                    off)
+                    Save $
+                    {(
+                      parseFloat(product.NormalPrice) -
+                      parseFloat(product.OfferPrice)
+                    ).toFixed(2)}{" "}
+                    (
+                    {Math.round(
+                      1 -
+                        parseFloat(product.OfferPrice) /
+                          parseFloat(product.NormalPrice)
+                    ) * 100}
+                    % off)
                   </p>
                 </div>
 
                 {/* Description */}
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Description</h3>
-                  <p
-                    className="text-gray-700 leading-relaxed"
-                    style={{ fontSize: "20px" }}
-                  >
-                    {product.description}
+                  <p className="text-gray-700 leading-relaxed text-lg">
+                    {product.ProductName} is a premium piece from our{" "}
+                    {product.CollectionName} collection. Crafted with
+                    high-quality {product.Material}, this item is designed for
+                    elegance and durability.
                   </p>
                 </div>
 
@@ -253,7 +276,7 @@ const ProductView = () => {
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Specifications</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    {product.specifications.map((spec, index) => (
+                    {specifications.map((spec, index) => (
                       <div key={index} className="bg-gray-50 p-3 rounded-lg">
                         <p className="text-sm text-gray-600">{spec.label}</p>
                         <p className="font-medium">{spec.value}</p>
@@ -270,6 +293,7 @@ const ProductView = () => {
                       <button
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
                         className="px-3 py-2 hover:bg-gray-100 transition-colors"
+                        disabled={parseInt(product.Quantity) === 0}
                       >
                         -
                       </button>
@@ -279,144 +303,73 @@ const ProductView = () => {
                       <button
                         onClick={() => setQuantity(quantity + 1)}
                         className="px-3 py-2 hover:bg-gray-100 transition-colors"
+                        disabled={
+                          parseInt(product.Quantity) === 0 ||
+                          quantity >= parseInt(product.Quantity)
+                        }
                       >
                         +
                       </button>
                     </div>
-                  </div>
-
-                  <button onClick={() => {navigate('/checkout')}} className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
-                    <Package className="h-5 w-5" />
-                    <span>
-                      Check Out - ${product.discountPrice * quantity}
-                    </span>
-                  </button>
-                  <button className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
-                    <ShoppingBag className="h-5 w-5" />
-                    <span>
-                      Add to Cart - ${product.discountPrice * quantity}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Comments Section */}
-            <div className="border-t border-gray-200 p-8">
-              <div className="max-w-4xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                  <MessageCircle className="h-6 w-6 mr-2" />
-                  Customer Reviews ({comments.length})
-                </h2>
-
-                {/* Add Comment */}
-                <div className="bg-gray-50 rounded-xl p-6 mb-8">
-                  <h3 className="font-semibold mb-4">Write a Review</h3>
-                  <div className="space-y-4">
-                    <textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Share your experience with this product..."
-                      className="w-full p-3 border border-gray-300 rounded-lg resize-none h-24 focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none"
-                    />
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">
-                          Rate this product:
+                    {parseInt(product.Quantity) > 0 &&
+                      parseInt(product.Quantity) < 5 && (
+                        <span className="text-red-600 text-sm font-medium">
+                          Limited Stock Available!
                         </span>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className="h-5 w-5 text-yellow-400 fill-current cursor-pointer hover:scale-110 transition-transform"
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleAddComment}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-6 rounded-lg transition-colors flex items-center space-x-2"
-                      >
-                        <Send className="h-4 w-4" />
-                        <span>Post Review</span>
-                      </button>
-                    </div>
+                      )}
+                    {parseInt(product.Quantity) === 0 && (
+                      <span className="text-red-600 text-sm font-medium">
+                        Out of Stock
+                      </span>
+                    )}
                   </div>
-                </div>
 
-                {/* Comments List */}
-                <div className="space-y-6">
-                  {comments.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow"
+                  {parseInt(product.Quantity) > 0 ? (
+                    <>
+                      <button
+                        onClick={() => navigate("/checkout")}
+                        className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
+                      >
+                        <Package className="h-5 w-5" />
+                        <span>
+                          Check Out - $
+                          {(parseFloat(product.OfferPrice) * quantity).toFixed(
+                            2
+                          )}
+                        </span>
+                      </button>
+                      <button className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
+                        <ShoppingBag className="h-5 w-5" />
+                        <span>
+                          Add to Cart - $
+                          {(parseFloat(product.OfferPrice) * quantity).toFixed(
+                            2
+                          )}
+                        </span>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="w-full bg-gray-400 text-white font-semibold py-4 px-6 rounded-lg cursor-not-allowed flex items-center justify-center space-x-2"
+                      disabled
                     >
-                      <div className="flex items-start space-x-4">
-                        <img
-                          src={comment.avatar}
-                          alt={comment.user}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <h4 className="font-semibold text-gray-900">
-                                {comment.user}
-                              </h4>
-                              <div className="flex items-center space-x-2">
-                                <div className="flex">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star
-                                      key={i}
-                                      className={`h-4 w-4 ${
-                                        i < comment.rating
-                                          ? "text-yellow-400 fill-current"
-                                          : "text-gray-300"
-                                      }`}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="text-sm text-gray-500">
-                                  {comment.date}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <p className="text-gray-700 mb-3 leading-relaxed">
-                            {comment.comment}
-                          </p>
-                          <div className="flex items-center space-x-4">
-                            <button
-                              onClick={() => toggleLike(comment.id)}
-                              className={`flex items-center space-x-1 text-sm transition-colors ${
-                                likedComments.has(comment.id)
-                                  ? "text-blue-600"
-                                  : "text-gray-500 hover:text-blue-600"
-                              }`}
-                            >
-                              <ThumbsUp
-                                className={`h-4 w-4 ${
-                                  likedComments.has(comment.id)
-                                    ? "fill-current"
-                                    : ""
-                                }`}
-                              />
-                              <span>
-                                {comment.likes +
-                                  (likedComments.has(comment.id) ? 1 : 0)}
-                              </span>
-                            </button>
-                            <button className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                              Reply
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                      <Package className="h-5 w-5" />
+                      <span>Out of Stock</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
+
+            {/* Comments Section - Now using the separate component */}
+            <CommentsSection
+              comments={comments}
+              newComment={newComment}
+              setNewComment={setNewComment}
+              handleAddComment={handleAddComment}
+              likedComments={likedComments}
+              toggleLike={toggleLike}
+            />
           </div>
         </div>
       </div>

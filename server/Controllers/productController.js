@@ -68,7 +68,6 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-
 exports.getProductOrderedByCollection = async (req, res) => {
   try {
     const { id } = req.params;
@@ -119,6 +118,24 @@ exports.getAllProducts = async(req, res) => {
     const products = await productModel.find({});
     return res.status(200).json({
       products
+    })
+  } catch(err){
+    return res.status(404).json({
+      message : "Internal Server Error"
+    })
+  }
+}
+
+exports.getProductById = async(req, res) => {
+  try{
+    const { id } = req.params;
+    if(!id)
+      return res.status(404).json({ message : "Invalid Id or No Id"})
+    const product = await productModel.findById(id);
+    const images = await imageModel.find({imageId : product._id});
+    return res.status(200).json({
+      product,
+      images
     })
   } catch(err){
     return res.status(404).json({
