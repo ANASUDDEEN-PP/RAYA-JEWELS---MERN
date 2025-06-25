@@ -1,6 +1,7 @@
 const productModel = require("../Models/productModel");
 const imageModel = require("../Models/ImageModel");
 const collectionModel = require("../Models/collectionModel");
+const commentModel = require("../Models/commentsModel");
 
 exports.createProduct = async (req, res) => {
   try {
@@ -136,6 +137,33 @@ exports.getProductById = async(req, res) => {
     return res.status(200).json({
       product,
       images
+    })
+  } catch(err){
+    return res.status(404).json({
+      message : "Internal Server Error"
+    })
+  }
+}
+
+exports.postComments = async (req, res) => {
+  try{
+    const {avatar, comment, date, id, likes, rating, user} = req.body
+    if(!avatar && !user)
+      return res.status(401).json({ message : "NoUserGet" });
+    if(!comment)
+      return res.status(201).json({ message : "Comments is Required" })
+    const commentsData = {
+      ProductId : id,
+      UserId : user,
+      Rating : rating,
+      Likes : likes,
+      Date : date,
+      Comment : comment,
+      Avatar : avatar
+    }
+    await commentModel.create(commentsData);
+    return res.status(200).json({
+      message : "Comment Posted..."
     })
   } catch(err){
     return res.status(404).json({

@@ -29,6 +29,9 @@ const ProductView = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  const localUser = JSON.parse(localStorage.getItem('userProfile'));
+  console.log(localUser._id)
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -82,18 +85,22 @@ const ProductView = () => {
     fetchData();
   }, [id]);
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
+    // console.log(id)
     if (newComment.trim()) {
       const comment = {
-        id: comments.length + 1,
-        user: "You",
+        id: id,
+        user: localUser._id,
         rating: 5,
         comment: newComment,
-        date: "Just now",
+        date: Date.now(),
         likes: 0,
         avatar:
           "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
       };
+      console.log(comment)
+      const responce = await axios.post(`${ baseUrl }/product/post/product`, comment);
+      console.log(responce);
       setComments([comment, ...comments]);
       setNewComment("");
     }
@@ -164,11 +171,10 @@ const ProductView = () => {
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImage === index
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index
                           ? "border-yellow-500"
                           : "border-gray-200 hover:border-gray-300"
-                      }`}
+                        }`}
                     >
                       <img
                         src={
@@ -198,11 +204,10 @@ const ProductView = () => {
                     className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                   >
                     <Heart
-                      className={`h-6 w-6 ${
-                        isFavorite
+                      className={`h-6 w-6 ${isFavorite
                           ? "text-red-500 fill-current"
                           : "text-gray-400"
-                      }`}
+                        }`}
                     />
                   </button>
                   <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
@@ -221,11 +226,10 @@ const ProductView = () => {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`h-5 w-5 ${
-                          i < 4 // Default to 4 stars if no rating exists
+                        className={`h-5 w-5 ${i < 4 // Default to 4 stars if no rating exists
                             ? "text-yellow-400 fill-current"
                             : "text-gray-300"
-                        }`}
+                          }`}
                       />
                     ))}
                   </div>
@@ -254,8 +258,8 @@ const ProductView = () => {
                     (
                     {Math.round(
                       1 -
-                        parseFloat(product.OfferPrice) /
-                          parseFloat(product.NormalPrice)
+                      parseFloat(product.OfferPrice) /
+                      parseFloat(product.NormalPrice)
                     ) * 100}
                     % off)
                   </p>
