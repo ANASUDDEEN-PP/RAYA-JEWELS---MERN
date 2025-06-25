@@ -7,5 +7,6 @@ router.get('/get/collection/product/:id', productController.getProductOrderedByC
 router.get('/get/all', productController.getAllProducts);
 router.get('/get/:id', productController.getProductById);
 router.post('/post/product', productController.postComments);
+router.get('/get/product/comments/:id', productController.getComments);
 
 module.exports = router;

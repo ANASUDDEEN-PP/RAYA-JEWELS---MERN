@@ -42,6 +42,8 @@ const ProductView = () => {
 
         // Initialize with sample comments if none exist
         if (!response.data.comments) {
+          const getComments = await axios.get(`${baseUrl}/product/get/product/comments/${id}`);
+          console.log(getComments)
           setComments([
             {
               id: 1,

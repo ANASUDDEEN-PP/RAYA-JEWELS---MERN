@@ -171,3 +171,17 @@ exports.postComments = async (req, res) => {
     })
   }
 }
+
+exports.getComments = async (req, res) => {
+  try{
+    const { id } = req.params;
+    if(!await productModel.findById(id))
+      return res.status(401).json({ message : "InvalidId"})
+    const commets = await commentModel.find({ ProductId : id });
+    return res.status(200).json({commets})
+  } catch(err){
+    return res.status(404).json({
+      message : "Internal Server Error"
+    })
+  }
+}
