@@ -61,15 +61,15 @@ const CommentsSection = ({
             >
               <div className="flex items-start space-x-4">
                 <img
-                  src={comment.avatar}
-                  alt={comment.user}
+                  src={comment.Avatar}
+                  alt={comment.UserId}
                   className="w-12 h-12 rounded-full object-cover"
                 />
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <div>
                       <h4 className="font-semibold text-gray-900">
-                        {comment.user}
+                        {comment.UserId}
                       </h4>
                       <div className="flex items-center space-x-2">
                         <div className="flex">
@@ -77,7 +77,7 @@ const CommentsSection = ({
                             <Star
                               key={i}
                               className={`h-4 w-4 ${
-                                i < comment.rating
+                                i < comment.Rating
                                   ? "text-yellow-400 fill-current"
                                   : "text-gray-300"
                               }`}
@@ -91,13 +91,13 @@ const CommentsSection = ({
                     </div>
                   </div>
                   <p className="text-gray-700 mb-3 leading-relaxed">
-                    {comment.comment}
+                    {comment.Comment}
                   </p>
                   <div className="flex items-center space-x-4">
                     <button
-                      onClick={() => toggleLike(comment.id)}
+                      onClick={() => toggleLike(comment._id)}
                       className={`flex items-center space-x-1 text-sm transition-colors ${
-                        likedComments.has(comment.id)
+                        likedComments.has(comment._id)
                           ? "text-blue-600"
                           : "text-gray-500 hover:text-blue-600"
                       }`}
@@ -111,9 +111,6 @@ const CommentsSection = ({
                         {comment.likes +
                           (likedComments.has(comment.id) ? 1 : 0)}
                       </span>
-                    </button>
-                    <button className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                      Reply
                     </button>
                   </div>
                 </div>
