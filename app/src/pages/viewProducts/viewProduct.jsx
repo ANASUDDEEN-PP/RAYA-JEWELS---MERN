@@ -35,6 +35,20 @@ const ProductView = () => {
 
   const localUser = JSON.parse(localStorage.getItem('userProfile'));
 
+  const addCart = async () => {
+    try{
+      const item = {
+        UserId : localUser._id,
+        Quantity : 1,
+        itemsData : id
+      }
+      const responce = await axios.post(`${baseUrl}/cart/add/item`, item);
+      console.log(responce)
+    } catch(err){
+      console.log(err);
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -287,7 +301,7 @@ const ProductView = () => {
                           Check Out - ${(parseFloat(product.OfferPrice) * quantity).toFixed(2)}
                         </span>
                       </button>
-                      <button className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
+                      <button onClick={addCart} className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
                         <ShoppingBag className="h-5 w-5" />
                         <span>
                           Add to Cart - ${(parseFloat(product.OfferPrice) * quantity).toFixed(2)}

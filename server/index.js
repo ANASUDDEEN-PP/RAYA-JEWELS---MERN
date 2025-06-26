@@ -19,10 +19,12 @@ connection();
 const AuthRoute = require('./Routes/authRoute');
 const CollectionRoute = require('./Routes/collectionRoute');
 const productRoute = require("./Routes/productRoute");
+const cartRoute = require("./Routes/cartRoute");
 
 app.use('/auth', AuthRoute);
 app.use('/collection', CollectionRoute);
 app.use('/product', productRoute);
+app.use('/cart', cartRoute);
 
 // 404 Route (Catch-All)
 app.use((req, res, next) => {
