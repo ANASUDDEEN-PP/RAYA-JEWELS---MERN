@@ -146,42 +146,83 @@ exports.getProductById = async(req, res) => {
 }
 
 exports.postComments = async (req, res) => {
-  try{
-    const {avatar, comment, date, id, likes, rating, user} = req.body
-    if(!avatar && !user)
-      return res.status(401).json({ message : "NoUserGet" });
-    if(!comment)
-      return res.status(201).json({ message : "Comments is Required" })
-    const commentsData = {
-      ProductId : id,
-      UserId : user,
-      Rating : rating,
-      Likes : likes,
-      Date : date,
-      Comment : comment,
-      Avatar : avatar
+  try {
+    const { Avatar, Comment, ProductId, Rating, UserId, Date } = req.body;
+    
+    // Validate required fields
+    if (!UserId) {
+      return res.status(401).json({ 
+        success: false,
+        message: "User ID is required" 
+      });
     }
-    await commentModel.create(commentsData);
+    
+    if (!Comment || Comment.trim().length === 0) {
+      return res.status(201).json({ 
+        success: false,
+        message: "Comment text is required" 
+      });
+    }
+    
+    if (!ProductId) {
+      return res.status(401).json({ 
+        success: false,
+        message: "Product ID is required" 
+      });
+    }
+    
+    // Validate rating (1-5)
+    const validatedRating = Math.min(Math.max(Number(Rating) || 0, 1), 5);
+    
+    // Create comment data with current timestamp
+    const commentsData = {
+      ProductId,
+      UserId,
+      Rating: validatedRating,
+      Likes: 0, // Initialize likes to 0
+      Date, // Use current timestamp
+      Comment: Comment.trim(),
+      Avatar: Avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(UserId)}&background=random`
+    };
+    
+    // Save to database
+    const newComment = await commentModel.create(commentsData);
+    
     return res.status(200).json({
-      message : "Comment Posted..."
-    })
-  } catch(err){
-    return res.status(404).json({
-      message : "Internal Server Error"
-    })
+      success: true,
+      message: "Comment posted successfully",
+      comment: {
+        id: newComment._id,
+        UserId: newComment.UserId,
+        Rating: newComment.Rating,
+        Comment: newComment.Comment,
+        Date: newComment.Date,
+        Avatar: newComment.Avatar
+      }
+    });
+    
+  } catch (err) {
+    console.error("Error posting comment:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
   }
-}
+};
 
 exports.getComments = async (req, res) => {
-  try{
+  try {
     const { id } = req.params;
-    if(!await productModel.findById(id))
-      return res.status(401).json({ message : "InvalidId"})
-    const commets = await commentModel.find({ ProductId : id });
-    return res.status(200).json({commets})
-  } catch(err){
-    return res.status(404).json({
-      message : "Internal Server Error"
-    })
+    if (!await productModel.findById(id)) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    const comments = await commentModel.find({ ProductId: id })
+      .sort({ Date: -1 });
+    return res.status(200).json({ comments });
+  } catch (err) {
+    console.error("Error fetching comments:", err);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
   }
 }
