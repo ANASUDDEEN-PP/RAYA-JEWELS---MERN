@@ -43,7 +43,10 @@ const ProductView = () => {
         itemsData : id
       }
       const responce = await axios.post(`${baseUrl}/cart/add/item`, item);
-      console.log(responce)
+      if(responce.status == 200)
+        toast.success(responce.data.message);
+      else 
+        toast.error(responce.data.message);
     } catch(err){
       console.log(err);
     }
