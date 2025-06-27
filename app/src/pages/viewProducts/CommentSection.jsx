@@ -26,7 +26,7 @@ const CommentsSection = ({
     : sortedComments.slice(0, 3);
 
   return (
-    <div className="border-t border-gray-200 pt-8 px-8 pb-4">
+    <div className="border-t border-gray-200 pt-8 px-8 pb-[80px]">
       <div className="max-w-4xl mx-auto">
         {/* Section Header */}
         <div className="flex items-center justify-between mb-6">

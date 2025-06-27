@@ -1,5 +1,6 @@
 const userModel = require("../Models/userModel");
 const profileModel = require("../Models/profileModel");
+const cartModel = require("../Models/addToChart");
 
 exports.userRegister = async (req, res) => {
     try {
@@ -85,6 +86,13 @@ exports.userRegister = async (req, res) => {
                 ImageUrl : ""
             }
             await profileModel.create(profileData)
+
+            const cartData = {
+                UserId : userPushData._id,
+                Date : Date.now(),
+                Items : []
+            }
+            await cartModel.create(cartData);
             return res.status(200).json({ message: "User created successfully" });
         } else {
             return res.status(400).json({ message: "Invalid request" });
