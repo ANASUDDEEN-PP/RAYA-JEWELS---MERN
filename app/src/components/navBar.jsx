@@ -4,6 +4,94 @@ import { Link } from "react-router-dom";
 import ProfileIcon from "../assets/images/profile.png";
 import Cart from "./cart";
 
+// Add custom CSS animations
+const customStyles = `
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes bgFadeIn {
+    from { 
+      opacity: 0;
+      background: rgb(255, 255, 255);
+    }
+    to { 
+      opacity: 1;
+      background: linear-gradient(to bottom right, rgb(17, 24, 39), rgb(31, 41, 55), rgb(0, 0, 0));
+    }
+  }
+  
+  @keyframes slideUp {
+    from { 
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to { 
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideDown {
+    from { 
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to { 
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes scaleIn {
+    from { 
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to { 
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeInUp {
+    from { 
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to { 
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(180deg); }
+  }
+  
+  @keyframes float-delayed {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(-180deg); }
+  }
+  
+  @keyframes float-slow {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(90deg); }
+  }
+  
+  .animate-fadeIn { animation: fadeIn 0.6s ease-out; }
+  .animate-bgFadeIn { animation: bgFadeIn 0.8s ease-out; }
+  .animate-slideUp { animation: slideUp 0.7s ease-out; }
+  .animate-slideDown { animation: slideDown 0.5s ease-out; }
+  .animate-scaleIn { animation: scaleIn 0.6s ease-out 0.2s both; }
+  .animate-fadeInUp { animation: fadeInUp 0.8s ease-out 0.3s both; }
+  .animate-float { animation: float 6s ease-in-out infinite; }
+  .animate-float-delayed { animation: float-delayed 8s ease-in-out infinite 2s; }
+  .animate-float-slow { animation: float-slow 10s ease-in-out infinite 1s; }
+`;
+
 export default class NavBar extends Component {
   constructor(props) {
     super(props);
@@ -30,8 +118,8 @@ export default class NavBar extends Component {
         }
       ],
       searchResults: [],
-      userProfile: JSON.parse(localStorage.getItem('userProfile')) || null,
-      isLoggedIn: localStorage.getItem('isLoggedIn') === 'true'
+      userProfile: null, // Remove localStorage usage
+      isLoggedIn: true // Set to true for demo
     };
   }
 
@@ -45,6 +133,14 @@ export default class NavBar extends Component {
       isCartOpen: false,
       isProfileOpen: false
     }));
+  };
+
+  closeSearch = () => {
+    this.setState({
+      isSearchOpen: false,
+      searchQuery: "",
+      searchResults: []
+    });
   };
 
   toggleCart = () => {
@@ -85,24 +181,6 @@ export default class NavBar extends Component {
     }));
   };
 
-  handleLogin = () => {
-    const userData = {
-      name: "Alex Johnson",
-      email: "alex.johnson@example.com",
-      joinDate: "Joined March 2023",
-      phone: "+1 (555) 123-4567",
-      imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-    };
-
-    localStorage.setItem('userProfile', JSON.stringify(userData));
-    localStorage.setItem('isLoggedIn', 'true');
-    this.setState({
-      isProfileOpen: false,
-      userProfile: userData,
-      isLoggedIn: true
-    });
-  };
-
   handleLogout = () => {
     const logoutMsg = confirm("Are you sure you want to logout?");
     if (logoutMsg === true) {
@@ -111,8 +189,6 @@ export default class NavBar extends Component {
         userProfile: null,
         isLoggedIn: false
       });
-      localStorage.removeItem('userProfile');
-      localStorage.removeItem('isLoggedIn');
     }
   };
 
@@ -122,16 +198,155 @@ export default class NavBar extends Component {
 
     if (query.length > 2) {
       const mockResults = [
-        { id: 1, name: "Diamond Ring", price: 299 },
-        { id: 2, name: "Gold Necklace", price: 499 },
-        { id: 3, name: "Silver Earrings", price: 199 }
+        { id: 1, name: "Diamond Ring", price: 299, category: "Rings", image: "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=100&h=100&fit=crop" },
+        { id: 2, name: "Gold Necklace", price: 499, category: "Necklaces", image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=100&h=100&fit=crop" },
+        { id: 3, name: "Silver Earrings", price: 199, category: "Earrings", image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=100&h=100&fit=crop" },
+        { id: 4, name: "Pearl Bracelet", price: 299, category: "Bracelets", image: "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=100&h=100&fit=crop" },
+        { id: 5, name: "Ruby Ring", price: 799, category: "Rings", image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&h=100&fit=crop" },
+        { id: 6, name: "Emerald Pendant", price: 649, category: "Necklaces", image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=100&h=100&fit=crop" }
       ].filter(item =>
-        item.name.toLowerCase().includes(query.toLowerCase())
+        item.name.toLowerCase().includes(query.toLowerCase()) ||
+        item.category.toLowerCase().includes(query.toLowerCase())
       );
       this.setState({ searchResults: mockResults });
     } else {
       this.setState({ searchResults: [] });
     }
+  };
+
+  // Full-Screen Search Component
+  renderFullScreenSearch = () => {
+    const { isSearchOpen, searchQuery, searchResults } = this.state;
+
+    if (!isSearchOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 animate-fadeIn">
+        {/* Animated Background Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black animate-bgFadeIn">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="h-full w-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 animate-pulse"></div>
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22 width=%2232%22 height=%2232%22 fill=%22none%22 stroke=%22rgb(255 255 255 / 0.1)%22%3e%3cpath d=%22m0 .5 32 32M32 .5 0 32%22/%3e%3c/svg%3e')] bg-[length:32px_32px]"></div>
+          </div>
+          
+          {/* Floating particles effect */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-yellow-400 rounded-full opacity-30 animate-float"></div>
+            <div className="absolute top-1/3 right-1/4 w-1 h-1 bg-yellow-500 rounded-full opacity-40 animate-float-delayed"></div>
+            <div className="absolute bottom-1/3 left-1/3 w-3 h-3 bg-yellow-300 rounded-full opacity-20 animate-float-slow"></div>
+            <div className="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-yellow-600 rounded-full opacity-35 animate-float-delayed"></div>
+          </div>
+        </div>
+
+        {/* Search Container */}
+        <div className="relative h-full flex flex-col animate-slideUp">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 md:p-6 animate-slideDown">
+            <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+              RAYA JEWELS
+            </h2>
+            <button
+              onClick={this.closeSearch}
+              className="p-2 rounded-full hover:bg-white/10 transition-all duration-300 text-white hover:text-yellow-400"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="px-4 md:px-6 mb-8 animate-scaleIn">
+            <div className="max-w-4xl mx-auto">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                  <Search className="h-6 w-6 text-gray-400 animate-pulse" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search for rings, necklaces, earrings..."
+                  value={searchQuery}
+                  onChange={this.handleSearchChange}
+                  className="w-full pl-16 pr-6 py-4 md:py-6 text-lg text-yellow-300 md:text-xl bg-transparent/95 backdrop-blur-sm rounded-2xl shadow-2xl border-2 border-yellow/20 focus:border-yellow-400 focus:outline-none focus:ring-4 focus:ring-yellow-400/30 focus:bg-transparent transition-all duration-500 placeholder-gray-500"
+                  autoFocus
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Search Results */}
+          <div className="flex-1 px-4 md:px-6 overflow-y-auto animate-fadeInUp">
+            <div className="max-w-4xl mx-auto">
+              {searchQuery.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-yellow-400/30 animate-bounce">
+                    <Search className="h-12 w-12 text-yellow-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    Start typing to search
+                  </h3>
+                  <p className="text-gray-300">
+                    Find rings, necklaces, earrings, and more...
+                  </p>
+                </div>
+              )}
+
+              {searchQuery.length > 0 && searchResults.length === 0 && (
+                <div className="text-center py-12 animate-fadeIn">
+                  <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-600/20 to-gray-700/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-gray-500/30">
+                    <Search className="h-12 w-12 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    No results found
+                  </h3>
+                  <p className="text-gray-300">
+                    Try different keywords or browse our collections
+                  </p>
+                </div>
+              )}
+
+              {searchResults.length > 0 && (
+                <div className="animate-fadeInUp">
+                  <div className="mb-6">
+                    <p className="text-gray-300">
+                      Found {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "<span className="text-yellow-400">{searchQuery}</span>"
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-8">
+                    {searchResults.map((item, index) => (
+                      <Link
+                        key={item.id}
+                        to={`/product/${item.id}`}
+                        onClick={this.closeSearch}
+                        className="group bg-white/10 backdrop-blur-sm rounded-xl p-4 shadow-2xl hover:shadow-yellow-400/20 transition-all duration-300 border border-white/20 hover:border-yellow-400/50 hover:bg-white/20 animate-fadeInUp"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-lg overflow-hidden flex-shrink-0 border border-white/30">
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-white truncate group-hover:text-yellow-400 transition-colors">
+                              {item.name}
+                            </h4>
+                            <p className="text-sm text-gray-300 mb-1">{item.category}</p>
+                            <p className="text-lg font-bold text-yellow-400">${item.price}</p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   render() {
@@ -141,7 +356,6 @@ export default class NavBar extends Component {
       isCartOpen,
       isProfileOpen,
       searchQuery,
-      searchResults,
       cartItems,
       userProfile,
       isLoggedIn
@@ -149,7 +363,10 @@ export default class NavBar extends Component {
 
     return (
       <div>
-        <header className="bg-white shadow-lg sticky top-0 z-50">
+        {/* Inject custom CSS animations */}
+        <style dangerouslySetInnerHTML={{ __html: customStyles }} />
+        
+        <header className="bg-white shadow-lg sticky top-0 z-40">
           {/* Top bar */}
           <div className="bg-black text-white text-center py-2 text-sm">
             Free shipping on orders over $500 | 30-day returns
@@ -193,29 +410,20 @@ export default class NavBar extends Component {
                     <Search className="h-4 w-4 text-gray-500 mr-2" />
                     <input
                       placeholder="Search jewelry..."
-                      className="bg-transparent outline-none text-sm w-40"
-                      value={searchQuery}
-                      onChange={this.handleSearchChange}
-                      onFocus={this.toggleSearch}
+                      className="bg-transparent outline-none text-sm w-40 cursor-pointer"
+                      value=""
+                      onClick={this.toggleSearch}
+                      readOnly
                     />
                   </div>
 
-                  {/* Search dropdown */}
-                  {isSearchOpen && searchResults.length > 0 && (
-                    <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
-                      {searchResults.map(item => (
-                        <Link 
-                          to={`/product/${item.id}`} 
-                          key={item.id} 
-                          className="p-3 border-b hover:bg-gray-50 cursor-pointer block"
-                          onClick={this.toggleSearch}
-                        >
-                          <div className="font-medium">{item.name}</div>
-                          <div className="text-yellow-600">${item.price}</div>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+                  {/* Mobile Search Button */}
+                  <button 
+                    className="md:hidden p-2"
+                    onClick={this.toggleSearch}
+                  >
+                    <Search className="h-5 w-5 text-gray-700 hover:text-yellow-600 transition-colors" />
+                  </button>
                 </div>
 
                 {/* Profile */}
@@ -225,7 +433,7 @@ export default class NavBar extends Component {
                   ) : (
                     <Fingerprint className="mt-[2px] h-5 w-5 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" />
                   )}
-                  <p className="hover:text-yellow-600">{userProfile ? userProfile.name : "Sign In"}</p>
+                  <p className="hidden sm:block hover:text-yellow-600">{userProfile ? userProfile.name : "Sign In"}</p>
                 </button>
 
                 {/* Cart */}
@@ -265,6 +473,9 @@ export default class NavBar extends Component {
             </div>
           )}
         </header>
+
+        {/* Full-Screen Search Overlay */}
+        {this.renderFullScreenSearch()}
 
         {/* Shopping Cart */}
         {isLoggedIn && (
@@ -344,13 +555,12 @@ export default class NavBar extends Component {
                             </p>
                           </div>
                           <div className="w-full">
-                            <button
-                              onClick={this.handleLogin}
+                            <Link to='/auth'
                               className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-yellow-600 hover:bg-yellow-700 transition-colors"
                             >
                               <User className="h-5 w-5 mr-2" />
                               Sign In
-                            </button>
+                            </Link>
                           </div>
                         </div>
                       )}
