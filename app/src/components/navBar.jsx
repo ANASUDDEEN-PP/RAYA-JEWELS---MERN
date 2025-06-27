@@ -2,9 +2,7 @@ import React, { Component } from "react";
 import { Search, User, Heart, ShoppingBag, X, Menu, LogOut, UserX, Fingerprint } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProfileIcon from "../assets/images/profile.png";
-
-//imported Modules
-import AddToChart from "./cart";
+import Cart from "./cart";
 
 export default class NavBar extends Component {
   constructor(props) {
@@ -16,9 +14,20 @@ export default class NavBar extends Component {
       isProfileOpen: false,
       searchQuery: "",
       cartItems: [
-        { id: 1, name: "Diamond Ring", price: 299, quantity: 1 },
-        { id: 2, name: "Gold Necklace", price: 499, quantity: 1 },
-        { id: 3, name: "Silver Necklace", price: 699, quantity: 2 }
+        { 
+          id: 1, 
+          name: "Diamond Ring", 
+          price: 299, 
+          quantity: 1, 
+          image: "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" 
+        },
+        { 
+          id: 2, 
+          name: "Gold Necklace", 
+          price: 499, 
+          quantity: 1, 
+          image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" 
+        }
       ],
       searchResults: [],
       userProfile: JSON.parse(localStorage.getItem('userProfile')) || null,
@@ -51,6 +60,28 @@ export default class NavBar extends Component {
       isProfileOpen: !prevState.isProfileOpen,
       isSearchOpen: false,
       isCartOpen: false
+    }));
+  };
+
+  handleIncreaseQuantity = (itemId) => {
+    this.setState(prevState => ({
+      cartItems: prevState.cartItems.map(item =>
+        item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
+      )
+    }));
+  };
+
+  handleDecreaseQuantity = (itemId) => {
+    this.setState(prevState => ({
+      cartItems: prevState.cartItems.map(item =>
+        item.id === itemId ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item
+      )
+    }));
+  };
+
+  handleRemoveItem = (itemId) => {
+    this.setState(prevState => ({
+      cartItems: prevState.cartItems.filter(item => item.id !== itemId)
     }));
   };
 
@@ -137,25 +168,26 @@ export default class NavBar extends Component {
 
               {/* Desktop Navigation */}
               <nav className="hidden md:flex space-x-8">
-                <a href="#" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
+                <Link to="/collections" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
                   Collections
-                </a>
-                <a href="#" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
+                </Link>
+                <Link to="/rings" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
                   Rings
-                </a>
-                <a href="#" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
+                </Link>
+                <Link to="/necklaces" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
                   Necklaces
-                </a>
-                <a href="#" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
+                </Link>
+                <Link to="/earrings" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
                   Earrings
-                </a>
-                <a href="#" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
+                </Link>
+                <Link to="/about" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
                   About
-                </a>
+                </Link>
               </nav>
 
-              {/* Search and Icons */}
+              {/* Icons */}
               <div className="flex items-center space-x-4">
+                {/* Search */}
                 <div className="relative">
                   <div className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2">
                     <Search className="h-4 w-4 text-gray-500 mr-2" />
@@ -172,24 +204,31 @@ export default class NavBar extends Component {
                   {isSearchOpen && searchResults.length > 0 && (
                     <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
                       {searchResults.map(item => (
-                        <div key={item.id} className="p-3 border-b hover:bg-gray-50 cursor-pointer">
+                        <Link 
+                          to={`/product/${item.id}`} 
+                          key={item.id} 
+                          className="p-3 border-b hover:bg-gray-50 cursor-pointer block"
+                          onClick={this.toggleSearch}
+                        >
                           <div className="font-medium">{item.name}</div>
                           <div className="text-yellow-600">${item.price}</div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   )}
                 </div>
 
+                {/* Profile */}
                 <button className="flex justify-center gap-2" onClick={this.toggleProfile}>
                   {userProfile ? (
                     <User className="h-5 w-5 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" />
                   ) : (
                     <Fingerprint className="mt-[2px] h-5 w-5 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors" />
                   )}
-                  <p className="hover:text-yellow-600">{userProfile ? userProfile.Name : "Sign In"}</p>
+                  <p className="hover:text-yellow-600">{userProfile ? userProfile.name : "Sign In"}</p>
                 </button>
 
+                {/* Cart */}
                 {isLoggedIn && (
                   <div className="relative">
                     <button onClick={this.toggleCart}>
@@ -217,20 +256,29 @@ export default class NavBar extends Component {
           {isMenuOpen && (
             <div className="md:hidden bg-white border-t">
               <div className="px-4 py-2 space-y-2">
-                <a href="#" className="block py-2 text-gray-700">Collections</a>
-                <a href="#" className="block py-2 text-gray-700">Rings</a>
-                <a href="#" className="block py-2 text-gray-700">Necklaces</a>
-                <a href="#" className="block py-2 text-gray-700">Earrings</a>
-                <a href="#" className="block py-2 text-gray-700">About</a>
+                <Link to="/collections" className="block py-2 text-gray-700" onClick={this.toggleMenu}>Collections</Link>
+                <Link to="/rings" className="block py-2 text-gray-700" onClick={this.toggleMenu}>Rings</Link>
+                <Link to="/necklaces" className="block py-2 text-gray-700" onClick={this.toggleMenu}>Necklaces</Link>
+                <Link to="/earrings" className="block py-2 text-gray-700" onClick={this.toggleMenu}>Earrings</Link>
+                <Link to="/about" className="block py-2 text-gray-700" onClick={this.toggleMenu}>About</Link>
               </div>
             </div>
           )}
         </header>
 
-        {/* Shopping Cart Sidebar - Only shown if logged in */}
-        {isLoggedIn && isCartOpen && (<AddToChart />)}
+        {/* Shopping Cart */}
+        {isLoggedIn && (
+          <Cart 
+            isCartOpen={isCartOpen} 
+            toggleCart={this.toggleCart} 
+            cartItems={cartItems}
+            onIncreaseQuantity={this.handleIncreaseQuantity}
+            onDecreaseQuantity={this.handleDecreaseQuantity}
+            onRemoveItem={this.handleRemoveItem}
+          />
+        )}
 
-        {/* Profile/Login Sidebar */}
+        {/* Profile/Login Panel */}
         {isProfileOpen && (
           <div className="fixed inset-0 z-50 overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
@@ -264,12 +312,11 @@ export default class NavBar extends Component {
                               alt="Profile"
                             />
                           </div>
-
                           <h1 className="text-xl font-bold text-gray-900 mb-2">
-                            {userProfile.Name || "UserName"}
+                            {userProfile.name}
                           </h1>
-                          <p className="mt-1 text-sm text-gray-900">{userProfile.Email}</p>
-                          <p className="mt-1 text-sm text-gray-900">{userProfile.Mobile}</p>
+                          <p className="mt-1 text-sm text-gray-900">{userProfile.email}</p>
+                          <p className="mt-1 text-sm text-gray-900">{userProfile.phone}</p>
                           <p className="mt-1 text-sm text-gray-900">{userProfile.joinDate}</p>
                           <div className="mt-8 w-full">
                             <button
@@ -288,37 +335,22 @@ export default class NavBar extends Component {
                               <UserX className="h-16 w-16 text-gray-400" />
                             </div>
                           </div>
-
                           <div className="text-center mb-8">
                             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                              HOOO....
+                              Welcome!
                             </h1>
                             <p className="text-lg text-gray-600 mb-1">
-                              You Don't Login
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Please sign in to access your account and enjoy personalized features
+                              Please sign in to your account
                             </p>
                           </div>
-
                           <div className="w-full">
-                            <Link to='/auth'
+                            <button
+                              onClick={this.handleLogin}
                               className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-yellow-600 hover:bg-yellow-700 transition-colors"
                             >
                               <User className="h-5 w-5 mr-2" />
                               Sign In
-                            </Link>
-                          </div>
-
-                          <div className="mt-6 w-full">
-                            <div className="text-center">
-                              <p className="text-sm text-gray-500">
-                                Don't have an account?{' '}
-                                <button className="font-medium text-yellow-600 hover:text-yellow-500">
-                                  Sign up
-                                </button>
-                              </p>
-                            </div>
+                            </button>
                           </div>
                         </div>
                       )}
