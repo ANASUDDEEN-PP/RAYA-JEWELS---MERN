@@ -1,6 +1,24 @@
 import React from 'react';
-import { X, Plus, Minus, Trash2 } from "lucide-react";
+import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
+
+// Add this CSS for the animation (you can also add it to your global styles)
+const cartStyles = `
+  @keyframes slideInFromRight {
+    from { 
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to { 
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-slideInFromRight { 
+    animation: slideInFromRight 0.4s ease-out forwards; 
+  }
+`;
 
 const Cart = ({ 
   isCartOpen, 
@@ -19,20 +37,23 @@ const Cart = ({
   };
 
   return (
-    <div className="cart-container">
+    <div>
+      {/* Inject the animation styles */}
+      <style dangerouslySetInnerHTML={{ __html: cartStyles }} />
+      
       {isCartOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
-            {/* Overlay */}
+            {/* Overlay with fade animation */}
             <div
-              className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity animate-fadeIn"
               onClick={toggleCart}
               aria-hidden="true"
             ></div>
             
-            {/* Cart Panel */}
+            {/* Cart Panel with right-to-left animation */}
             <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex">
-              <div className="w-screen max-w-md">
+              <div className="w-screen max-w-md animate-slideInFromRight">
                 <div className="h-full flex flex-col bg-white shadow-xl">
                   {/* Cart Header */}
                   <div className="flex-1 py-6 overflow-y-auto px-4 sm:px-6">
@@ -99,7 +120,6 @@ const Cart = ({
                                   </div>
 
                                   <div className="flex-1 flex items-end justify-between text-sm">
-                                    {/* Quantity Controls */}
                                     <div className="flex items-center border border-gray-300 rounded-md">
                                       <button
                                         type="button"
@@ -121,7 +141,6 @@ const Cart = ({
                                       </button>
                                     </div>
 
-                                    {/* Remove Button */}
                                     <button
                                       type="button"
                                       className="flex items-center font-medium text-red-600 hover:text-red-500 transition-colors"
@@ -140,7 +159,6 @@ const Cart = ({
                     </div>
                   </div>
 
-                  {/* Cart Footer */}
                   {cartItems.length > 0 && (
                     <div className="border-t border-gray-200 py-6 px-4 sm:px-6">
                       <div className="flex justify-between text-base font-medium text-gray-900">
