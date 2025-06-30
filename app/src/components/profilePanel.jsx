@@ -1,5 +1,5 @@
 import React from "react";
-import { UserX, LogOut, X } from "lucide-react";
+import { UserX,User, LogOut, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProfileIcon from "../assets/images/profile.png";
 

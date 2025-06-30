@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Search, User, ShoppingBag, X, Menu, Fingerprint } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Cart from "./cart";
 import SearchOverlay from "./searchOverlay";
 import LoginWarning from "./Alert/pleaseLoginWarning";
@@ -172,6 +172,10 @@ export default class NavBar extends Component {
   closeLoginWarning = () => {
     this.setState({ showLoginWarning: false });
   };
+
+  nav = () => {
+    console.log("Clicked")
+  }
 
   render() {
     const {
