@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Star } from 'lucide-react';
+import { Heart, Star, ShoppingCart } from 'lucide-react';
 import NavBar from '../../components/navBar';
 
 const ProductsShowcase = () => {
     const [products, setProducts] = useState([]);
     const [likedProducts, setLikedProducts] = useState(new Set());
+    const [cartItems, setCartItems] = useState(new Set());
 
     // Sample product data
     const sampleProducts = [
@@ -158,6 +159,15 @@ const ProductsShowcase = () => {
         });
     };
 
+    // Add to cart function
+    const addToCart = (productId) => {
+        setCartItems(prev => {
+            const newCart = new Set(prev);
+            newCart.add(productId);
+            return newCart;
+        });
+    };
+
     // Render stars
     const renderStars = (rating) => {
         return Array.from({ length: 5 }, (_, index) => (
@@ -168,6 +178,7 @@ const ProductsShowcase = () => {
             />
         ));
     };
+
 
     return (
         <div>
@@ -234,16 +245,32 @@ const ProductsShowcase = () => {
                                         <span className="text-sm text-gray-500 ml-1">({product.reviews})</span>
                                     </div>
 
-                                    {/* Price */}
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xl font-bold text-gray-900">
-                                            ${product.price.toLocaleString()}
-                                        </span>
-                                        {product.originalPrice > product.price && (
-                                            <span className="text-sm text-gray-500 line-through">
-                                                ${product.originalPrice.toLocaleString()}
+                                    {/* Price and Add to Cart */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xl font-bold text-gray-900">
+                                                ${product.price.toLocaleString()}
                                             </span>
-                                        )}
+                                            {product.originalPrice > product.price && (
+                                                <span className="text-sm text-gray-500 line-through">
+                                                    ${product.originalPrice.toLocaleString()}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Add to Cart Button */}
+                                        <button
+                                            onClick={() => addToCart(product.id)}
+                                            className={`px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${cartItems.has(product.id)
+                                                    ? 'bg-green-600 text-white'
+                                                    : 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700'
+                                                }`}
+                                        >
+                                            <ShoppingCart className="w-4 h-4" />
+                                            <span className="hidden sm:inline">
+                                                {cartItems.has(product.id) ? 'Added' : 'Add to Cart'}
+                                            </span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
