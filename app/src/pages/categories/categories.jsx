@@ -39,8 +39,10 @@ const RingCategoryList = () => {
       itemsData: prd._id
     }
     const responce = await axios.post(`${baseUrl}/cart/add/item`, items)
-    if (responce.status == 200)
+    if (responce.status == 200){
       toast.success(responce.data.message);
+      window.location.reload();
+    }
     else
       toast.error(responce.data.message);
   };

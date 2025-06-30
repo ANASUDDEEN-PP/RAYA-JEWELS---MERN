@@ -87,6 +87,8 @@ exports.getCartOfUser = async (req, res) => {
                 const productImage = await imageModel.findOne({ imageId : productData._id });
                 // console.log(productImage)
                 userCartItems.push({
+                    id : cartItems._id,
+                    productId : productData._id,
                     image : productImage.ImageUrl || null,
                     name : productData.ProductName,
                     price : productData.OfferPrice,
@@ -107,3 +109,39 @@ exports.getCartOfUser = async (req, res) => {
         });
     }
 };
+
+exports.editCartQty = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, productId } = req.body;
+        console.log(productId, action, id);
+
+        const isCart = await cartModel.findById(id);
+        console.log(isCart);
+        if (!isCart)
+            return res.status(401).json({ message: "InvalidId" });
+
+        if (!await productModel.findById(productId))
+            return res.status(401).json({ message: "NoProductHave" });
+
+        const itemIndex = isCart.Items.findIndex(i => i.type.toString() === productId.toString());
+
+        if (itemIndex !== -1) {
+            if (action === 'increase') {
+                isCart.Items[itemIndex].Qty += 1;
+            } else if (action === 'decrease') {
+                isCart.Items[itemIndex].Qty = Math.max(1, isCart.Items[itemIndex].Qty - 1);
+            }
+            await isCart.save();
+            return res.status(200).json({ message: "Cart updated", cart: isCart });
+        } else {
+            return res.status(404).json({ message: "Item not found in cart" });
+        }
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+}

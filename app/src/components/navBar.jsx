@@ -118,6 +118,7 @@ export default class NavBar extends Component {
   };
 
   handleIncreaseQuantity = (itemId) => {
+    console.log("Increaseomg")
     this.setState((prevState) => ({
       cartItems: prevState.cartItems.map((item) =>
         item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
@@ -126,6 +127,7 @@ export default class NavBar extends Component {
   };
 
   handleDecreaseQuantity = (itemId) => {
+    console.log("Decreasing");
     this.setState((prevState) => ({
       cartItems: prevState.cartItems.map((item) =>
         item.id === itemId

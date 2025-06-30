@@ -36,18 +36,20 @@ const ProductView = () => {
   const localUser = JSON.parse(localStorage.getItem('userProfile'));
 
   const addCart = async () => {
-    try{
+    try {
       const item = {
-        UserId : localUser._id,
-        Quantity : 1,
-        itemsData : id
+        UserId: localUser._id,
+        Quantity: 1,
+        itemsData: id
       }
       const responce = await axios.post(`${baseUrl}/cart/add/item`, item);
-      if(responce.status == 200)
+      if (responce.status == 200) {
         toast.success(responce.data.message);
-      else 
+        window.location.reload();
+      }
+      else
         toast.error(responce.data.message);
-    } catch(err){
+    } catch (err) {
       console.log(err);
     }
   }
@@ -70,57 +72,57 @@ const ProductView = () => {
   }, [id]);
 
   const handleAddComment = async () => {
-  if (!newComment.trim()) return;
-  setLoading(true);
-  try {
-    // Format date as "26 June 25 | 02:00 pm"
-    const formatDate = (date) => {
-      const d = new Date(date);
-      const day = d.getDate();
-      const month = d.toLocaleString('default', { month: 'long' });
-      const year = d.getFullYear().toString().slice(-2);
-      
-      let hours = d.getHours();
-      const minutes = d.getMinutes().toString().padStart(2, '0');
-      const ampm = hours >= 12 ? 'pm' : 'am';
-      
-      hours = hours % 12;
-      hours = hours ? hours : 12; // Convert 0 to 12
-      
-      return `${day} ${month} ${year} | ${hours}:${minutes} ${ampm}`;
-    };
+    if (!newComment.trim()) return;
+    setLoading(true);
+    try {
+      // Format date as "26 June 25 | 02:00 pm"
+      const formatDate = (date) => {
+        const d = new Date(date);
+        const day = d.getDate();
+        const month = d.toLocaleString('default', { month: 'long' });
+        const year = d.getFullYear().toString().slice(-2);
 
-    const currentDate = new Date();
-    const formattedDate = formatDate(currentDate);
+        let hours = d.getHours();
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'pm' : 'am';
 
-    const comment = {
-      ProductId: id,
-      UserId: localUser.Name,
-      Rating: rating || 5, // Use the selected rating or default to 5
-      Comment: newComment,
-      Date: formattedDate, // Using formatted date string
-      Likes: 0,
-      Avatar: localUser.ProfilePicture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
-    };
-    console.log(comment)
+        hours = hours % 12;
+        hours = hours ? hours : 12; // Convert 0 to 12
 
-    const response = await axios.post(`${baseUrl}/product/post/product`, comment);
-    console.log(response)
-    if (response.status === 200) {
-      toast.success(response.data.message);
-      setComments(prev => [response.data.comment, ...prev]);
-      setNewComment("");
-      setRating(0);
-    } else if (response.status === 201){
-      toast.error(response.data.message)
+        return `${day} ${month} ${year} | ${hours}:${minutes} ${ampm}`;
+      };
+
+      const currentDate = new Date();
+      const formattedDate = formatDate(currentDate);
+
+      const comment = {
+        ProductId: id,
+        UserId: localUser.Name,
+        Rating: rating || 5, // Use the selected rating or default to 5
+        Comment: newComment,
+        Date: formattedDate, // Using formatted date string
+        Likes: 0,
+        Avatar: localUser.ProfilePicture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
+      };
+      console.log(comment)
+
+      const response = await axios.post(`${baseUrl}/product/post/product`, comment);
+      console.log(response)
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        setComments(prev => [response.data.comment, ...prev]);
+        setNewComment("");
+        setRating(0);
+      } else if (response.status === 201) {
+        toast.error(response.data.message)
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Error adding comment:", error);
-    toast.error("Something went wrong");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   const getBadgeStyle = (category) => {
     switch (category?.toLowerCase()) {
       case "bestseller": return "bg-green-100 text-green-800";
@@ -131,7 +133,7 @@ const ProductView = () => {
   };
 
   // Calculate average rating
-  const averageRating = comments.length > 0 
+  const averageRating = comments.length > 0
     ? (comments.reduce((sum, comment) => sum + (comment.Rating || 0), 0) / comments.length)
     : 4.9; // Default if no comments
 
@@ -173,9 +175,8 @@ const ProductView = () => {
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImage === index ? "border-yellow-500" : "border-gray-200 hover:border-gray-300"
-                      }`}
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index ? "border-yellow-500" : "border-gray-200 hover:border-gray-300"
+                        }`}
                     >
                       <img
                         src={image.ImageUrl || "https://via.placeholder.com/150"}
@@ -214,11 +215,10 @@ const ProductView = () => {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`h-5 w-5 ${
-                          i < Math.round(averageRating) 
-                            ? "text-yellow-400 fill-current" 
+                        className={`h-5 w-5 ${i < Math.round(averageRating)
+                            ? "text-yellow-400 fill-current"
                             : "text-gray-300"
-                        }`}
+                          }`}
                       />
                     ))}
                   </div>
@@ -243,7 +243,7 @@ const ProductView = () => {
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Description</h3>
                   <p className="text-gray-700 leading-relaxed text-lg">
-                    {product.ProductName} is a premium piece from our {product.CollectionName} collection. 
+                    {product.ProductName} is a premium piece from our {product.CollectionName} collection.
                     Crafted with high-quality {product.Material}, this item is designed for elegance and durability.
                   </p>
                 </div>
@@ -323,7 +323,7 @@ const ProductView = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Comments Section */}
             <CommentsSection
               comments={comments}
