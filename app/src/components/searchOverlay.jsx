@@ -160,7 +160,7 @@ export default class SearchOverlay extends Component {
                     {suggestions.map((suggestion, index) => (
                       <Link
                         key={index}
-                        to={`/category/${suggestion.toLowerCase().replace(' ', '-')}`}
+                        to={`/all/product`}
                         onClick={closeSearch}
                         className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 hover:text-yellow-400 transition-all duration-300 text-[30px] font-medium animate-fadeInUp border-b border-gray-600/30 hover:border-yellow-400/50"
                         style={{ animationDelay: `${index * 100}ms` }}

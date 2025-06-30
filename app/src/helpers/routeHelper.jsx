@@ -3,6 +3,8 @@ import ViewProductPage from "../pages/viewProducts/viewProduct"
 import CategoriesList from "../pages/categories/categories";
 import CheckOut from "../pages/checkout/checkout"
 import ConfirmOrder from "../pages/checkout/OrderConfirmed/orderConfirmed"
+import ProductViewPage from "../pages/Admin/product/viewProduct"
+import AllProductPage from "../pages/allProduct/allProduct"
 
 //Authentication pages
 import LoginPage from "../pages/Auth/login";
@@ -16,7 +18,6 @@ import SettingsMain from "../pages/Admin/Settings/settings";
 import AboutUs from "../pages/Admin/Settings/settingsSub";
 import ProfileSettings from "../pages/Admin/Settings/profileSettings"
 import CollectionSettings from "../pages/Admin/Settings/collectionSettings";
-import ProductViewPage from "../pages/Admin/product/viewProduct"
 
 const routeHelper = [
   {
@@ -78,6 +79,10 @@ const routeHelper = [
   {
     path: "/admin-product-view/:id",
     comp: <ProductViewPage />,
+  },
+  {
+    path: "/all/product",
+    comp: <AllProductPage />,
   },
 ];
 
