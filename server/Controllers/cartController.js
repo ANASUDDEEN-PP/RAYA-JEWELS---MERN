@@ -1,6 +1,7 @@
 const cartModel = require("../Models/addToChart");
 const userModel = require("../Models/userModel");
-const productModel = require("../Models/productModel")
+const productModel = require("../Models/productModel");
+const imageModel = require("../Models/ImageModel");
 
 exports.addToCart = async (req, res) => {
     try {
@@ -69,3 +70,40 @@ exports.addToCart = async (req, res) => {
         });
     }
 }
+
+exports.getCartOfUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const userExists = await userModel.findById(id);
+        if (!userExists)
+            return res.status(401).json({ message: "NoUserOnOurRecord" });
+
+        const cartItems = await cartModel.findOne({ UserId: id });
+        if(cartItems && cartItems.Items) {
+            const userCartItems = [];
+            for ( i = 0 ; i<= cartItems.Items.length-1 ; i++ ){
+                const productData = await productModel.findById({ _id : cartItems.Items[i].type });
+                const productImage = await imageModel.findOne({ imageId : productData._id });
+                // console.log(productImage)
+                userCartItems.push({
+                    image : productImage.ImageUrl || null,
+                    name : productData.ProductName,
+                    price : productData.OfferPrice,
+                    quantity : cartItems.Items[i].Qty
+                })
+            }
+            return res.status(200).json({ userCartItems });
+        }
+
+        return res.status(200).json({ 
+            message : "No Products On Cart"
+         });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+};

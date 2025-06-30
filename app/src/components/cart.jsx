@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
+import axios from 'axios';
+import baseUrl from '../url';
 
 // Add this CSS for the animation (you can also add it to your global styles)
 const cartStyles = `
@@ -28,6 +30,7 @@ const Cart = ({
   onDecreaseQuantity, 
   onRemoveItem 
 }) => {
+  const localUser = JSON.parse(localStorage.getItem("userProfile")) || null;
   const calculateSubtotal = () => {
     return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2);
   };
@@ -35,6 +38,18 @@ const Cart = ({
   const calculateTotalItems = () => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   };
+
+  useEffect(() => {
+    const fetchCartData = async () => {
+      try{
+        const responce = await axios.get(`${baseUrl}/cart/get/${localUser._id}`)
+        console.log(responce)
+      } catch(err){
+        console.log(err);
+      }
+    }
+    fetchCartData();
+  }, []);
 
   return (
     <div>
