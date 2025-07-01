@@ -5,6 +5,7 @@ import CheckOut from "../pages/checkout/checkout"
 import ConfirmOrder from "../pages/checkout/OrderConfirmed/orderConfirmed"
 import ProductViewPage from "../pages/Admin/product/viewProduct"
 import AllProductPage from "../pages/allProduct/allProduct"
+import AllOrderList from "../pages/orderDetails/order"
 
 //Authentication pages
 import LoginPage from "../pages/Auth/login";
@@ -83,6 +84,10 @@ const routeHelper = [
   {
     path: "/all/product",
     comp: <AllProductPage />,
+  },
+  {
+    path: "/all/orders",
+    comp: <AllOrderList />,
   },
 ];
 
