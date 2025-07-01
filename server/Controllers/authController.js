@@ -1,6 +1,8 @@
 const userModel = require("../Models/userModel");
 const profileModel = require("../Models/profileModel");
 const cartModel = require("../Models/addToChart");
+const notifyModel = require("../Models/notificationModel");
+const DateFormat = require("../utils/dateFormat");
 
 exports.userRegister = async (req, res) => {
     try {
@@ -38,7 +40,7 @@ exports.userRegister = async (req, res) => {
 
         } else if (isLogin === false) {
             // --- REGISTER SECTION ---
-            console.log("Create Account");
+            // console.log("Create Account");
 
             if (!email || !password || !confirmPassword || !name || !Mobile) {
                 return res.status(201).json({ message: "Please fill all the fields" });
@@ -93,6 +95,13 @@ exports.userRegister = async (req, res) => {
                 Items : []
             }
             await cartModel.create(cartData);
+            const notifyData = {
+                userId : 'ADMMIN',
+                Notification : `New User Registration : ${name}, Email : ${email}, Mobile : ${Mobile} `,
+                Category : 'User-Registration',
+                createdDate : DateFormat()
+            }
+            await notifyModel.create(notifyData)
             return res.status(200).json({ message: "User created successfully" });
         } else {
             return res.status(400).json({ message: "Invalid request" });
