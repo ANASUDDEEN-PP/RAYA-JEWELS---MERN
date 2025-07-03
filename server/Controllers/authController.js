@@ -3,6 +3,7 @@ const profileModel = require("../Models/profileModel");
 const cartModel = require("../Models/addToChart");
 const notifyModel = require("../Models/notificationModel");
 const DateFormat = require("../utils/dateFormat");
+const sendNotify = require("../utils/sendNotify");
 
 exports.userRegister = async (req, res) => {
     try {
@@ -95,13 +96,7 @@ exports.userRegister = async (req, res) => {
                 Items : []
             }
             await cartModel.create(cartData);
-            const notifyData = {
-                userId : 'ADMMIN',
-                Notification : `New User Registration : ${name}, Email : ${email}, Mobile : ${Mobile} `,
-                Category : 'User-Registration',
-                createdDate : DateFormat()
-            }
-            await notifyModel.create(notifyData)
+            sendNotify({name, email, Mobile}, "USRG");
             return res.status(200).json({ message: "User created successfully" });
         } else {
             return res.status(400).json({ message: "Invalid request" });

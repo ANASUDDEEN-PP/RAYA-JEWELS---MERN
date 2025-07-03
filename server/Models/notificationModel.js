@@ -1,16 +1,19 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const notificationSchema = new Schema ({
-    userId : {
+    Title : {
         type : String
     },
-    Notification : {
+    Content : {
         type : String
     },
     Category : {
         type : String
     },
     createdDate : {
+        type : String
+    },
+    MarkAsRead : {
         type : String
     }
 });

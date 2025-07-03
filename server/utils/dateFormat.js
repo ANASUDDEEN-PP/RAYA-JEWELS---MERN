@@ -1,23 +1,26 @@
 // DateFormat.js
+const formatDate = (dateFormat = 'NNMMYY|TT:TT') => {
+  const date = new Date();
+  
+  if (dateFormat === 'NNMMYY|TT:TT') {
+    const day = date.getDate().toString().padStart(2, '0'); // Pad day with leading zero
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
 
-function formatDate(dateInput = Date.now()) {
-  const date = new Date(dateInput);
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = (hours % 12 || 12).toString().padStart(2, '0'); // Pad hours with leading zero
 
-  const day = date.getDate();
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-  const month = monthNames[date.getMonth()];
-  const year = date.getFullYear();
-
-  let hours = date.getHours();
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-
-  hours = hours % 12 || 12;
-
-  return `${day} ${month} ${year} | ${hours}:${minutes} ${ampm}`;
+    return `${day} ${month} ${year} | ${hours}:${minutes} ${ampm}`;
+  }
+  
+  // Add additional format patterns here if needed
+  throw new Error(`Unsupported date format: ${dateFormat}`);
 }
 
 module.exports = formatDate;

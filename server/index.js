@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+// const dateFormat = require("./utils/dateFormat")
+// dateFormat('NNMMYY|TT:TT');
+
 const app = express();
 
 // Increase payload limit

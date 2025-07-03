@@ -2,6 +2,7 @@ const productModel = require("../Models/productModel");
 const imageModel = require("../Models/ImageModel");
 const collectionModel = require("../Models/collectionModel");
 const commentModel = require("../Models/commentsModel");
+const sendNotify = require("../utils/sendNotify");
 
 exports.createProduct = async (req, res) => {
   try {
@@ -53,6 +54,12 @@ exports.createProduct = async (req, res) => {
     }));
 
     await imageModel.insertMany(imageDocs);
+    sendNotify({
+      productId : productData.ProductId,
+      productName : productData.ProductName,
+      Qty : productData.Quantity,
+      Price : product.OfferPrice
+    }, 'PRDAD');
 
     return res.status(201).json({
       message: "Product created successfully",
@@ -187,6 +194,9 @@ exports.postComments = async (req, res) => {
     
     // Save to database
     const newComment = await commentModel.create(commentsData);
+
+    const productData = await productModel.findById({ _id : commentsData.ProductId })
+    sendNotify({UserId, productName : productData.ProductId}, "CMTPST");
     
     return res.status(200).json({
       success: true,
