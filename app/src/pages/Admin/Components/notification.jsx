@@ -1,5 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, X, CheckCircle, AlertCircle, ShoppingCart, Users, Package, TrendingUp, CreditCard, MessageCircle, Filter } from 'lucide-react';
+import axios from 'axios';
+import io from 'socket.io-client';
+import baseUrl from '../../../url';
+
+// Socket connection
+const socket = io(baseUrl);
 
 // Notification Item Component
 const NotificationItem = ({ notification, onMarkAsRead, onDelete, isRead }) => {
@@ -8,7 +14,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, isRead }) => {
       case 'success': return <CheckCircle size={20} className="text-green-600" />;
       case 'warning': return <AlertCircle size={20} className="text-yellow-600" />;
       case 'error': return <AlertCircle size={20} className="text-red-600" />;
-      case 'info': return <Bell size={20} className="text-blue-600" />;
+      case 'info': return <TrendingUp size={20} className="text-blue-600" />;
       case 'order': return <ShoppingCart size={20} className="text-purple-600" />;
       case 'user': return <Users size={20} className="text-indigo-600" />;
       case 'product': return <Package size={20} className="text-pink-600" />;
@@ -115,19 +121,13 @@ const FilterButton = ({ type, label, isActive, onClick, count, icon: Icon }) => 
 };
 
 // Full Screen Notification System Component
-const FullScreenNotificationSystem = ({ notifications: initialNotifications, isOpen, onClose }) => {
+const FullScreenNotificationSystem = ({ notifications: initialNotifications, isOpen, onClose, onMarkAsRead, onDelete }) => {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [activeFilter, setActiveFilter] = useState('all');
 
-  const markAsRead = (id) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? { ...notification, isRead: true } : notification
-    ));
-  };
-
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter(notification => notification.id !== id));
-  };
+  useEffect(() => {
+    setNotifications(initialNotifications);
+  }, [initialNotifications]);
 
   const getFilteredNotifications = () => {
     if (activeFilter === 'all') return notifications;
@@ -234,8 +234,8 @@ const FullScreenNotificationSystem = ({ notifications: initialNotifications, isO
                       <NotificationItem 
                         key={`unread-${notification.id}`}
                         notification={notification} 
-                        onMarkAsRead={markAsRead}
-                        onDelete={deleteNotification}
+                        onMarkAsRead={onMarkAsRead}
+                        onDelete={onDelete}
                         isRead={false}
                       />
                     ))}
@@ -252,8 +252,8 @@ const FullScreenNotificationSystem = ({ notifications: initialNotifications, isO
                       <NotificationItem 
                         key={`read-${notification.id}`}
                         notification={notification} 
-                        onMarkAsRead={markAsRead}
-                        onDelete={deleteNotification}
+                        onMarkAsRead={onMarkAsRead}
+                        onDelete={onDelete}
                         isRead={true}
                       />
                     ))}
@@ -268,90 +268,110 @@ const FullScreenNotificationSystem = ({ notifications: initialNotifications, isO
   );
 };
 
-// Sample notifications data
-const sampleNotifications = [
-  {
-    id: 1,
-    type: 'order',
-    title: 'New Order Received',
-    message: 'Order #12345 has been placed by John Doe for $299.99. Contains 3 items including wireless headphones and charging cable.',
-    time: '2 minutes ago',
-    isRead: false
-  },
-  {
-    id: 2,
-    type: 'user',
-    title: 'New User Registration',
-    message: 'Sarah Wilson has successfully registered as a new customer. Account verification pending.',
-    time: '15 minutes ago',
-    isRead: false
-  },
-  {
-    id: 3,
-    type: 'payment',
-    title: 'Payment Successful',
-    message: 'Payment of $199.50 has been successfully processed for order #12344. Transaction ID: TXN789012',
-    time: '1 hour ago',
-    isRead: false
-  },
-  {
-    id: 4,
-    type: 'product',
-    title: 'Product Dispatched',
-    message: 'Order #12340 has been dispatched via FedEx. Tracking number: FED123456789. Expected delivery: Tomorrow',
-    time: '2 hours ago',
-    isRead: true
-  },
-  {
-    id: 5,
-    type: 'info',
-    title: 'New Product Added',
-    message: 'iPhone 15 Pro Max has been added to the inventory with 50 units available. Price set at $1199.',
-    time: '3 hours ago',
-    isRead: false
-  },
-  {
-    id: 6,
-    type: 'comment',
-    title: 'New Review Posted',
-    message: 'Mike Johnson left a 5-star review for "Wireless Bluetooth Headphones". Review: "Excellent sound quality and comfortable fit!"',
-    time: '4 hours ago',
-    isRead: true
-  },
-  {
-    id: 7,
-    type: 'error',
-    title: 'Payment Failed',
-    message: 'Payment for order #12346 has failed due to insufficient funds. Customer has been notified.',
-    time: '5 hours ago',
-    isRead: true
-  },
-  {
-    id: 8,
-    type: 'warning',
-    title: 'Low Stock Alert',
-    message: 'MacBook Air M2 is running low on stock. Only 3 units remaining. Consider restocking soon.',
-    time: '6 hours ago',
-    isRead: false
-  }
-];
-
-// Demo Component
-const NotificationDemo = () => {
+// Main Notification Component
+const NotificationSystem = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(sampleNotifications);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Map API categories to notification types
+  const mapCategoryToType = (category) => {
+    switch(category) {
+      case 'USRG': return 'user';
+      case 'CMTPST': return 'comment';
+      case 'PRDAD': return 'info';
+      case 'ORDER': return 'order';
+      case 'PAYMENT': return 'payment';
+      case 'DISPATCH': return 'product';
+      case 'ERROR': return 'error';
+      case 'WARNING': return 'warning';
+      default: return 'info';
+    }
+  };
+
+  // Fetch notifications from API
+  const fetchNotifications = async() => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axios.get(`${baseUrl}/get/all/notification`);
+      
+      const transformedNotifications = response.data.allNotifications.map(notification => ({
+        id: notification._id,
+        type: mapCategoryToType(notification.Category),
+        title: notification.Title,
+        message: notification.Content,
+        time: notification.createdDate,
+        isRead: notification.MarkAsRead === "true"
+      }));
+      
+      setNotifications(transformedNotifications);
+    } catch(err) {
+      setError("Failed to load notifications");
+      console.error("Notification fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mark notification as read
+  const markAsRead = async (id) => {
+    try {
+      await axios.put(`${baseUrl}/mark/notification/as/read`, { notificationId: id });
+      setNotifications(notifications.map(notification => 
+        notification.id === id ? { ...notification, isRead: true } : notification
+      ));
+    } catch(err) {
+      console.error("Error marking notification as read:", err);
+    }
+  };
+
+  // Delete notification
+  const deleteNotification = async (id) => {
+    try {
+      await axios.delete(`${baseUrl}/delete/notification`, { data: { notificationId: id } });
+      setNotifications(notifications.filter(notification => notification.id !== id));
+    } catch(err) {
+      console.error("Error deleting notification:", err);
+    }
+  };
+
+  // Initialize socket and fetch notifications
+  useEffect(() => {
+    fetchNotifications();
+
+    // Socket.io listeners
+    socket.on('new-notification', (newNotification) => {
+      const transformedNotification = {
+        id: newNotification._id,
+        type: mapCategoryToType(newNotification.Category),
+        title: newNotification.Title,
+        message: newNotification.Content,
+        time: newNotification.createdDate,
+        isRead: false
+      };
+      setNotifications(prev => [transformedNotification, ...prev]);
+    });
+
+    socket.on('notification-read', (notificationId) => {
+      setNotifications(prev => prev.map(n => 
+        n.id === notificationId ? { ...n, isRead: true } : n
+      ));
+    });
+
+    socket.on('notification-deleted', (notificationId) => {
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    });
+
+    return () => {
+      socket.off('new-notification');
+      socket.off('notification-read');
+      socket.off('notification-deleted');
+    };
+  }, []);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
-
-  const markAsRead = (id) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? { ...notification, isRead: true } : notification
-    ));
-  };
-
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter(notification => notification.id !== id));
-  };
 
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 p-8">
@@ -370,13 +390,27 @@ const NotificationDemo = () => {
         </button>
       </div>
 
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/10 backdrop-blur-sm z-40">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+
+      {error && (
+        <div className="fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg z-50">
+          <p>{error}</p>
+        </div>
+      )}
+
       <FullScreenNotificationSystem 
         notifications={notifications}
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
+        onMarkAsRead={markAsRead}
+        onDelete={deleteNotification}
       />
     </div>
   );
 };
 
-export default NotificationDemo;
+export default NotificationSystem;

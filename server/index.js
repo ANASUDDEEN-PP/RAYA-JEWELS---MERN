@@ -19,11 +19,13 @@ const connection = require('./connection/connection');
 // Start Connection
 connection();
 
+const commonRoute = require("./Routes/commonRoute");
 const AuthRoute = require('./Routes/authRoute');
 const CollectionRoute = require('./Routes/collectionRoute');
 const productRoute = require("./Routes/productRoute");
 const cartRoute = require("./Routes/cartRoute");
 
+app.use('/', commonRoute);
 app.use('/auth', AuthRoute);
 app.use('/collection', CollectionRoute);
 app.use('/product', productRoute);
