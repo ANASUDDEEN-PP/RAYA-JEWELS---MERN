@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, X, CheckCircle, AlertCircle, ShoppingCart, Users, Package, TrendingUp, CreditCard, MessageCircle, Filter } from 'lucide-react';
 import axios from 'axios';
-import io from 'socket.io-client';
+// import io from 'socket.io-client';
 import baseUrl from '../../../url';
 
 // Socket connection
-const socket = io(baseUrl);
+// const socket = io(baseUrl);
 
 // Notification Item Component
 const NotificationItem = ({ notification, onMarkAsRead, onDelete, isRead }) => {
@@ -341,34 +341,34 @@ const NotificationSystem = () => {
   useEffect(() => {
     fetchNotifications();
 
-    // Socket.io listeners
-    socket.on('new-notification', (newNotification) => {
-      const transformedNotification = {
-        id: newNotification._id,
-        type: mapCategoryToType(newNotification.Category),
-        title: newNotification.Title,
-        message: newNotification.Content,
-        time: newNotification.createdDate,
-        isRead: false
-      };
-      setNotifications(prev => [transformedNotification, ...prev]);
-    });
+    // // Socket.io listeners
+    // socket.on('new-notification', (newNotification) => {
+    //   const transformedNotification = {
+    //     id: newNotification._id,
+    //     type: mapCategoryToType(newNotification.Category),
+    //     title: newNotification.Title,
+    //     message: newNotification.Content,
+    //     time: newNotification.createdDate,
+    //     isRead: false
+    //   };
+    //   setNotifications(prev => [transformedNotification, ...prev]);
+    // });
 
-    socket.on('notification-read', (notificationId) => {
-      setNotifications(prev => prev.map(n => 
-        n.id === notificationId ? { ...n, isRead: true } : n
-      ));
-    });
+    // socket.on('notification-read', (notificationId) => {
+    //   setNotifications(prev => prev.map(n => 
+    //     n.id === notificationId ? { ...n, isRead: true } : n
+    //   ));
+    // });
 
-    socket.on('notification-deleted', (notificationId) => {
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-    });
+    // socket.on('notification-deleted', (notificationId) => {
+    //   setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    // });
 
-    return () => {
-      socket.off('new-notification');
-      socket.off('notification-read');
-      socket.off('notification-deleted');
-    };
+    // return () => {
+    //   socket.off('new-notification');
+    //   socket.off('notification-read');
+    //   socket.off('notification-deleted');
+    // };
   }, []);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
