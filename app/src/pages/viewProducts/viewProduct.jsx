@@ -30,28 +30,61 @@ const ProductView = () => {
   const [loading, setLoading] = useState(false);
   const [hoverRating, setHoverRating] = useState(0);
   const [rating, setRating] = useState(0);
+  const [selectedSize, setSelectedSize] = useState("");
   const navigate = useNavigate();
   const { id } = useParams();
 
   const localUser = JSON.parse(localStorage.getItem('userProfile'));
 
   const addCart = async () => {
+    if (!selectedSize) {
+      toast.error("Please select a size");
+      return;
+    }
+    
     try {
       const item = {
         UserId: localUser._id,
-        Quantity: 1,
-        itemsData: id
+        Quantity: quantity,
+        itemsData: id,
+        Size: selectedSize,
+        ProductName: product.ProductName,
+        OfferPrice: product.OfferPrice
       }
-      const responce = await axios.post(`${baseUrl}/cart/add/item`, item);
-      if (responce.status == 200) {
-        toast.success(responce.data.message);
+      const response = await axios.post(`${baseUrl}/cart/add/item`, item);
+      if (response.status == 200) {
+        toast.success(response.data.message);
         window.location.reload();
       }
-      else
-        toast.error(responce.data.message);
+      else {
+        toast.error(response.data.message);
+      }
     } catch (err) {
       console.log(err);
+      toast.error("Failed to add to cart");
     }
+  }
+
+  const handleCheckout = () => {
+    if (!selectedSize) {
+      toast.error("Please select a size");
+      return;
+    }
+    
+    navigate("/checkout", {
+      state: {
+        product: {
+          _id: product._id,
+          ProductId: product.ProductId,
+          ProductName: product.ProductName,
+          OfferPrice: product.OfferPrice,
+          NormalPrice: product.NormalPrice,
+          Size: selectedSize,
+          Quantity: quantity,
+          TotalPrice: (parseFloat(product.OfferPrice) * quantity).toFixed(2)
+        }
+      }
+    });
   }
 
   useEffect(() => {
@@ -75,7 +108,6 @@ const ProductView = () => {
     if (!newComment.trim()) return;
     setLoading(true);
     try {
-      // Format date as "26 June 25 | 02:00 pm"
       const formatDate = (date) => {
         const d = new Date(date);
         const day = d.getDate();
@@ -87,7 +119,7 @@ const ProductView = () => {
         const ampm = hours >= 12 ? 'pm' : 'am';
 
         hours = hours % 12;
-        hours = hours ? hours : 12; // Convert 0 to 12
+        hours = hours ? hours : 12;
 
         return `${day} ${month} ${year} | ${hours}:${minutes} ${ampm}`;
       };
@@ -98,16 +130,14 @@ const ProductView = () => {
       const comment = {
         ProductId: id,
         UserId: localUser.Name,
-        Rating: rating || 5, // Use the selected rating or default to 5
+        Rating: rating || 5,
         Comment: newComment,
-        Date: formattedDate, // Using formatted date string
+        Date: formattedDate,
         Likes: 0,
         Avatar: localUser.ProfilePicture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
       };
-      console.log(comment)
 
       const response = await axios.post(`${baseUrl}/product/post/product`, comment);
-      console.log(response)
       if (response.status === 200) {
         toast.success(response.data.message);
         setComments(prev => [response.data.comment, ...prev]);
@@ -123,6 +153,7 @@ const ProductView = () => {
       setLoading(false);
     }
   };
+
   const getBadgeStyle = (category) => {
     switch (category?.toLowerCase()) {
       case "bestseller": return "bg-green-100 text-green-800";
@@ -132,10 +163,9 @@ const ProductView = () => {
     }
   };
 
-  // Calculate average rating
   const averageRating = comments.length > 0
     ? (comments.reduce((sum, comment) => sum + (comment.Rating || 0), 0) / comments.length)
-    : 4.9; // Default if no comments
+    : 4.9;
 
   if (!product) {
     return (
@@ -255,7 +285,25 @@ const ProductView = () => {
                     {specifications.map((spec, index) => (
                       <div key={index} className="bg-gray-50 p-3 rounded-lg">
                         <p className="text-sm text-gray-600">{spec.label}</p>
-                        <p className="font-medium">{spec.value}</p>
+                        {spec.label === "Sizes Available" ? (
+                          <div className="flex space-x-2 mt-1">
+                            {product.Size.split(',').map((size, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setSelectedSize(size.trim())}
+                                className={`px-3 py-1 border rounded-md text-sm ${
+                                  selectedSize === size.trim() 
+                                    ? 'bg-black text-white border-black' 
+                                    : 'border-gray-300 hover:bg-gray-100'
+                                }`}
+                              >
+                                {size.trim()}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="font-medium">{spec.value}</p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -296,7 +344,7 @@ const ProductView = () => {
                   {parseInt(product.Quantity) > 0 ? (
                     <>
                       <button
-                        onClick={() => navigate("/checkout")}
+                        onClick={handleCheckout}
                         className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
                       >
                         <Package className="h-5 w-5" />
