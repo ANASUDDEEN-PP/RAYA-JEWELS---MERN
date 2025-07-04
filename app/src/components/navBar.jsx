@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import Cart from "./cart";
 import SearchOverlay from "./searchOverlay";
 import LoginWarning from "./Alert/pleaseLoginWarning";
-import ProfilePanel from "./profilePanel";
+import ProfilePanel from "./profilePanel/profilePanel";
 import axios from "axios";
 import baseUrl from "../url";
 

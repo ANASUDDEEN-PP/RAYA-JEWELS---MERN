@@ -80,27 +80,33 @@ exports.getCartOfUser = async (req, res) => {
             return res.status(401).json({ message: "NoUserOnOurRecord" });
 
         const cartItems = await cartModel.findOne({ UserId: id });
-        if(cartItems && cartItems.Items) {
+        if (cartItems && cartItems.Items) {
             const userCartItems = [];
-            for ( i = 0 ; i<= cartItems.Items.length-1 ; i++ ){
-                const productData = await productModel.findById({ _id : cartItems.Items[i].type });
-                const productImage = await imageModel.findOne({ imageId : productData._id });
-                // console.log(productImage)
+            for (let i = 0; i < cartItems.Items.length; i++) {
+                const item = cartItems.Items[i];
+                if (!item || !item.type || !item.Qty) continue; // skip if data is malformed
+
+                const productData = await productModel.findById(item.type);
+                if (!productData) continue;
+
+                const productImage = await imageModel.findOne({ imageId: productData._id });
+
                 userCartItems.push({
-                    id : cartItems._id,
-                    productId : productData._id,
-                    image : productImage.ImageUrl || null,
-                    name : productData.ProductName,
-                    price : productData.OfferPrice,
-                    quantity : cartItems.Items[i].Qty
-                })
+                    id: cartItems._id,
+                    productId: productData._id,
+                    image: productImage?.ImageUrl || null,
+                    name: productData.ProductName,
+                    price: productData.OfferPrice,
+                    quantity: item.Qty
+                });
             }
+
             return res.status(200).json({ userCartItems });
         }
 
-        return res.status(200).json({ 
-            message : "No Products On Cart"
-         });
+        return res.status(200).json({
+            message: "No Products On Cart"
+        });
 
     } catch (err) {
         console.error(err);

@@ -1,48 +1,67 @@
-import React, { useState } from 'react';
-import { CreditCard, MapPin, User, Mail, Phone, Home, Check, Smartphone, Banknote, CheckCircle } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { CreditCard, MapPin, User, Mail, X, Phone, Home, Check, Smartphone, Banknote, CheckCircle, ChevronDown } from 'lucide-react';
+import axios from 'axios';
+import baseUrl from '../../url';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function CheckoutPage() {
-  const location = useLocation();
-  const { product } = location.state || {};
-  console.log(product)
-  const [currentStep, setCurrentStep] = useState('checkout'); // 'checkout', 'payment', 'confirmed'
-  const [useAccountAddress, setUseAccountAddress] = useState(false);
+  const [currentStep, setCurrentStep] = useState('checkout');
+  const [selectedAddress, setSelectedAddress] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPaymentMode, setSelectedPaymentMode] = useState('');
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
   
-  // Dummy account address
-  const accountAddress = {
-    email: 'john.doe@example.com',
-    firstName: 'John Doe',
-    phone: '+91 98765 43210',
-    address: '123 MG Road, Koramangala',
-    place: 'Apartment 4B, Sterling Heights',
-    city: 'Bangalore',
-    pincode: '560034'
-  };
+  // Handle both single product and array of products
+  const { product } = location.state || {};
+  const [cartItems, setCartItems] = useState(
+    product 
+      ? Array.isArray(product) 
+        ? product 
+        : [product]
+      : []
+  );
+
+  const user = JSON.parse(localStorage.getItem('userProfile'));
 
   const [formData, setFormData] = useState({
-    email: '',
+    email: user?.email || '',
     firstName: '',
     phone: '',
     address: '',
-    place: '',
     city: '',
-    pincode: ''
+    state: '',
+    zipCode: ''
   });
 
-  // Sample cart items for the invoice
-  const cartItems = [
-    { id: 1, name: 'Gold Chain Necklace', price: 2499.99, quantity: 1 },
-    { id: 2, name: 'Diamond Earrings', price: 1899.99, quantity: 1 },
-    { id: 3, name: 'Silver Bracelet', price: 599.99, quantity: 2 }
-  ];
+  // Calculate totals safely
+  const subtotal = cartItems.reduce((sum, item) => {
+    const price = parseFloat(item.OfferPrice || item.NormalPrice || 0);
+    const quantity = parseInt(item.Quantity || 1);
+    return sum + (price * quantity);
+  }, 0);
+  
+  const total = subtotal;
 
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.03; // 3% tax
-  const shipping = 99.99;
-  const total = subtotal + tax + shipping;
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}/address/get/${user._id}`);
+        const formattedAddresses = response.data.address.map(addr => ({
+          ...addr,
+          email: user.email
+        }));
+        setSavedAddresses(formattedAddresses);
+      } catch (err) {
+        console.error('Error fetching addresses:', err);
+      } finally {
+        setIsLoadingAddresses(false);
+      }
+    };
+    fetchAddresses();
+  }, [user._id]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -52,26 +71,38 @@ export default function CheckoutPage() {
     }));
   };
 
-  const handleAddressToggle = (checked) => {
-    setUseAccountAddress(checked);
-    if (checked) {
-      setFormData(accountAddress);
-    } else {
+  const handleAddressSelect = (e) => {
+    const addressId = e.target.value;
+    setSelectedAddress(addressId);
+
+    if (addressId === '') {
       setFormData({
-        email: '',
+        email: user?.email || '',
         firstName: '',
         phone: '',
         address: '',
-        place: '',
         city: '',
-        pincode: ''
+        state: '',
+        zipCode: ''
       });
+    } else {
+      const selectedAddressData = savedAddresses.find(addr => addr._id === addressId);
+      if (selectedAddressData) {
+        setFormData({
+          email: selectedAddressData.email || user?.email || '',
+          firstName: selectedAddressData.name,
+          phone: selectedAddressData.phone,
+          address: selectedAddressData.address,
+          city: selectedAddressData.city,
+          state: selectedAddressData.state,
+          zipCode: selectedAddressData.zipCode
+        });
+      }
     }
   };
 
   const handlePlaceOrder = async () => {
     setIsLoading(true);
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsLoading(false);
     setCurrentStep('payment');
@@ -82,12 +113,15 @@ export default function CheckoutPage() {
       alert('Please select a payment mode');
       return;
     }
-    
+
     setIsLoading(true);
-    // Simulate payment processing
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsLoading(false);
     setCurrentStep('confirmed');
+  };
+
+  const goBack = () => {
+    navigate(-1);
   };
 
   if (currentStep === 'confirmed') {
@@ -99,21 +133,21 @@ export default function CheckoutPage() {
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Order Confirmed!</h1>
             <p className="text-gray-600">Thank you for your purchase</p>
           </div>
-          
+
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <h3 className="font-semibold text-gray-800 mb-2">Order Details</h3>
             <p className="text-sm text-gray-600">Order #: ORD-2024-001</p>
             <p className="text-sm text-gray-600">Total: ₹{total.toFixed(2)}</p>
             <p className="text-sm text-gray-600">Payment: {selectedPaymentMode === 'googlepay' ? 'Google Pay' : 'Cash on Delivery'}</p>
           </div>
-          
+
           <div className="text-sm text-gray-600 mb-6">
             <p>Expected delivery: 3-5 business days</p>
             <p>You will receive SMS updates on your order</p>
           </div>
-          
+
           <button
-            onClick={() => window.location.href = '/'}
+            onClick={() => navigate('/')}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 font-medium"
           >
             Continue Shopping
@@ -128,17 +162,16 @@ export default function CheckoutPage() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">Payment Method</h1>
-          
+
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-6">Select Payment Mode</h2>
-            
+
             <div className="space-y-4 mb-8">
-              <div 
-                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                  selectedPaymentMode === 'googlepay' 
-                    ? 'border-blue-500 bg-blue-50' 
+              <div
+                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${selectedPaymentMode === 'googlepay'
+                    ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
-                }`}
+                  }`}
                 onClick={() => setSelectedPaymentMode('googlepay')}
               >
                 <div className="flex items-center">
@@ -152,13 +185,12 @@ export default function CheckoutPage() {
                   )}
                 </div>
               </div>
-              
-              <div 
-                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                  selectedPaymentMode === 'cod' 
-                    ? 'border-blue-500 bg-blue-50' 
+
+              <div
+                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${selectedPaymentMode === 'cod'
+                    ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
-                }`}
+                  }`}
                 onClick={() => setSelectedPaymentMode('cod')}
               >
                 <div className="flex items-center">
@@ -173,12 +205,12 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <h3 className="font-medium text-gray-800 mb-2">Order Total</h3>
               <p className="text-2xl font-bold text-gray-900">₹{total.toFixed(2)}</p>
             </div>
-            
+
             <div className="flex gap-4">
               <button
                 onClick={() => setCurrentStep('checkout')}
@@ -209,31 +241,46 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      <button onClick={goBack} className="ml-10 bg-gray-50 p-2 rounded-full hover:bg-gray-100">
+        <X />
+      </button>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">Checkout</h1>
-        
+
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Left Side - Form */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="space-y-6">
-              
-              {/* Address Toggle */}
+              {/* Address Dropdown */}
               <div className="border-b border-gray-200 pb-4">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={useAccountAddress}
-                    onChange={(e) => handleAddressToggle(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    Add my account Address
-                  </span>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Saved Address
                 </label>
+                <div className="relative">
+                  <select
+                    value={selectedAddress}
+                    onChange={handleAddressSelect}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white pr-8"
+                    disabled={isLoadingAddresses}
+                  >
+                    <option value="">Select an address or enter manually</option>
+                    {savedAddresses.map((address) => (
+                      <option key={address._id} value={address._id}>
+                        {address.type} - {address.address.substring(0, 30)}...
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
+                  {isLoadingAddresses && (
+                    <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+                    </div>
+                  )}
+                </div>
               </div>
-              
+
               {/* Customer Details */}
-              {!useAccountAddress && (
+              {selectedAddress === '' && (
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                     <User className="mr-2 h-5 w-5" />
@@ -257,10 +304,10 @@ export default function CheckoutPage() {
                         />
                       </div>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        First Name
+                        Full Name
                       </label>
                       <input
                         type="text"
@@ -268,11 +315,11 @@ export default function CheckoutPage() {
                         value={formData.firstName}
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="John"
+                        placeholder="John Doe"
                         required
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Phone Number
@@ -300,20 +347,19 @@ export default function CheckoutPage() {
                   <MapPin className="mr-2 h-5 w-5" />
                   Delivery Details
                 </h2>
-                
-                {useAccountAddress ? (
+
+                {selectedAddress !== '' ? (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
                     <div className="flex items-center text-blue-700 mb-2">
                       <Check className="w-4 h-4 mr-2" />
-                      <span className="font-medium">Using Account Address</span>
+                      <span className="font-medium">Using Saved Address</span>
                     </div>
-                    <p className="text-sm text-gray-700"><strong>Name:</strong> {accountAddress.firstName}</p>
-                    <p className="text-sm text-gray-700"><strong>Email:</strong> {accountAddress.email}</p>
-                    <p className="text-sm text-gray-700"><strong>Phone:</strong> {accountAddress.phone}</p>
-                    <p className="text-sm text-gray-700"><strong>Address:</strong> {accountAddress.address}</p>
-                    <p className="text-sm text-gray-700"><strong>Place:</strong> {accountAddress.place}</p>
-                    <p className="text-sm text-gray-700"><strong>City:</strong> {accountAddress.city}</p>
-                    <p className="text-sm text-gray-700"><strong>Pincode:</strong> {accountAddress.pincode}</p>
+                    <p className="text-sm text-gray-700"><strong>Name:</strong> {formData.firstName}</p>
+                    <p className="text-sm text-gray-700"><strong>Phone:</strong> {formData.phone}</p>
+                    <p className="text-sm text-gray-700"><strong>Address:</strong> {formData.address}</p>
+                    <p className="text-sm text-gray-700"><strong>City:</strong> {formData.city}</p>
+                    <p className="text-sm text-gray-700"><strong>State:</strong> {formData.state}</p>
+                    <p className="text-sm text-gray-700"><strong>Zip Code:</strong> {formData.zipCode}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -334,21 +380,7 @@ export default function CheckoutPage() {
                         />
                       </div>
                     </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Place
-                      </label>
-                      <input
-                        type="text"
-                        name="place"
-                        value={formData.place}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Apartment, suite, etc."
-                      />
-                    </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -364,26 +396,41 @@ export default function CheckoutPage() {
                           required
                         />
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Pincode
+                          State
                         </label>
                         <input
                           type="text"
-                          name="pincode"
-                          value={formData.pincode}
+                          name="state"
+                          value={formData.state}
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="560001"
+                          placeholder="Karnataka"
                           required
                         />
                       </div>
                     </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Zip Code
+                      </label>
+                      <input
+                        type="text"
+                        name="zipCode"
+                        value={formData.zipCode}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="560001"
+                        required
+                      />
+                    </div>
                   </div>
                 )}
               </div>
-              
+
               {/* Submit Button */}
               <button
                 onClick={handlePlaceOrder}
@@ -402,44 +449,47 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Right Side - Receipt Style Order Summary */}
+          {/* Right Side - Order Summary */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            {/* Receipt Header */}
             <div className="text-center border-b-2 border-gray-200 pb-4 mb-6">
               <h1 className="text-2xl font-bold text-gray-900">RAYA JEWELS</h1>
               <p className="text-sm text-gray-600 mt-1">Premium Jewelry Collection</p>
               <p className="text-xs text-gray-500 mt-1">Order #: ORD-2024-001</p>
             </div>
-            
-            {/* Receipt Items */}
+
             <div className="space-y-3 mb-6">
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex justify-between items-start text-sm">
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-800">{item.name}</h3>
-                    <p className="text-gray-600">₹{item.price.toFixed(2)} x {item.quantity}</p>
+              {cartItems.map((item) => {
+                const price = parseFloat(item.OfferPrice || item.NormalPrice || 0);
+                const quantity = parseInt(item.Quantity || 1);
+                const itemTotal = price * quantity;
+
+                return (
+                  <div key={item.ProductId} className="flex justify-between items-start text-sm">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-800">{item.ProductName}</h3>
+                      <p className="text-gray-600">₹{price.toFixed(2)} x {quantity}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">₹{itemTotal.toFixed(2)}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            {/* Receipt Totals */}
             <div className="border-t border-gray-200 pt-4">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between">
                   <span>Tax (3%):</span>
                   <span>₹{tax.toFixed(2)}</span>
-                </div>
+                </div> */}
                 <div className="flex justify-between">
                   <span>Shipping:</span>
-                  <span>₹{shipping.toFixed(2)}</span>
+                  <span>Free</span>
                 </div>
                 <div className="border-t border-gray-200 pt-2 mt-2">
                   <div className="flex justify-between text-lg font-bold">
@@ -450,7 +500,6 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Receipt Footer */}
             <div className="mt-6 pt-4 border-t border-gray-200 text-center">
               <div className="text-xs text-gray-500 space-y-1">
                 <p>Thank you for choosing RAYA JEWELS</p>
