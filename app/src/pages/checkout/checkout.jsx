@@ -27,6 +27,7 @@ export default function CheckoutPage() {
   const user = JSON.parse(localStorage.getItem('userProfile'));
 
   const [formData, setFormData] = useState({
+    id : '',
     email: user?.email || '',
     firstName: '',
     phone: '',
@@ -77,6 +78,7 @@ export default function CheckoutPage() {
 
     if (addressId === '') {
       setFormData({
+        id: '',
         email: user?.email || '',
         firstName: '',
         phone: '',
@@ -87,8 +89,10 @@ export default function CheckoutPage() {
       });
     } else {
       const selectedAddressData = savedAddresses.find(addr => addr._id === addressId);
+      console.log(selectedAddressData)
       if (selectedAddressData) {
         setFormData({
+          id: selectedAddressData._id,
           email: selectedAddressData.email || user?.email || '',
           firstName: selectedAddressData.name,
           phone: selectedAddressData.phone,
@@ -103,7 +107,27 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // console.log(ids)
+    try{
+      // const productIds = cartItems.map(item => item._id);
+      const orderData = {
+      productId : cartItems.map(item => item._id),
+      customerId : user._id,
+      paymentType : '',
+      addressId : formData.id,
+      address : formData.address,
+      city: formData.city,
+      name : formData.firstName,
+      phone : formData.phone,
+      state : formData.state,
+      zipCode : formData.zipCode
+    }
+    // console.log(orderData)
+      const responce = await axios.post(`${baseUrl}/order/add`, orderData);
+      console.log(responce)
+    } catch(err){
+      console.log(err);
+    }
     setIsLoading(false);
     setCurrentStep('payment');
   };
