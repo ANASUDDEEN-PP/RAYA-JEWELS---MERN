@@ -1,7 +1,7 @@
 // DateFormat.js
-const formatDate = (dateFormat = 'NNMMYY|TT:TT') => {
+const formatDate = (dateFormat) => {
   const date = new Date();
-  
+  // console.log(dateFormat);
   if (dateFormat === 'NNMMYY|TT:TT') {
     const day = date.getDate().toString().padStart(2, '0'); // Pad day with leading zero
     const monthNames = [

@@ -24,6 +24,9 @@ const addressSchema = new Schema({
     },
     phone : {
         type : String
+    },
+    isSaved : {
+        type: String    
     }
 });
 

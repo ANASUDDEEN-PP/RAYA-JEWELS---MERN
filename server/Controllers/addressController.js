@@ -3,13 +3,14 @@ const userModel = require("../Models/userModel");
 
 exports.addAddress = async(req, res) => {
     try{
-        const { type, name, address, city, state, zipCode, phone, id } = req.body;
+        const { type, name, address, city, state, zipCode, phone, id, isSaved } = req.body;
+        // console.log(isSaved);
         const isUser = await userModel.findById(id)
         if(!isUser)
             return res.status(404).json({ message : "NoUserOnMyRecord" });
         const addressData = {
             UserId : isUser._id,
-            type, name, address, city, state, zipCode, phone
+            type, name, address, city, state, zipCode, phone, isSaved
         }
         await addressModel.create(addressData);
         return res.status(200).json({ message : "Address Added..."})
@@ -25,7 +26,7 @@ exports.getAddressByUserId = async(req, res) => {
         const { id } = req.params;
         if(!await userModel.findById(id))
             return res.status(404).json({ message : "NoUserOnRecord" });
-        const address = await addressModel.find({ UserId : id });
+        const address = await addressModel.find({ UserId : id, isSaved: true });
         return res.status(200).json({address});
     } catch(err){
         return res.status(404).json({ message : "Internal Server Error" });

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { CreditCard, MapPin, User, Mail, X, Phone, Home, Check, Smartphone, Banknote, CheckCircle, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { CreditCard, MapPin, User, Mail, X, Phone, Home, Check, Smartphone, Banknote, CheckCircle, ChevronDown, Printer, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 import baseUrl from '../../url';
 import { useLocation, useNavigate } from 'react-router-dom';
+import html2canvas from 'html2canvas';
 
 export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState('checkout');
@@ -11,6 +12,10 @@ export default function CheckoutPage() {
   const [selectedPaymentMode, setSelectedPaymentMode] = useState('');
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [showAddressWarning, setShowAddressWarning] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const receiptRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -64,6 +69,17 @@ export default function CheckoutPage() {
     fetchAddresses();
   }, [user._id]);
 
+  // Check if form is filled for address warning
+  useEffect(() => {
+    if (selectedAddress === '') {
+      const isFormFilled = formData.firstName && formData.phone && formData.address && 
+                          formData.city && formData.state && formData.zipCode;
+      setShowAddressWarning(isFormFilled && !saveAddress);
+    } else {
+      setShowAddressWarning(false);
+    }
+  }, [formData, saveAddress, selectedAddress]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -75,6 +91,8 @@ export default function CheckoutPage() {
   const handleAddressSelect = (e) => {
     const addressId = e.target.value;
     setSelectedAddress(addressId);
+    setSaveAddress(false); // Reset save address checkbox when selecting saved address
+    setShowAddressWarning(false);
 
     if (addressId === '') {
       setFormData({
@@ -105,26 +123,29 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleSaveAddressChange = (e) => {
+    setSaveAddress(e.target.checked);
+  };
+
   const handlePlaceOrder = async () => {
     setIsLoading(true);
-    // console.log(ids)
     try{
-      // const productIds = cartItems.map(item => item._id);
       const orderData = {
-      productId : cartItems.map(item => item._id),
-      customerId : user._id,
-      paymentType : '',
-      addressId : formData.id,
-      address : formData.address,
-      city: formData.city,
-      name : formData.firstName,
-      phone : formData.phone,
-      state : formData.state,
-      zipCode : formData.zipCode
-    }
-    // console.log(orderData)
-      const responce = await axios.post(`${baseUrl}/order/add`, orderData);
-      console.log(responce)
+        productId : cartItems.map(item => item._id),
+        customerId : user._id,
+        paymentType : '',
+        addressId : formData.id,
+        address : formData.address,
+        city: formData.city,
+        name : formData.firstName,
+        phone : formData.phone,
+        state : formData.state,
+        zipCode : formData.zipCode,
+        saveAddress: saveAddress // Add save address flag to orderData
+      }
+      console.log(orderData)
+      const response = await axios.post(`${baseUrl}/order/add`, orderData);
+      console.log(response)
     } catch(err){
       console.log(err);
     }
@@ -144,6 +165,32 @@ export default function CheckoutPage() {
     setCurrentStep('confirmed');
   };
 
+  const handlePrintReceipt = async () => {
+    setIsPrinting(true);
+    try {
+      const canvas = await html2canvas(receiptRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true
+      });
+      
+      // Convert canvas to image
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      
+      // Create a link and trigger download
+      const link = document.createElement('a');
+      link.download = `receipt-ORD-2024-001.jpg`;
+      link.href = imgData;
+      link.click();
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      alert('Error generating receipt. Please try again.');
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   const goBack = () => {
     navigate(-1);
   };
@@ -152,30 +199,66 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div className="mb-6">
-            <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Order Confirmed!</h1>
-            <p className="text-gray-600">Thank you for your purchase</p>
+          <div ref={receiptRef} className="bg-white p-8">
+            <div className="mb-6">
+              <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4" />
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Order Confirmed!</h1>
+              <p className="text-gray-600">Thank you for your purchase</p>
+            </div>
+
+            <div className="text-center border-b-2 border-gray-200 pb-4 mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">RAYA JEWELS</h2>
+              <p className="text-sm text-gray-600 mt-1">Premium Jewelry Collection</p>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold text-gray-800 mb-2">Order Details</h3>
+              <p className="text-sm text-gray-600">Order #: ORD-2024-001</p>
+              <p className="text-sm text-gray-600">Date: {new Date().toLocaleDateString()}</p>
+              <p className="text-sm text-gray-600">Total: ₹{total.toFixed(2)}</p>
+              <p className="text-sm text-gray-600">Payment: {selectedPaymentMode === 'googlepay' ? 'Google Pay' : 'Cash on Delivery'}</p>
+            </div>
+
+            <div className="mb-6">
+              <h4 className="font-semibold text-gray-800 mb-2">Items Ordered:</h4>
+              {cartItems.map((item, index) => (
+                <div key={index} className="text-sm text-gray-600 mb-1">
+                  {item.ProductName} - ₹{(parseFloat(item.OfferPrice || item.NormalPrice || 0) * parseInt(item.Quantity || 1)).toFixed(2)}
+                </div>
+              ))}
+            </div>
+
+            <div className="text-sm text-gray-600 mb-6">
+              <p>Expected delivery: 3-5 business days</p>
+              <p>You will receive SMS updates on your order</p>
+            </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold text-gray-800 mb-2">Order Details</h3>
-            <p className="text-sm text-gray-600">Order #: ORD-2024-001</p>
-            <p className="text-sm text-gray-600">Total: ₹{total.toFixed(2)}</p>
-            <p className="text-sm text-gray-600">Payment: {selectedPaymentMode === 'googlepay' ? 'Google Pay' : 'Cash on Delivery'}</p>
+          <div className="flex gap-4 mt-6">
+            <button
+              onClick={handlePrintReceipt}
+              disabled={isPrinting}
+              className="flex-1 bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition duration-200 font-medium flex items-center justify-center"
+            >
+              {isPrinting ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                  Generating...
+                </div>
+              ) : (
+                <>
+                  <Printer className="w-4 h-4 mr-2" />
+                  Print Receipt
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 font-medium"
+            >
+              Continue Shopping
+            </button>
           </div>
-
-          <div className="text-sm text-gray-600 mb-6">
-            <p>Expected delivery: 3-5 business days</p>
-            <p>You will receive SMS updates on your order</p>
-          </div>
-
-          <button
-            onClick={() => navigate('/')}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 font-medium"
-          >
-            Continue Shopping
-          </button>
         </div>
       </div>
     );
@@ -451,6 +534,34 @@ export default function CheckoutPage() {
                         required
                       />
                     </div>
+
+                    {/* Save Address Radio Button */}
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="saveAddress"
+                          checked={saveAddress}
+                          onChange={handleSaveAddressChange}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="saveAddress" className="ml-2 block text-sm text-gray-700">
+                          Save this address to my profile for future orders
+                        </label>
+                      </div>
+                      
+                      {/* Address Warning */}
+                      {showAddressWarning && (
+                        <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                          <div className="flex items-center">
+                            <AlertTriangle className="w-4 h-4 text-yellow-600 mr-2" />
+                            <p className="text-sm text-yellow-800">
+                              If you want to save this address to your profile, please click the checkbox above.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -507,10 +618,6 @@ export default function CheckoutPage() {
                   <span>Subtotal:</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
-                {/* <div className="flex justify-between">
-                  <span>Tax (3%):</span>
-                  <span>₹{tax.toFixed(2)}</span>
-                </div> */}
                 <div className="flex justify-between">
                   <span>Shipping:</span>
                   <span>Free</span>

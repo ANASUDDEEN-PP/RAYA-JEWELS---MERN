@@ -71,7 +71,8 @@ const UserAddress = ({ onBack, user }) => {
             if (isAddingNew) {
                 const newAddress = {
                     ...formData,
-                    id: user._id
+                    id: user._id,
+                    isSaved : true
                 };
                 
                 const responce = await axios.post(`${baseUrl}/address/add`, newAddress)
