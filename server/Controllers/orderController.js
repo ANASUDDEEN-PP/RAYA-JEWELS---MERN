@@ -1,8 +1,8 @@
 const addressModel = require("../Models/AddressModel");
 const orderModel = require("../Models/orderModel");
 const gPayDetailsModel = require("../Models/gPayPaymentModel");
-const userModel = require("../Models/userModel");
 const productModel = require("../Models/productModel");
+const userModel = require("../Models/userModel");
 const dateFormat = require("../utils/dateFormat");
 const sendNotify = require("../utils/sendNotify")
 
@@ -142,3 +142,35 @@ exports.googlePayPaymentDetails = async (req, res) => {
     });
   }
 };
+
+exports.getAllOrders = async (req, res) => {
+  try {
+    const orders = await orderModel.find({});
+    const users = await userModel.find({});
+    const products = await productModel.find({});
+
+    // Create lookup maps for fast access
+    const userMap = new Map(users.map(user => [user._id.toString(), user]));
+    const productMap = new Map(products.map(p => [p._id.toString(), p]));
+
+    // Build the result
+    const finalResult = orders.map(order => {
+      const user = userMap.get(order.customerId.toString());
+      const product = productMap.get(order.productId.toString());
+
+      return {
+        orderId: order.orderID,
+        productId: product ? product.ProductId : "Unknown", // adjust field name
+        customerName: user ? user.Name : "Unknown", // adjust field name
+        quantity: parseInt(order.qty),
+        orderDate: order.orderDate
+      };
+    });
+
+    return res.status(200).json(finalResult);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+

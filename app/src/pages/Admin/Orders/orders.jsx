@@ -2,59 +2,31 @@ import React, { useState } from 'react';
 import { Search, Eye, Edit, Trash2 } from 'lucide-react';
 import NavBar from "../Components/navBar";
 import Sidebar from '../Components/sideBar';
+import { useEffect } from 'react';
+import axios from 'axios';
+import baseUrl from '../../../url';
 
 const OrderListPage = () => {
     // Sample order data
-    const [orders] = useState([
-        {
-            orderId: 'ORD-2024-001',
-            productId: 'PRD-001',
-            customerName: 'John Smith',
-            quantity: 2,
-            orderDate: '2024-06-10'
-        },
-        {
-            orderId: 'ORD-2024-002',
-            productId: 'PRD-002',
-            customerName: 'Sarah Johnson',
-            quantity: 1,
-            orderDate: '2024-06-09'
-        },
-        {
-            orderId: 'ORD-2024-003',
-            productId: 'PRD-003',
-            customerName: 'Mike Davis',
-            quantity: 5,
-            orderDate: '2024-06-08'
-        },
-        {
-            orderId: 'ORD-2024-004',
-            productId: 'PRD-001',
-            customerName: 'Emily Brown',
-            quantity: 3,
-            orderDate: '2024-06-07'
-        },
-        {
-            orderId: 'ORD-2024-005',
-            productId: 'PRD-004',
-            customerName: 'David Wilson',
-            quantity: 1,
-            orderDate: '2024-06-06'
-        },
-        {
-            orderId: 'ORD-2024-006',
-            productId: 'PRD-002',
-            customerName: 'Lisa Anderson',
-            quantity: 4,
-            orderDate: '2024-06-05'
-        }
-    ]);
+    const [orders, setOrders] = useState([]);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        const fetchOrderData = async () => {
+            try{
+                const response = await axios.get(`${baseUrl}/order/get/all/orders`);
+                setOrders(response.data);
+            } catch(err){
+                console.log(err);
+            }
+        }
+        fetchOrderData();
+    }, []);
     
       const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
