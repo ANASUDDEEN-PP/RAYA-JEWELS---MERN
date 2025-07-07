@@ -1,11 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { CreditCard, MapPin, User, Mail, X, Phone, Home, Check, Smartphone, Banknote, CheckCircle, ChevronDown, Printer, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { 
+  CreditCard, MapPin, User, Mail, X, Phone, Home, 
+  Check, Smartphone, Banknote, ChevronDown, 
+  Printer, AlertTriangle, Loader2, ReceiptIndianRupee
+} from 'lucide-react';
 import axios from 'axios';
-import baseUrl from '../../url';
 import { useLocation, useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
+import GooglePayPopup from '../../components/Payment/googlePayComponent';
+import baseUrl from '../../url';
 
-export default function CheckoutPage() {
+const CheckoutPage = () => {
+  // State management
   const [currentStep, setCurrentStep] = useState('checkout');
   const [selectedAddress, setSelectedAddress] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -15,24 +21,23 @@ export default function CheckoutPage() {
   const [saveAddress, setSaveAddress] = useState(false);
   const [showAddressWarning, setShowAddressWarning] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [showGooglePayPopup, setShowGooglePayPopup] = useState(false);
+  const [orderId, setOrderId] = useState('');
+  
   const receiptRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Handle both single product and array of products
+
+  // Get user data and products
+  const user = JSON.parse(localStorage.getItem('userProfile')) || {};
   const { product } = location.state || {};
   const [cartItems, setCartItems] = useState(
-    product 
-      ? Array.isArray(product) 
-        ? product 
-        : [product]
-      : []
+    product ? (Array.isArray(product) ? product : [product]) : []
   );
 
-  const user = JSON.parse(localStorage.getItem('userProfile'));
-
+  // Form state
   const [formData, setFormData] = useState({
-    id : '',
+    id: '',
     email: user?.email || '',
     firstName: '',
     phone: '',
@@ -42,57 +47,65 @@ export default function CheckoutPage() {
     zipCode: ''
   });
 
-  // Calculate totals safely
+  // Calculate order totals
   const subtotal = cartItems.reduce((sum, item) => {
     const price = parseFloat(item.OfferPrice || item.NormalPrice || 0);
     const quantity = parseInt(item.Quantity || 1);
     return sum + (price * quantity);
   }, 0);
-  
+
   const total = subtotal;
 
-  useEffect(() => {
-    const fetchAddresses = async () => {
-      try {
-        const response = await axios.get(`${baseUrl}/address/get/${user._id}`);
-        const formattedAddresses = response.data.address.map(addr => ({
-          ...addr,
-          email: user.email
-        }));
-        setSavedAddresses(formattedAddresses);
-      } catch (err) {
-        console.error('Error fetching addresses:', err);
-      } finally {
-        setIsLoadingAddresses(false);
-      }
-    };
-    fetchAddresses();
-  }, [user._id]);
+  // Fetch saved addresses
+  const fetchAddresses = useCallback(async () => {
+    try {
+      if (!user._id) return;
+      
+      setIsLoadingAddresses(true);
+      const response = await axios.get(`${baseUrl}/address/get/${user._id}`);
+      const formattedAddresses = response.data.address.map(addr => ({
+        ...addr,
+        email: user.email
+      }));
+      setSavedAddresses(formattedAddresses);
+    } catch (err) {
+      console.error('Error fetching addresses:', err);
+    } finally {
+      setIsLoadingAddresses(false);
+    }
+  }, [user._id, user.email]);
 
-  // Check if form is filled for address warning
+  useEffect(() => {
+    fetchAddresses();
+  }, [fetchAddresses]);
+
+  // Generate order ID
+  // useEffect(() => {
+  //   setOrderId(`ORD-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
+  // }, []);
+
+  // Address validation
   useEffect(() => {
     if (selectedAddress === '') {
-      const isFormFilled = formData.firstName && formData.phone && formData.address && 
-                          formData.city && formData.state && formData.zipCode;
+      const isFormFilled = formData.firstName && formData.phone && 
+                          formData.address && formData.city && 
+                          formData.state && formData.zipCode;
       setShowAddressWarning(isFormFilled && !saveAddress);
     } else {
       setShowAddressWarning(false);
     }
   }, [formData, saveAddress, selectedAddress]);
 
+  // Form handlers
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleAddressSelect = (e) => {
     const addressId = e.target.value;
     setSelectedAddress(addressId);
-    setSaveAddress(false); // Reset save address checkbox when selecting saved address
-    setShowAddressWarning(false);
+    setSaveAddress(false);
 
     if (addressId === '') {
       setFormData({
@@ -107,7 +120,6 @@ export default function CheckoutPage() {
       });
     } else {
       const selectedAddressData = savedAddresses.find(addr => addr._id === addressId);
-      console.log(selectedAddressData)
       if (selectedAddressData) {
         setFormData({
           id: selectedAddressData._id,
@@ -123,40 +135,82 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleSaveAddressChange = (e) => {
-    setSaveAddress(e.target.checked);
-  };
-
+  // Order processing
   const handlePlaceOrder = async () => {
-    setIsLoading(true);
-    try{
-      const orderData = {
-        productId : cartItems.map(item => item._id),
-        customerId : user._id,
-        paymentType : '',
-        addressId : formData.id,
-        address : formData.address,
-        city: formData.city,
-        name : formData.firstName,
-        phone : formData.phone,
-        state : formData.state,
-        zipCode : formData.zipCode,
-        saveAddress: saveAddress // Add save address flag to orderData
-      }
-      console.log(orderData)
-      const response = await axios.post(`${baseUrl}/order/add`, orderData);
-      console.log(response)
-    } catch(err){
-      console.log(err);
+    if (!validateAddress()) {
+      alert('Please fill in all required fields');
+      return;
     }
-    setIsLoading(false);
-    setCurrentStep('payment');
+
+    setIsLoading(true);
+    try {
+      const orderData = {
+        orderId,
+        productId: cartItems.map(item => item._id),
+        customerId: user._id,
+        paymentType: selectedPaymentMode,
+        addressId: formData.id,
+        address: formData.address,
+        city: formData.city,
+        name: formData.firstName,
+        phone: formData.phone,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        saveAddress,
+        qty: product?.Quantity || 1,
+        size: product?.Size || 'Standard',
+        totalAmount: total,
+        items: cartItems.map(item => ({
+          id: item._id,
+          name: item.ProductName,
+          price: item.OfferPrice || item.NormalPrice,
+          quantity: item.Quantity || 1
+        }))
+      };
+
+      const response = await axios.post(`${baseUrl}/order/add`, orderData);
+      // console.log('Order created:', response.data.orderID);
+      setOrderId(response.data.orderID);
+      
+      if (selectedPaymentMode === 'cod') {
+        setCurrentStep('confirmed');
+      } else {
+        setCurrentStep('payment');
+      }
+    } catch (err) {
+      console.error('Order submission failed:', err);
+      alert('Failed to place order. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  const validateAddress = () => {
+    const requiredFields = ['firstName', 'phone', 'address', 'city', 'state', 'zipCode'];
+    return requiredFields.every(field => !!formData[field]);
+  };
+
+  // Payment handlers
   const handlePayment = async () => {
     if (!selectedPaymentMode) {
       alert('Please select a payment mode');
       return;
+    }
+
+    if (selectedPaymentMode === 'googlepay') {
+      setShowGooglePayPopup(true);
+      return;
+    }
+
+    if(selectedPaymentMode === 'cod'){
+      try{
+        const responce = await axios.post(`${baseUrl}/order/gpay/payment/details`, {
+          orderId, 
+          paymentType : selectedPaymentMode
+        })
+      } catch(err){
+        console.log(err);
+      }
     }
 
     setIsLoading(true);
@@ -165,22 +219,25 @@ export default function CheckoutPage() {
     setCurrentStep('confirmed');
   };
 
+  const handleGooglePayComplete = (paymentData) => {
+    console.log('Google Pay payment completed:', paymentData);
+    setShowGooglePayPopup(false);
+    setCurrentStep('confirmed');
+  };
+
+  // Receipt handling
   const handlePrintReceipt = async () => {
     setIsPrinting(true);
     try {
       const canvas = await html2canvas(receiptRef.current, {
         backgroundColor: '#ffffff',
         scale: 2,
-        useCORS: true,
-        allowTaint: true
+        useCORS: true
       });
-      
-      // Convert canvas to image
+
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
-      
-      // Create a link and trigger download
       const link = document.createElement('a');
-      link.download = `receipt-ORD-2024-001.jpg`;
+      link.download = `receipt-${orderId}.jpg`;
       link.href = imgData;
       link.click();
     } catch (error) {
@@ -191,18 +248,18 @@ export default function CheckoutPage() {
     }
   };
 
-  const goBack = () => {
-    navigate(-1);
-  };
+  // Navigation
+  const goBack = () => navigate(-1);
 
+  // Step rendering
   if (currentStep === 'confirmed') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
           <div ref={receiptRef} className="bg-white p-8">
             <div className="mb-6">
-              <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4" />
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Order Confirmed!</h1>
+              <ReceiptIndianRupee className="w-20 h-20 text-green-500 mx-auto mb-4" />
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Order Processing...</h1>
               <p className="text-gray-600">Thank you for your purchase</p>
             </div>
 
@@ -213,10 +270,12 @@ export default function CheckoutPage() {
 
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <h3 className="font-semibold text-gray-800 mb-2">Order Details</h3>
-              <p className="text-sm text-gray-600">Order #: ORD-2024-001</p>
+              <p className="text-sm text-gray-600">Order #: {orderId}</p>
               <p className="text-sm text-gray-600">Date: {new Date().toLocaleDateString()}</p>
               <p className="text-sm text-gray-600">Total: ₹{total.toFixed(2)}</p>
-              <p className="text-sm text-gray-600">Payment: {selectedPaymentMode === 'googlepay' ? 'Google Pay' : 'Cash on Delivery'}</p>
+              <p className="text-sm text-gray-600">
+                Payment: {selectedPaymentMode === 'googlepay' ? 'Google Pay' : 'Cash on Delivery'}
+              </p>
             </div>
 
             <div className="mb-6">
@@ -229,8 +288,8 @@ export default function CheckoutPage() {
             </div>
 
             <div className="text-sm text-gray-600 mb-6">
-              <p>Expected delivery: 3-5 business days</p>
-              <p>You will receive SMS updates on your order</p>
+              <p className='font-bold text-red-600'>Please Wait Some Moments</p>
+              <p>We are cross check your payment and order Details. <br/>Please check the order list on your profile to Know the order Status.</p>
             </div>
           </div>
 
@@ -241,10 +300,10 @@ export default function CheckoutPage() {
               className="flex-1 bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition duration-200 font-medium flex items-center justify-center"
             >
               {isPrinting ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                <>
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
                   Generating...
-                </div>
+                </>
               ) : (
                 <>
                   <Printer className="w-4 h-4 mr-2" />
@@ -275,11 +334,15 @@ export default function CheckoutPage() {
 
             <div className="space-y-4 mb-8">
               <div
-                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${selectedPaymentMode === 'googlepay'
+                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                  selectedPaymentMode === 'googlepay'
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                onClick={() => setSelectedPaymentMode('googlepay')}
+                }`}
+                onClick={() => {
+                  setSelectedPaymentMode('googlepay');
+                  setShowGooglePayPopup(true);
+                }}
               >
                 <div className="flex items-center">
                   <Smartphone className="w-6 h-6 text-blue-600 mr-3" />
@@ -293,11 +356,20 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              <GooglePayPopup
+                isOpen={showGooglePayPopup}
+                onClose={() => setShowGooglePayPopup(false)}
+                onPaymentComplete={handleGooglePayComplete}
+                orderTotal={total}
+                orderId={orderId}
+              />
+
               <div
-                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${selectedPaymentMode === 'cod'
+                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                  selectedPaymentMode === 'cod'
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                }`}
                 onClick={() => setSelectedPaymentMode('cod')}
               >
                 <div className="flex items-center">
@@ -331,10 +403,10 @@ export default function CheckoutPage() {
                 className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 font-medium flex items-center justify-center"
               >
                 {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                  <>
+                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
                     Processing...
-                  </div>
+                  </>
                 ) : (
                   'Complete Order'
                 )}
@@ -346,9 +418,14 @@ export default function CheckoutPage() {
     );
   }
 
+  // Main checkout view
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <button onClick={goBack} className="ml-10 bg-gray-50 p-2 rounded-full hover:bg-gray-100">
+      <button 
+        onClick={goBack} 
+        className="ml-10 bg-gray-50 p-2 rounded-full hover:bg-gray-100 transition-colors"
+        aria-label="Go back"
+      >
         <X />
       </button>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -380,7 +457,7 @@ export default function CheckoutPage() {
                   <ChevronDown className="absolute right-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
                   {isLoadingAddresses && (
                     <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+                      <Loader2 className="animate-spin h-5 w-5 text-blue-500" />
                     </div>
                   )}
                 </div>
@@ -535,28 +612,27 @@ export default function CheckoutPage() {
                       />
                     </div>
 
-                    {/* Save Address Radio Button */}
+                    {/* Save Address Checkbox */}
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <div className="flex items-center">
                         <input
                           type="checkbox"
                           id="saveAddress"
                           checked={saveAddress}
-                          onChange={handleSaveAddressChange}
+                          onChange={(e) => setSaveAddress(e.target.checked)}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                         <label htmlFor="saveAddress" className="ml-2 block text-sm text-gray-700">
                           Save this address to my profile for future orders
                         </label>
                       </div>
-                      
-                      {/* Address Warning */}
+
                       {showAddressWarning && (
                         <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                           <div className="flex items-center">
                             <AlertTriangle className="w-4 h-4 text-yellow-600 mr-2" />
                             <p className="text-sm text-yellow-800">
-                              If you want to save this address to your profile, please click the checkbox above.
+                              If you want to save this address to your profile, please check the box above.
                             </p>
                           </div>
                         </div>
@@ -569,14 +645,14 @@ export default function CheckoutPage() {
               {/* Submit Button */}
               <button
                 onClick={handlePlaceOrder}
-                disabled={isLoading}
+                disabled={isLoading || (selectedAddress === '' && !validateAddress())}
                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium flex items-center justify-center"
               >
                 {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                  <>
+                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
                     Processing...
-                  </div>
+                  </>
                 ) : (
                   'Place Order'
                 )}
@@ -589,7 +665,7 @@ export default function CheckoutPage() {
             <div className="text-center border-b-2 border-gray-200 pb-4 mb-6">
               <h1 className="text-2xl font-bold text-gray-900">RAYA JEWELS</h1>
               <p className="text-sm text-gray-600 mt-1">Premium Jewelry Collection</p>
-              <p className="text-xs text-gray-500 mt-1">Order #: ORD-2024-001</p>
+              <p className="text-xs text-gray-500 mt-1">Order #: {orderId}</p>
             </div>
 
             <div className="space-y-3 mb-6">
@@ -647,4 +723,6 @@ export default function CheckoutPage() {
       </div>
     </div>
   );
-}
+};
+
+export default CheckoutPage;

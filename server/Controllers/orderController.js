@@ -1,23 +1,20 @@
 const addressModel = require("../Models/AddressModel");
 const orderModel = require("../Models/orderModel");
+const gPayDetailsModel = require("../Models/gPayPaymentModel");
 const dateFormat = require("../utils/dateFormat");
 
 exports.addOrder = async (req, res) => {
   try {
-    let addressData = {};
-    const { productId, customerId, paymentType,
-      addressId,
-      address,
-      city,
-      name,
-      phone,
-      state,
-      zipCode,
-      saveAddress,
+    const {
+      productId, customerId, paymentType,
+      addressId, address, city, name, phone,
+      state, zipCode, saveAddress, qty, size
     } = req.body;
-    // console.log(productId, customerId, paymentType, addressId, address, city, name, phone, state, zipcode, saveAddress)
-    if (saveAddress === true && addressId === "") {
-      addressData = {
+
+    let addressDoc = null;
+
+    if (!addressId || saveAddress === true) {
+      const addressData = {
         UserId: customerId,
         type: "Order Address",
         name,
@@ -28,49 +25,102 @@ exports.addOrder = async (req, res) => {
         phone,
         isSaved: saveAddress,
       };
-      console.log(addressData);
-    } else {
-      //code to set order
-      addressData = {
-        UserId: customerId,
-        type: "",
-        name,
-        address,
-        city,
-        state,
-        zipCode,
-        phone,
-        isSaved: saveAddress,
-      };
+      addressDoc = await addressModel.create(addressData);
     }
-    const addresses = await addressModel.create(addressData);
 
-    //Generate OrderId
-    let genOrderId = '';
+    const finalAddressId = addressId || (addressDoc && addressDoc._id);
+
+    // Generate Order ID
     const year = new Date().getFullYear();
     const orderCount = await orderModel.countDocuments();
-    if(orderCount === 0)
-        genOrderId = `RAYA/${year}/ORD/0001`
-    else {
-        const lastOrderId = await orderModel.findOne().sort({ _id: -1 });
+    let genOrderId = '';
+
+    if (orderCount === 0) {
+      genOrderId = `RAYA/${year}/ORD/0001`;
+    } else {
+      const lastOrder = await orderModel.findOne().sort({ _id: -1 });
+      const lastOrdId = lastOrder.orderID?.split('/').pop();
+      const nextOrdId = String(parseInt(lastOrdId) + 1).padStart(4, '0');
+      genOrderId = `RAYA/${year}/ORD/${nextOrdId}`;
     }
 
     const orderData = {
-        orderID : genOrderId,
-        productId,
-        customerId,
-        paymentType,
-        addressId,
-        paymentStatus : 'pending',
-        orderStatus : 'pending',
-        orderDate : dateFormat('NNMMYY|TT:TT'),
-        deliveredDate : '',
-        trackId : ''
-    }
-    console.log(orderData);
+      orderID: genOrderId,
+      customerId,
+      productId: productId.toString(),
+      paymentType,
+      addressId: finalAddressId,
+      paymentStatus: 'pending',
+      orderStatus: 'pending',
+      orderDate: dateFormat('NNMMYY|TT:TT'),
+      deliveredDate: '',
+      trackId: '',
+      size,
+      qty,
+    };
+
+    await orderModel.create(orderData);
+
+    return res.status(201).json({
+      message: "Order placed successfully",
+      orderID: genOrderId
+    });
+
   } catch (err) {
-    return res.status(404).json({
+    console.error(err);
+    return res.status(500).json({
       message: "Internal Server Error",
+    });
+  }
+};
+
+exports.googlePayPaymentDetails = async (req, res) => {
+  try {
+    const { orderId, screenshotBase64, screenshotName, paymentType } = req.body;
+    // console.log(paymentType)
+
+    const isExist = await orderModel.findOne({ orderID: orderId });
+
+    if (!isExist) {
+      return res.status(404).json({ message: "NoProductAvailable" });
+    }
+
+    if (paymentType == "UPI") {     //For UPI
+      const paymentData = {
+        orderId: isExist._id,
+        screenshotBase64,
+        screenshotName,
+        Date: dateFormat('NNMMYY|TT:TT')
+      };
+
+      const payment = await gPayDetailsModel.create(paymentData);
+      if (!payment) {
+        return res.status(500).json({ message: "Something Went Wrong..." });
+      }
+
+      await orderModel.findByIdAndUpdate(
+        isExist._id,
+        { $set: { paymentType: paymentType } },
+        { new: true }
+      );
+
+      return res.status(200).json({
+        message: "Payment Request Completed Successfully..."
+      });
+    } else if(paymentType == "cod"){    //for COD
+      await orderModel.findByIdAndUpdate(
+        isExist._id,
+        { $set: { paymentType: paymentType } },
+        { new: true }
+      );
+      return res.status(200).json({
+        message: "Order requested...."
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Internal Server Error"
     });
   }
 };
