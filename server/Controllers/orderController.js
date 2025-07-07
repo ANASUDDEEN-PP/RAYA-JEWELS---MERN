@@ -127,6 +127,10 @@ exports.googlePayPaymentDetails = async (req, res) => {
         { $set: { paymentType: paymentType } },
         { new: true }
       );
+      sendNotify({
+        product: isExist.orderID,
+        Qty: isExist.qty
+      }, 'ORDPRCS');
       return res.status(200).json({
         message: "Order requested...."
       });
