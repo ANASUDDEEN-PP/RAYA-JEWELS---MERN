@@ -20,6 +20,7 @@ const sendNotify = async(datas, category) => {
             notifyData.MarkAsRead = false;
 
         }
+
         if(category == "CMTPST"){
             if(!datas.UserId && !datas.productName) return 0;
 
@@ -33,6 +34,7 @@ const sendNotify = async(datas, category) => {
             notifyData.createdDate = dateFormat('NNMMYY|TT:TT');
             notifyData.MarkAsRead = false;
         }
+        
         if(category == "PRDAD"){
             if(!datas.productId && !datas.productName && !datas.Qty && !datas.Price) return 0;
 

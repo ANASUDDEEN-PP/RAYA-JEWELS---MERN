@@ -2,6 +2,7 @@ const addressModel = require("../Models/AddressModel");
 const orderModel = require("../Models/orderModel");
 const gPayDetailsModel = require("../Models/gPayPaymentModel");
 const dateFormat = require("../utils/dateFormat");
+const sendNotify = require("../utils/sendNotify")
 
 exports.addOrder = async (req, res) => {
   try {
@@ -104,10 +105,20 @@ exports.googlePayPaymentDetails = async (req, res) => {
         { new: true }
       );
 
+      
+
+      //for Notification
+      sendNotify({
+        productId: productData.ProductId,
+        productName: productData.ProductName,
+        Qty: productData.Quantity,
+        Price: product.OfferPrice
+      }, 'PRDAD');
+
       return res.status(200).json({
         message: "Payment Request Completed Successfully..."
       });
-    } else if(paymentType == "cod"){    //for COD
+    } else if (paymentType == "cod") {    //for COD
       await orderModel.findByIdAndUpdate(
         isExist._id,
         { $set: { paymentType: paymentType } },
