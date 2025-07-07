@@ -121,6 +121,7 @@ const FilterButton = ({ type, label, isActive, onClick, count, icon: Icon }) => 
 };
 
 // Full Screen Notification System Component
+// Full Screen Notification System Component
 const FullScreenNotificationSystem = ({ notifications: initialNotifications, isOpen, onClose, onMarkAsRead, onDelete }) => {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [activeFilter, setActiveFilter] = useState('all');
@@ -163,47 +164,51 @@ const FullScreenNotificationSystem = ({ notifications: initialNotifications, isO
       />
       
       {/* Main Container */}
-      <div className="relative w-full max-w-6xl h-full max-h-[90vh] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden mx-4">
+      <div className="relative w-full max-w-6xl h-full max-h-[90vh] bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden mx-4 flex flex-col">
         
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-xl border-b border-gray-200/50 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-xl">
-                <Bell size={24} className="text-blue-600" />
+        {/* Header - Fixed height */}
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-xl border-b border-gray-200/50">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-xl">
+                  <Bell size={24} className="text-blue-600" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+                  <p className="text-gray-600">
+                    {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
-                <p className="text-gray-600">
-                  {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
-                </p>
-              </div>
+              <button
+                onClick={onClose}
+                className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200"
+              >
+                <X size={24} />
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200"
-            >
-              <X size={24} />
-            </button>
           </div>
 
-          {/* Filter Buttons */}
-          <div className="flex flex-wrap gap-3">
-            {filterButtons.map((filter) => (
-              <FilterButton
-                key={filter.type}
-                type={filter.type}
-                label={filter.label}
-                isActive={activeFilter === filter.type}
-                onClick={setActiveFilter}
-                count={getNotificationCount(filter.type)}
-                icon={filter.icon}
-              />
-            ))}
+          {/* Filter Buttons - Fixed height */}
+          <div className="px-6 pb-6">
+            <div className="flex flex-wrap gap-3">
+              {filterButtons.map((filter) => (
+                <FilterButton
+                  key={filter.type}
+                  type={filter.type}
+                  label={filter.label}
+                  isActive={activeFilter === filter.type}
+                  onClick={setActiveFilter}
+                  count={getNotificationCount(filter.type)}
+                  icon={filter.icon}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Notifications List */}
+        {/* Notifications List - Scrollable area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {filteredNotifications.length === 0 ? (
             <div className="text-center py-20">
@@ -281,8 +286,8 @@ const NotificationSystem = () => {
       case 'USRG': return 'user';
       case 'CMTPST': return 'comment';
       case 'PRDAD': return 'info';
-      case 'ORDER': return 'order';
-      case 'PAYMENT': return 'payment';
+      case 'ORDPRCS': return 'order';
+      case 'ORDPYMT': return 'payment';
       case 'DISPATCH': return 'product';
       case 'ERROR': return 'error';
       case 'WARNING': return 'warning';

@@ -1,6 +1,8 @@
 const addressModel = require("../Models/AddressModel");
 const orderModel = require("../Models/orderModel");
 const gPayDetailsModel = require("../Models/gPayPaymentModel");
+const userModel = require("../Models/userModel");
+const productModel = require("../Models/productModel");
 const dateFormat = require("../utils/dateFormat");
 const sendNotify = require("../utils/sendNotify")
 
@@ -105,15 +107,16 @@ exports.googlePayPaymentDetails = async (req, res) => {
         { new: true }
       );
 
-      
-
-      //for Notification
       sendNotify({
-        productId: productData.ProductId,
-        productName: productData.ProductName,
-        Qty: productData.Quantity,
-        Price: product.OfferPrice
-      }, 'PRDAD');
+        product: isExist.orderID,
+        Qty: isExist.qty
+      }, 'ORDPRCS');
+
+      // console.log(user,product)
+      sendNotify({
+        product: isExist.orderID,
+        Qty: isExist.qty
+      }, 'ORDPYMT');
 
       return res.status(200).json({
         message: "Payment Request Completed Successfully..."

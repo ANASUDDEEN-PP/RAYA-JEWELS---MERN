@@ -48,6 +48,34 @@ const sendNotify = async(datas, category) => {
             notifyData.createdDate = dateFormat('NNMMYY|TT:TT');
             notifyData.MarkAsRead = false;
         }
+
+        if(category == "ORDPRCS"){
+            if(!datas.product && !datas.Qty) return 0;
+
+            if(notifyData !== null && notifyData !== undefined)
+                notifyData = {};
+
+            // Set the notification datas
+            notifyData.Title = "Order Status";
+            notifyData.Content = `${datas.product} with ${datas.Qty} was ordered on ${dateFormat('MM-DDTH-YYYY')}`;
+            notifyData.Category = category;
+            notifyData.createdDate = dateFormat('NNMMYY|TT:TT');
+            notifyData.MarkAsRead = false;
+        }
+
+        if(category == "ORDPYMT"){
+            if(!datas.product && !datas.Qty) return 0;
+
+            if(notifyData !== null && notifyData !== undefined)
+                notifyData = {};
+
+            // Set the notification datas
+            notifyData.Title = "Order Payment Request";
+            notifyData.Content = `${datas.product} : Quantity ${datas.Qty}, Was Ordered through UPI`;
+            notifyData.Category = category;
+            notifyData.createdDate = dateFormat('NNMMYY|TT:TT');
+            notifyData.MarkAsRead = false;
+        }
         await notifyModel.create(notifyData);
         return true;
     } catch(err){
