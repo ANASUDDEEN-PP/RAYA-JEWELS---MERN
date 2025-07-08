@@ -76,6 +76,20 @@ const sendNotify = async(datas, category) => {
             notifyData.createdDate = dateFormat('NNMMYY|TT:TT');
             notifyData.MarkAsRead = false;
         }
+
+        if(category == "PRDDISP"){
+            if(!datas.orderID) return 0;
+
+            if(notifyData !== null && notifyData !== undefined)
+                notifyData = {};
+
+            // Set the notification datas
+            notifyData.Title = "Order Dispatched";
+            notifyData.Content = `${datas.orderID} product was dispatched to the given address.`;
+            notifyData.Category = category;
+            notifyData.createdDate = dateFormat('NNMMYY|TT:TT');
+            notifyData.MarkAsRead = false;
+        }
         await notifyModel.create(notifyData);
         return true;
     } catch(err){

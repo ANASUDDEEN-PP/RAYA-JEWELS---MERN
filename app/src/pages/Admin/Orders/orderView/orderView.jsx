@@ -7,6 +7,7 @@ import UserDetails from "./userDetails";
 import PaymentDetailsPopup from './paymentDetails';
 import axios from 'axios';
 import baseUrl from '../../../../url';
+import toast, { Toaster } from 'react-hot-toast';
 
 const OrderDetailsPage = () => {
     const [loading, setLoading] = useState(true);
@@ -127,11 +128,16 @@ const OrderDetailsPage = () => {
             const backendField = fieldMap[field] || field;
             console.log(backendField, value)
             
-            // await axios.patch(`${baseUrl}/order/update/${id}`, {
-            //     [backendField]: value
-            // });
+            const res = await axios.put(`${baseUrl}/order/edit/${id}`, {
+                [backendField]: value
+            });
+            if(res.status == 200){
+                toast.success(res.data.message)
+                handleEditToggle(field);
+            } else {
+                toast.error("Somthing went Wrong")
+            }
 
-            handleEditToggle(field);
         } catch (err) {
             console.error('Error updating order:', err);
             setSaveError(`Failed to update ${field}. Please try again.`);
@@ -152,6 +158,7 @@ const OrderDetailsPage = () => {
         if (!status) return 'text-gray-600 bg-gray-100';
         switch (status.toLowerCase()) {
             case 'paid':
+            case 'Confirmed':
             case 'delivered':
                 return 'text-green-600 bg-green-100';
             case 'pending':
@@ -169,9 +176,11 @@ const OrderDetailsPage = () => {
     };
 
     const getStatusIcon = (status) => {
+        // console.log(status)
         if (!status) return <Clock className="w-4 h-4" />;
         switch (status.toLowerCase()) {
             case 'paid':
+            case 'Confirmed':
             case 'delivered':
                 return <CheckCircle className="w-4 h-4" />;
             case 'failed':
@@ -267,9 +276,9 @@ const OrderDetailsPage = () => {
                                             className="border rounded px-2 py-1 text-sm"
                                             disabled={saving}
                                         >
-                                            <option value="Paid">Paid</option>
-                                            <option value="Pending">Pending</option>
-                                            <option value="Failed">Failed</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="paid">Paid</option>
+                                            <option value="failed">Failed</option>
                                         </select>
                                     ) : (
                                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm ${getStatusColor(orderData.paymentStatus)}`}>
@@ -299,6 +308,7 @@ const OrderDetailsPage = () => {
                                             disabled={saving}
                                         >
                                             <option value="Processing">Processing</option>
+                                            <option value="Confirmed">Confirm</option>
                                             <option value="Shipped">Shipped</option>
                                             <option value="Delivered">Delivered</option>
                                             <option value="Cancelled">Cancelled</option>
@@ -398,6 +408,7 @@ const OrderDetailsPage = () => {
             {showPaymentPopup && (
                 <PaymentDetailsPopup onClose={() => setShowPaymentPopup(false)} />
             )}
+            <Toaster />
         </div>
     );
 };

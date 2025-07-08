@@ -12,7 +12,7 @@ const OrderListPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const itemsPerPage = 5;
+    const itemsPerPage = 8;
     const navigate = useNavigate();
 
     // Fetch orders data

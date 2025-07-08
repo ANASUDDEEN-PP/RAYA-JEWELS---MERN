@@ -288,7 +288,7 @@ const NotificationSystem = () => {
       case 'PRDAD': return 'info';
       case 'ORDPRCS': return 'order';
       case 'ORDPYMT': return 'payment';
-      case 'DISPATCH': return 'product';
+      case 'PRDDISP': return 'product';
       case 'ERROR': return 'error';
       case 'WARNING': return 'warning';
       default: return 'info';

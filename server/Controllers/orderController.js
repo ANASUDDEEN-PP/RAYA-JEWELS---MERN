@@ -54,7 +54,7 @@ exports.addOrder = async (req, res) => {
       paymentType,
       addressId: finalAddressId,
       paymentStatus: 'pending',
-      orderStatus: 'pending',
+      orderStatus: 'Processing',
       orderDate: dateFormat('NNMMYY|TT:TT'),
       deliveredDate: '',
       trackId: '',
@@ -190,9 +190,26 @@ exports.getOrderById = async (req, res) => {
   }
 }
 
-exports.getOrderEditByAdmin = async (req, res) => {
+exports.orderEditByAdmin = async (req, res) => {
   try{
-    console.log(req.body);
+    const { id } = req.params;
+    
+    const isOrder = await orderModel.findById(id)
+    if(!isOrder)
+      return res.status(404).json({ message : "InvalidID" });
+
+    await orderModel.findByIdAndUpdate(
+      id,
+      { $set : req.body },
+      { new : true }
+    )
+
+    if(req.body.orderStatus == "Confirmed")
+      sendNotify({ orderID: isOrder.orderID }, 'PRDDISP');
+    return res.status(200).json({
+      message : "Status Changed Successfully"
+    })
+
   } catch(err){
     return res.status(404).json({
       message : "Internal Server Error"

@@ -6,6 +6,7 @@ router.post('/add', orderController.addOrder);
 router.post('/gpay/payment/details', orderController.googlePayPaymentDetails);
 router.get('/get/all/orders', orderController.getAllOrders);
 router.get('/get/order/:id', orderController.getOrderById);
+router.put('/edit/:id', orderController.orderEditByAdmin)
 
 module.exports = router;
 
