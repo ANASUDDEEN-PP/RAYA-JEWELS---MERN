@@ -108,7 +108,6 @@ exports.userRegister = async (req, res) => {
     }
 };
 
-
 exports.getAllUsers = async (req, res) => {
     try{
         const users = await userModel.find({});
@@ -119,5 +118,18 @@ exports.getAllUsers = async (req, res) => {
         return res.status(404).json({
             message : "Internal Server Error"
         })
+    }
+}
+
+exports.getUserById = async (req, res) => {
+    try{
+        const { id } = req.params;
+        if(!id)
+            return res.status(404).json({ message : "InvalidID"}); 
+        
+        const user = await userModel.findById(id);
+        return res.status(200).json({user})
+    } catch(err){   
+        return res.status(404).json({ message : "Internal Server Error" });
     }
 }

@@ -32,3 +32,16 @@ exports.getAddressByUserId = async(req, res) => {
         return res.status(404).json({ message : "Internal Server Error" });
     }
 }
+
+exports.getAddressByIdOrder = async(req, res) => {
+    try{
+        const { id } = req.params;
+        console.log(id)
+        if(!await addressModel.findById(id))
+            return res.status(404).json({ message : "InvalidID" });
+        const address = await addressModel.findById(id);
+        return res.status(200).json({address});
+    } catch(err){
+        return res.status(404).json({ message : "Internal Server Error" });
+    }
+}

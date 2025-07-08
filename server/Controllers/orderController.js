@@ -4,7 +4,7 @@ const gPayDetailsModel = require("../Models/gPayPaymentModel");
 const productModel = require("../Models/productModel");
 const userModel = require("../Models/userModel");
 const dateFormat = require("../utils/dateFormat");
-const sendNotify = require("../utils/sendNotify")
+const sendNotify = require("../utils/sendNotify");
 
 exports.addOrder = async (req, res) => {
   try {
@@ -159,11 +159,13 @@ exports.getAllOrders = async (req, res) => {
       const product = productMap.get(order.productId.toString());
 
       return {
+        id : order._id,
         orderId: order.orderID,
         productId: product ? product.ProductId : "Unknown", // adjust field name
         customerName: user ? user.Name : "Unknown", // adjust field name
         quantity: parseInt(order.qty),
-        orderDate: order.orderDate
+        orderDate: order.orderDate,
+        orderStatus : order.orderStatus
       };
     });
 
@@ -173,4 +175,28 @@ exports.getAllOrders = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+exports.getOrderById = async (req, res) => {
+  try{
+    const { id } = req.params;
+    if(!id)
+      return res.status(404).json({ message : "InvalidID" });
+
+    const order = await orderModel.findById(id);
+
+    return res.status(200).json({order})
+  } catch(err){
+    return res.status(404).json({ message : "Internal Server Error" });
+  }
+}
+
+exports.getOrderEditByAdmin = async (req, res) => {
+  try{
+    console.log(req.body);
+  } catch(err){
+    return res.status(404).json({
+      message : "Internal Server Error"
+    })
+  }
+}
 

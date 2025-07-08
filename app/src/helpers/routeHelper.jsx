@@ -18,6 +18,7 @@ import SettingsMain from "../pages/Admin/Settings/settings";
 import AboutUs from "../pages/Admin/Settings/settingsSub";
 import ProfileSettings from "../pages/Admin/Settings/profileSettings"
 import CollectionSettings from "../pages/Admin/Settings/collectionSettings";
+import OrderDetailsPage from "../pages/Admin/Orders/orderView/orderView";
 
 const routeHelper = [
   {
@@ -83,6 +84,10 @@ const routeHelper = [
   {
     path: "/all/orders",
     comp: <AllOrderList />,
+  },
+  {
+    path: "/admin/order/:id",
+    comp: <OrderDetailsPage />,
   },
 ];
 

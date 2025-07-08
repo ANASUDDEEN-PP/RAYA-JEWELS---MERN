@@ -1,55 +1,48 @@
-import React, { useState } from 'react';
-import { Search, Eye, Edit, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Eye } from 'lucide-react';
 import NavBar from "../Components/navBar";
 import Sidebar from '../Components/sideBar';
-import { useEffect } from 'react';
 import axios from 'axios';
 import baseUrl from '../../../url';
+import { useNavigate } from 'react-router-dom';
 
 const OrderListPage = () => {
-    // Sample order data
+    // State management
     const [orders, setOrders] = useState([]);
-
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
-
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const itemsPerPage = 5;
+    const navigate = useNavigate();
 
+    // Fetch orders data
     useEffect(() => {
         const fetchOrderData = async () => {
-            try{
+            try {
                 const response = await axios.get(`${baseUrl}/order/get/all/orders`);
                 setOrders(response.data);
-            } catch(err){
-                console.log(err);
+            } catch (err) {
+                console.error("Error fetching orders:", err);
             }
-        }
+        };
         fetchOrderData();
     }, []);
-    
-      const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
-      };
-    
-      // Close sidebar when clicking outside on mobile
-      React.useEffect(() => {
-        const handleResize = () => {
-          if (window.innerWidth >= 1024) {
-            setIsSidebarOpen(false);
-          }
-        };
-    
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-      }, []);
 
-    // Filter orders based on search term
-    const filteredOrders = orders.filter(order =>
-        order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.productId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customerName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Sidebar toggle function
+    const toggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
+
+    // Filter orders based on search term (case-insensitive)
+    const filteredOrders = orders.filter(order => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            (order.orderId?.toLowerCase().includes(searchLower)) ||
+            (order.productId?.toLowerCase().includes(searchLower)) ||
+            (order.customerName?.toLowerCase().includes(searchLower)) ||
+            (order.orderStatus?.toLowerCase().includes(searchLower))
+        );
+    });
 
     // Pagination calculations
     const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
@@ -58,11 +51,27 @@ const OrderListPage = () => {
     const currentOrders = filteredOrders.slice(startIndex, endIndex);
 
     // Reset to first page when search changes
-    React.useEffect(() => {
+    useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm]);
 
-    // Pagination helper function
+    // Get appropriate styling based on order status
+    const getStatusStyle = (status) => {
+        if (!status) return 'bg-gray-100 text-gray-800 border border-gray-200';
+        
+        const statusLower = status.toLowerCase();
+        
+        if (statusLower.includes('pending')) {
+            return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+        } else if (statusLower.includes('shipped') || statusLower.includes('delivered')) {
+            return 'bg-green-100 text-green-800 border border-green-200';
+        } else if (statusLower.includes('cancel')) {
+            return 'bg-red-100 text-red-800 border border-red-200';
+        }
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
+    };
+
+    // Generate pagination numbers
     const getPageNumbers = () => {
         const pages = [];
         const maxVisiblePages = 7;
@@ -97,20 +106,6 @@ const OrderListPage = () => {
         return pages;
     };
 
-    const handleView = (orderId) => {
-        alert(`Viewing order: ${orderId}`);
-    };
-
-    const handleEdit = (orderId) => {
-        alert(`Editing order: ${orderId}`);
-    };
-
-    const handleDelete = (orderId) => {
-        if (window.confirm(`Are you sure you want to delete order ${orderId}?`)) {
-            alert(`Deleted order: ${orderId}`);
-        }
-    };
-
     return (
         <div className="flex h-screen bg-gray-100">
             {/* Sidebar */}
@@ -120,6 +115,8 @@ const OrderListPage = () => {
             <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
                 {/* Navbar */}
                 <NavBar toggleSidebar={toggleSidebar} />
+                
+                {/* Page Content */}
                 <div className="min-h-screen bg-gray-50 p-6">
                     <div className="max-w-7xl mx-auto">
                         {/* Header */}
@@ -127,13 +124,13 @@ const OrderListPage = () => {
 
                         {/* Search Section */}
                         <div className="mb-6 flex justify-end">
-                            <div className="relative max-w-md">
+                            <div className="relative max-w-md w-full">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Search className="h-5 w-5 text-gray-400" />
                                 </div>
                                 <input
                                     type="text"
-                                    placeholder="Search by Order ID, Product ID, or Customer Name..."
+                                    placeholder="Search by Order ID, Product ID, Customer Name, or Status..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
@@ -162,6 +159,9 @@ const OrderListPage = () => {
                                             Order Date
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Status
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
@@ -169,13 +169,13 @@ const OrderListPage = () => {
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {currentOrders.length === 0 ? (
                                         <tr>
-                                            <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                                            <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                                                 No orders found matching your search criteria.
                                             </td>
                                         </tr>
                                     ) : (
                                         currentOrders.map((order, index) => (
-                                            <tr key={order.orderId} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                            <tr key={order.orderId || index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                     {order.orderId}
                                                 </td>
@@ -191,28 +191,17 @@ const OrderListPage = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {order.orderDate}
                                                 </td>
+                                                <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium rounded-md ${getStatusStyle(order.orderStatus)}`}>
+                                                    {order.orderStatus}
+                                                </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <div className="flex space-x-2">
                                                         <button
-                                                            onClick={() => handleView(order.orderId)}
+                                                            onClick={() => navigate(`/admin/order/${order.id}`)}
                                                             className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
                                                             title="View Order"
                                                         >
                                                             <Eye className="h-4 w-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleEdit(order.orderId)}
-                                                            className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
-                                                            title="Edit Order"
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(order.orderId)}
-                                                            className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
-                                                            title="Delete Order"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
                                                         </button>
                                                     </div>
                                                 </td>
@@ -223,13 +212,12 @@ const OrderListPage = () => {
                             </table>
                         </div>
 
-                        {/* Results count and Pagination */}
-                        <div className="mt-4 flex justify-between items-center">
+                        {/* Pagination and Results Count */}
+                        <div className="mt-4 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
                             <div className="text-sm text-gray-500">
                                 Showing {startIndex + 1} to {Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length} orders
                             </div>
 
-                            {/* Pagination */}
                             {totalPages > 1 && (
                                 <div className="flex items-center space-x-1">
                                     <button
