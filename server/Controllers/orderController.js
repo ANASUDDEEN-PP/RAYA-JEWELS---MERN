@@ -3,6 +3,7 @@ const orderModel = require("../Models/orderModel");
 const gPayDetailsModel = require("../Models/gPayPaymentModel");
 const productModel = require("../Models/productModel");
 const userModel = require("../Models/userModel");
+const imageModel = require("../Models/ImageModel")
 const dateFormat = require("../utils/dateFormat");
 const sendNotify = require("../utils/sendNotify");
 
@@ -204,8 +205,9 @@ exports.orderEditByAdmin = async (req, res) => {
       { new : true }
     )
 
-    if(req.body.orderStatus == "Confirmed")
+    if(req.body.orderStatus == "Confirmed"){
       sendNotify({ orderID: isOrder.orderID }, 'PRDDISP');
+    }
     return res.status(200).json({
       message : "Status Changed Successfully"
     })
@@ -216,4 +218,78 @@ exports.orderEditByAdmin = async (req, res) => {
     })
   }
 }
+
+exports.orderDetailsById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Step 1: Check if user exists
+    const isUser = await userModel.findById(id);
+    if (!isUser)
+      return res.status(404).json({ message: "Invalid ID" });
+
+    // Step 2: Fetch all orders of the user
+    const isOrder = await orderModel.find({ customerId: isUser._id }).lean();
+
+    if (isOrder.length === 0) {
+      return res.status(200).json({ isUser, orders: {} });
+    }
+
+    // Step 3: Extract product IDs from the orders
+    const productIds = isOrder.map(i => i.productId);
+
+    // Step 4: Fetch product details
+    const products = await productModel.find({ _id: { $in: productIds } }).lean();
+
+    // Step 5: Build a product lookup map
+    const productMap = {};
+    products.forEach(p => {
+      productMap[p._id.toString()] = p;
+    });
+
+    // Step 6: Fetch one image per product
+    const images = await imageModel.find({ imageId: { $in: productIds } }).lean();
+
+    // Step 7: Build a single-image map using ImageUrl
+    const imageMap = {};
+    images.forEach(img => {
+      const pid = img.imageId.toString();
+      if (!imageMap[pid]) {
+        imageMap[pid] = img.ImageUrl || "";
+      }
+    });
+
+    // Step 8: Structure final response
+    const orders = {};
+    isOrder.forEach(order => {
+      const product = productMap[order.productId.toString()] || {};
+      const image = imageMap[order.productId.toString()] || "";
+
+      orders[order.orderID] = {
+        id : order._id,
+        orderId: order.orderID,
+        orderDate: order.orderDate,
+        status: order.orderStatus,
+        trackId : order.trackId,
+        expectedDeliveryDate: order.deliveredDate,
+        product: {
+          name: product.ProductName || "N/A",
+          brand: product.CollectionName || "N/A",
+          image: image, // Single image (base64 or URL)
+          price: product.OfferPrice || 0,
+          quantity: order.qty || 1,
+          size: order.size || ""
+        }
+      };
+    });
+
+    // Step 9: Return response
+    return res.status(200).json({ orders });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 
