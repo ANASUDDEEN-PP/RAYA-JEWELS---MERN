@@ -328,6 +328,8 @@ exports.orderDetailsById = async (req, res) => {
 exports.userCancelOrder = async(req, res) => {
   try{
     const { id } = req.params;
+
+    // console.log(id, reason)
     
     if(!await orderModel.findById(id))
       return res.status(404).json({ message : "InvalidID" });
@@ -335,7 +337,7 @@ exports.userCancelOrder = async(req, res) => {
     await orderModel.findByIdAndUpdate(
       id,
       { $set : {
-        orderStatus : "",
+        orderStatus : "Cancelled",
         cancellationReason: req.body.reason
       }},
       { new: true }

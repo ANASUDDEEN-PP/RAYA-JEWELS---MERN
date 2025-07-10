@@ -89,12 +89,12 @@ export default function OrderDetailsPage() {
     try {
       // console.log(cancellationReason, currentOrder.id)
       // Here you would typically make an API call to cancel the order
-      await axios.put(`${baseUrl}/order/user/cancel/${currentOrder.orderId}`, {
+      await axios.put(`${baseUrl}/order/user/cancel/${currentOrder.id}`, {
         reason: cancellationReason
       });
 
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Update local state
       setOrdersData(ordersData.map(order => 
