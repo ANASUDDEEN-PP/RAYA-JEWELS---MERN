@@ -39,6 +39,9 @@ const orderSchema = new Schema({
     },
     isComplete: {
         type: String
+    },
+    cancellationReason : {
+        type: String
     }
 });
 

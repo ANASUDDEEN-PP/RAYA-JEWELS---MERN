@@ -65,7 +65,8 @@ exports.addOrder = async (req, res) => {
       trackId: '',
       size,
       qty,
-      isComplete: false
+      isComplete: false,
+      cancellationReason: ''
     };
 
     const order = await orderModel.create(orderData);
@@ -323,5 +324,31 @@ exports.orderDetailsById = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+exports.userCancelOrder = async(req, res) => {
+  try{
+    const { id } = req.params;
+    
+    if(!await orderModel.findById(id))
+      return res.status(404).json({ message : "InvalidID" });
+
+    await orderModel.findByIdAndUpdate(
+      id,
+      { $set : {
+        orderStatus : "",
+        cancellationReason: req.body.reason
+      }},
+      { new: true }
+    )
+    
+    return res.status(200).json({
+      message : "Order Cancelled..."
+    })
+  } catch(err){
+    return res.status(404).json({
+      message : "Internal Server Error"
+    })
+  }
+}
 
 

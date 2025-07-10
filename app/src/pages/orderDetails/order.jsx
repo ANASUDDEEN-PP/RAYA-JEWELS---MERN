@@ -6,6 +6,7 @@ import {
   Clock,
   Loader,
   ChevronRight,
+  X,
 } from "lucide-react";
 import NavBar from "../../components/navBar";
 import axios from "axios";
@@ -16,7 +17,12 @@ export default function OrderDetailsPage() {
   const [ordersData, setOrdersData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const user = JSON.parse(localStorage.getItem("userProfile"));
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
+  
+  // Safely get user from localStorage
+  const user = JSON.parse(localStorage.getItem("userProfile")) || { _id: "" };
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -25,9 +31,7 @@ export default function OrderDetailsPage() {
         const response = await axios.get(
           `${baseUrl}/order/user/get/${user._id}`
         );
-        // console.log(response);
-
-        // Convert object of orders to array
+        
         let rawOrders = response.data?.orders || response.data || {};
         let orders = Object.values(rawOrders);
 
@@ -55,7 +59,6 @@ export default function OrderDetailsPage() {
           }));
 
         setOrdersData(formattedOrders);
-        console.log(ordersData);
         if (formattedOrders.length > 0) {
           setSelectedOrderId(formattedOrders[0].orderId);
         }
@@ -67,32 +70,72 @@ export default function OrderDetailsPage() {
       }
     };
 
-    fetchOrderDetails();
+    if (user._id) {
+      fetchOrderDetails();
+    }
   }, [user._id]);
 
   const currentOrder =
     ordersData.find((order) => order.orderId === selectedOrderId) || {};
   const ordersList = [...ordersData];
 
-  const handleCancelOrder = () => {
-    if (window.confirm("Are you sure you want to cancel this order?")) {
+  const handleCancelOrder = async () => {
+    if (!cancellationReason.trim()) {
+      alert("Please provide a reason for cancellation.");
+      return;
+    }
+
+    setIsCancelling(true);
+    try {
+      // console.log(cancellationReason, currentOrder.id)
+      // Here you would typically make an API call to cancel the order
+      await axios.put(`${baseUrl}/order/user/cancel/${currentOrder.orderId}`, {
+        reason: cancellationReason
+      });
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Update local state
+      setOrdersData(ordersData.map(order => 
+        order.orderId === currentOrder.orderId 
+          ? { ...order, status: "Cancelled" } 
+          : order
+      ));
+
       alert(
-        "Order cancellation request submitted. You will receive a confirmation email shortly."
+        `Order cancellation request submitted successfully.\nReason: ${cancellationReason}\nYou will receive a confirmation email shortly.`
       );
+      setShowCancelModal(false);
+      setCancellationReason("");
+    } catch (err) {
+      console.error("Failed to cancel order:", err);
+      alert("Failed to cancel order. Please try again later.");
+    } finally {
+      setIsCancelling(false);
     }
   };
 
+  const openCancelModal = () => {
+    setShowCancelModal(true);
+  };
+
+  const closeCancelModal = () => {
+    setShowCancelModal(false);
+    setCancellationReason("");
+  };
+
   const handleTrackOrder = () => {
-    console.log("sbfasbfas", ordersData);
-    if (ordersData.trackId) {
-      window.location.href = `${ordersData.trackId}`;
+    if (currentOrder.trackId) {
+      window.open(currentOrder.trackId, "_blank");
     } else {
       alert("Tracking information is not yet available for this order.");
     }
   };
 
   const getStatusColor = (status) => {
-    // console.log(status.toLowerCase());
+    if (!status) return "text-gray-600 bg-gray-100";
+    
     switch (status.toLowerCase()) {
       case "confirmed":
         return "text-green-600 bg-green-100";
@@ -168,6 +211,67 @@ export default function OrderDetailsPage() {
   return (
     <>
       <NavBar />
+      {/* Cancel Order Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900">
+                Cancel Order
+              </h3>
+              <button 
+                onClick={closeCancelModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to cancel this order? Please provide a reason for cancellation.
+            </p>
+            
+            <div className="mb-4">
+              <label htmlFor="cancellationReason" className="block text-sm font-medium text-gray-700 mb-2">
+                Reason for cancellation
+              </label>
+              <textarea
+                id="cancellationReason"
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your reason here..."
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={closeCancelModal}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={isCancelling}
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                disabled={isCancelling}
+              >
+                {isCancelling ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-2 animate-spin inline" />
+                    Cancelling...
+                  </>
+                ) : (
+                  "Confirm Cancellation"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
@@ -178,19 +282,19 @@ export default function OrderDetailsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center space-x-4 mb-4 sm:mb-0">
                 <span className="text-lg font-medium text-gray-600">
-                  Order {currentOrder.orderId}
+                  Order {currentOrder.orderId || "N/A"}
                 </span>
                 <span
                   className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
                     currentOrder.status
                   )}`}
                 >
-                  {currentOrder.status}
+                  {currentOrder.status || "Unknown"}
                 </span>
               </div>
               <div className="flex items-center text-sm text-gray-500">
                 <Calendar className="w-4 h-4 mr-2" />
-                Ordered on {currentOrder.orderDate}
+                Ordered on {currentOrder.orderDate || "Date not available"}
               </div>
             </div>
           </div>
@@ -216,17 +320,17 @@ export default function OrderDetailsPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <p className="font-medium text-sm text-gray-900">
-                            {order.orderId}
+                            {order.orderId || "N/A"}
                           </p>
                           <p className="text-xs text-gray-600 mt-1">
-                            {order.orderDate}
+                            {order.orderDate || "Date not available"}
                           </p>
                           <span
                             className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-2 ${getStatusColor(
                               order.status
                             )}`}
                           >
-                            {order.status}
+                            {order.status || "Unknown"}
                           </span>
                         </div>
                         <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -272,28 +376,31 @@ export default function OrderDetailsPage() {
                 <div className="flex flex-col sm:flex-row gap-6">
                   <div className="flex-shrink-0">
                     <img
-                      src={currentOrder.product?.image}
-                      alt={currentOrder.product?.name}
+                      src={currentOrder.product?.image || ""}
+                      alt={currentOrder.product?.name || "Product"}
                       className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                      onError={(e) => {
+                        e.target.src = "https://via.placeholder.com/128";
+                      }}
                     />
                   </div>
 
                   <div className="flex-1">
                     <h3 className="text-lg font-medium text-gray-900 mb-1">
-                      {currentOrder.product?.name}
+                      {currentOrder.product?.name || "Unknown Product"}
                     </h3>
                     <p className="text-gray-600 mb-2">
-                      {currentOrder.product?.brand}
+                      {currentOrder.product?.brand || "Unknown Brand"}
                     </p>
                     <p className="text-sm text-gray-500 mb-2">
-                      SKU: {currentOrder.product?.sku}
+                      SKU: {currentOrder.product?.sku || "N/A"}
                     </p>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">
-                        Quantity: {currentOrder.product?.quantity}
+                        Quantity: {currentOrder.product?.quantity || 1}
                       </span>
                       <span className="text-xl font-bold text-gray-900">
-                        ₹{currentOrder.product?.price?.toFixed(2)}
+                        ₹{currentOrder.product?.price?.toFixed(2) || "0.00"}
                       </span>
                     </div>
                   </div>
@@ -301,19 +408,17 @@ export default function OrderDetailsPage() {
 
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <a
-                      href={currentOrder.trackId || ""}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={handleTrackOrder}
                       className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                     >
                       <Truck className="w-4 h-4 mr-2" />
                       Track Order
-                    </a>
+                    </button>
 
                     {currentOrder.status?.toLowerCase() === "processing" && (
                       <button
-                        onClick={handleCancelOrder}
+                        onClick={openCancelModal}
                         className="flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                       >
                         Cancel Order
@@ -333,7 +438,6 @@ export default function OrderDetailsPage() {
                   {currentOrder.expectedDeliveryDate &&
                   new Date(currentOrder.expectedDeliveryDate).getTime() >
                     Date.now() ? (
-                    // Show delivery date when available
                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                       <div>
                         <p className="text-sm text-gray-600">
@@ -358,7 +462,6 @@ export default function OrderDetailsPage() {
                       </div>
                     </div>
                   ) : (
-                    // Show user-friendly message when no delivery date
                     <div className="flex flex-col items-center justify-center p-8 bg-blue-50 rounded-lg border border-blue-200">
                       <div className="mb-4">
                         <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
