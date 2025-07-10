@@ -229,6 +229,10 @@ exports.orderEditByAdmin = async (req, res) => {
       { new: true }
     )
 
+    if(orderStatus === "Processing"){
+      quantityChanger("deduct", isOrder)
+    }
+
     if(orderStatus === "Cancelled"){
       quantityChanger("add", isOrder)
     }
