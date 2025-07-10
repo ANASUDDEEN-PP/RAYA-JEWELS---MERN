@@ -45,3 +45,17 @@ exports.getAddressByIdOrder = async(req, res) => {
         return res.status(404).json({ message : "Internal Server Error" });
     }
 }
+
+exports.deleteAddress = async(req, res) => {
+    try{
+        const { id } = req.params;
+        if(!await addressModel.findById(id))
+            return res.status(404).json({ message : "InvalidId" });
+        await addressModel.findByIdAndDelete(id)
+        return res.status(200).json({ message : "Address Deleted.." })
+    } catch(err){
+        return res.status(404).json({
+            message : "Internal Server Error"
+        })
+    }
+}

@@ -131,10 +131,12 @@ const UserAddress = ({ onBack, user }) => {
         setDeletingId(id);
         try {
             // Add your delete API call here
-            // await axios.delete(`${baseUrl}/address/delete/${id}`);
-            
-            setAddresses(prev => prev.filter(addr => addr.id !== id));
-            toast.success("Address deleted successfully");
+            const res = await axios.delete(`${baseUrl}/address/delete/${id}`);
+            if(res.status === 200){
+                setAddresses(prev => prev.filter(addr => addr.id !== id));
+                toast.success("Address deleted successfully");
+                window.location.reload();
+            }
         } catch (err) {
             console.log(err);
             toast.error("Failed to delete address");
@@ -272,7 +274,7 @@ const UserAddress = ({ onBack, user }) => {
                                         <Edit2 className="h-4 w-4" />
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(address.id)}
+                                        onClick={() => handleDelete(address._id)}
                                         disabled={isSaving || deletingId === address.id}
                                         className="p-1 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
