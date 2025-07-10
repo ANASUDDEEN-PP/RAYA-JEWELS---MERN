@@ -36,6 +36,9 @@ const orderSchema = new Schema({
     },
     qty : {
         type: String
+    },
+    isComplete: {
+        type: String
     }
 });
 

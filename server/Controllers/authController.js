@@ -133,3 +133,48 @@ exports.getUserById = async (req, res) => {
         return res.status(404).json({ message : "Internal Server Error" });
     }
 }
+
+exports.setUserProfileImage = async(req, res) => {
+    try{
+        const { profileImage } = req.body;
+        const { id } = req.params;
+
+        const isProfile = await profileModel.findOne({userId : id})
+
+        if(!await userModel.findById(id) && !isProfile)
+            return res.status(404).json({ message : "InvalidID"});
+        await profileModel.findByIdAndUpdate(
+            isProfile._id,
+            { $set : {
+                ImageUrl : profileImage
+            }},
+            { new : true }
+        )
+        
+        return res.status(200).json({
+            message : "Profile Image Updated..."
+        })
+    } catch(err){
+        return res.status(404).json({
+             message : "Internal Server Error"
+        })
+    }
+}
+
+exports.getProfileImage = async(req, res) => {
+    try{
+        const { id } = req.params
+        const isProfile = await profileModel.findOne({ userId : id });
+        
+        if(!await userModel.findById(id) && !isProfile)
+            return res.status(404).json({ message : "InvalidID"});
+
+        return res.status(200).json({
+            isProfile
+        })
+    } catch(err){
+        return res.status(404).json({
+            message : "Internal Server Error"
+        })
+    }
+}

@@ -7,6 +7,7 @@ import LoginWarning from "./Alert/pleaseLoginWarning";
 import ProfilePanel from "./profilePanel/profilePanel";
 import axios from "axios";
 import baseUrl from "../url";
+import { useNavigate } from "react-router-dom";
 
 const customStyles = `
   @keyframes fadeIn {
@@ -54,9 +55,13 @@ export default class NavBar extends Component {
       cartItems: [],
       searchResults: [],
       userProfile: JSON.parse(localStorage.getItem("userProfile")) || null,
-      isLoggedIn: JSON.parse(localStorage.getItem("isLoggedIn")) || false,
+      isLoggedIn: JSON.parse(localStorage.getItem("isLoggedIn")) || false
     };
   }
+
+  handleRedirect = () => {
+    this.props.navigate('/some-page'); // ✅ Use navigate from props
+  };
 
   componentDidMount() {
     const { userProfile } = this.state;

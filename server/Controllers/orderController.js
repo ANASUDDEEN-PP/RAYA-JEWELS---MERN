@@ -6,6 +6,7 @@ const userModel = require("../Models/userModel");
 const imageModel = require("../Models/ImageModel")
 const dateFormat = require("../utils/dateFormat");
 const sendNotify = require("../utils/sendNotify");
+const quantityChanger = require("../utils/orderQuantityChanger")
 
 exports.addOrder = async (req, res) => {
   try {
@@ -64,9 +65,10 @@ exports.addOrder = async (req, res) => {
       trackId: '',
       size,
       qty,
+      isComplete: false
     };
 
-    await orderModel.create(orderData);
+    const order = await orderModel.create(orderData);
 
     return res.status(201).json({
       message: "Order placed successfully",
@@ -107,7 +109,12 @@ exports.googlePayPaymentDetails = async (req, res) => {
 
       await orderModel.findByIdAndUpdate(
         isExist._id,
-        { $set: { paymentType: paymentType } },
+        {
+          $set: {
+            paymentType: paymentType,
+            isComplete: true
+          }
+        },
         { new: true }
       );
 
@@ -122,19 +129,32 @@ exports.googlePayPaymentDetails = async (req, res) => {
         Qty: isExist.qty
       }, 'ORDPYMT');
 
+
+      //add here to quantityChanger
+      quantityChanger("deduct", isExist);
+
       return res.status(200).json({
         message: "Payment Request Completed Successfully..."
       });
     } else if (paymentType == "cod") {    //for COD
       await orderModel.findByIdAndUpdate(
         isExist._id,
-        { $set: { paymentType: paymentType } },
+        {
+          $set: {
+            paymentType: paymentType,
+            isComplete: true
+          }
+        },
         { new: true }
       );
       sendNotify({
         product: isExist.orderID,
         Qty: isExist.qty
       }, 'ORDPRCS');
+
+      //add here to quantityChanger
+      quantityChanger("deduct", isExist);
+
       return res.status(200).json({
         message: "Order requested...."
       });
@@ -149,7 +169,7 @@ exports.googlePayPaymentDetails = async (req, res) => {
 
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({});
+    const orders = await orderModel.find({ isComplete: true });
     const users = await userModel.find({});
     const products = await productModel.find({});
 
@@ -163,13 +183,13 @@ exports.getAllOrders = async (req, res) => {
       const product = productMap.get(order.productId.toString());
 
       return {
-        id : order._id,
+        id: order._id,
         orderId: order.orderID,
         productId: product ? product.ProductId : "Unknown", // adjust field name
         customerName: user ? user.Name : "Unknown", // adjust field name
         quantity: parseInt(order.qty),
         orderDate: order.orderDate,
-        orderStatus : order.orderStatus
+        orderStatus: order.orderStatus
       };
     });
 
@@ -181,43 +201,48 @@ exports.getAllOrders = async (req, res) => {
 };
 
 exports.getOrderById = async (req, res) => {
-  try{
+  try {
     const { id } = req.params;
-    if(!id)
-      return res.status(404).json({ message : "InvalidID" });
+    if (!id)
+      return res.status(404).json({ message: "InvalidID" });
 
     const order = await orderModel.findById(id);
 
-    return res.status(200).json({order})
-  } catch(err){
-    return res.status(404).json({ message : "Internal Server Error" });
+    return res.status(200).json({ order })
+  } catch (err) {
+    return res.status(404).json({ message: "Internal Server Error" });
   }
 }
 
 exports.orderEditByAdmin = async (req, res) => {
-  try{
+  try {
     const { id } = req.params;
-    
+    const { orderStatus } = req.body;
+
     const isOrder = await orderModel.findById(id)
-    if(!isOrder)
-      return res.status(404).json({ message : "InvalidID" });
+    if (!isOrder)
+      return res.status(404).json({ message: "InvalidID" });
 
     await orderModel.findByIdAndUpdate(
       id,
-      { $set : req.body },
-      { new : true }
+      { $set: req.body },
+      { new: true }
     )
 
-    if(req.body.orderStatus == "Confirmed"){
+    if(orderStatus === "Cancelled"){
+      quantityChanger("add", isOrder)
+    }
+
+    if (req.body.orderStatus == "Confirmed") {
       sendNotify({ orderID: isOrder.orderID }, 'PRDDISP');
     }
     return res.status(200).json({
-      message : "Status Changed Successfully"
+      message: "Status Changed Successfully"
     })
 
-  } catch(err){
+  } catch (err) {
     return res.status(404).json({
-      message : "Internal Server Error"
+      message: "Internal Server Error"
     })
   }
 }
@@ -232,7 +257,7 @@ exports.orderDetailsById = async (req, res) => {
       return res.status(404).json({ message: "Invalid ID" });
 
     // Step 2: Fetch all orders of the user
-    const isOrder = await orderModel.find({ customerId: isUser._id }).lean();
+    const isOrder = await orderModel.find({ customerId: isUser._id, isComplete: true }).lean();
 
     if (isOrder.length === 0) {
       return res.status(200).json({ isUser, orders: {} });
@@ -269,11 +294,11 @@ exports.orderDetailsById = async (req, res) => {
       const image = imageMap[order.productId.toString()] || "";
 
       orders[order.orderID] = {
-        id : order._id,
+        id: order._id,
         orderId: order.orderID,
         orderDate: order.orderDate,
         status: order.orderStatus,
-        trackId : order.trackId,
+        trackId: order.trackId,
         expectedDeliveryDate: order.deliveredDate,
         product: {
           name: product.ProductName || "N/A",

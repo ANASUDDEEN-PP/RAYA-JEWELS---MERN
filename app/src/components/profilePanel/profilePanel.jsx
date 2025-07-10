@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { UserX, User, LogOut, X, ChevronDown, Package, Settings, MapPin, CreditCard, Edit2, Save, Camera } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import UserAddress from "./profileAddress";
+import axios from "axios";
+import baseUrl from "../../url";
 
 const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showAddresses, setShowAddresses] = useState(false);
+  const [profileImage, setProfileImage] = useState({});
   const [editedProfile, setEditedProfile] = useState({
     Name: userProfile?.Name || '',
     Email: userProfile?.Email || '',
@@ -14,6 +17,19 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
   });
   const navigate = useNavigate();
   const loginUser = JSON.parse(localStorage.getItem("userProfile"))
+
+  useEffect(() => {
+    const fetchUserProfile = async() => {
+      try{
+        const responce = await axios.get(`${baseUrl}/auth/get/profile/image/${loginUser._id}`);
+        const imageUrl = responce.data.isProfile ? responce.data.isProfile.ImageUrl : '';
+        setProfileImage(imageUrl);
+      } catch(err){
+        console.log(err);
+      }
+    }
+    fetchUserProfile();
+  })
 
   // Function to generate initials from name
   const getInitials = (name) => {
@@ -34,10 +50,11 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) => {
-        // Here you would typically upload the image to your server
-        // and update the user's profile image URL
-        console.log('New profile image:', event.target.result);
+      reader.onload = async (event) => {
+        const responce = await axios.post(`${baseUrl}/auth/set/profile/img/${loginUser._id}`, {
+          profileImage : event.target.result
+        });
+        console.log(responce)
         // For demo purposes, we'll just log it
       };
       reader.readAsDataURL(file);
@@ -121,10 +138,10 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                     ) : (
                       <div className="flex flex-col items-center">
                         <div className="mb-4 relative group">
-                          {userProfile.imageUrl ? (
+                          {profileImage ? (
                             <img
                               className="h-24 w-24 rounded-full object-cover"
-                              src={userProfile.imageUrl}
+                              src={profileImage}
                               alt="Profile"
                             />
                           ) : (
