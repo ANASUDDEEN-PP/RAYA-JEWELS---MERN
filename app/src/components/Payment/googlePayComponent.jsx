@@ -63,12 +63,12 @@ const GooglePayPopup = ({ isOpen, onClose, onPaymentComplete, orderTotal, orderI
     if (formData.screenshotBase64) {
       try {
         const res = await axios.post(`${baseUrl}/order/gpay/payment/details`, formData);
-        if (res.data.status === 200) {
+        if (res.status === 200) {
           setCurrentStep('success');
           setTimeout(() => {
             const paymentData = {
               screenshotBase64: formData.screenshotBase64,
-              screenshotName: formData.screenshotName,
+              screenshotName: formData.screenshotName,  
               amount: orderTotal
             };
             onPaymentComplete(paymentData);

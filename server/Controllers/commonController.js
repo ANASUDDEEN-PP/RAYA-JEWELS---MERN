@@ -16,6 +16,25 @@ exports.getAllNotification = async (req, res) => {
     }
 }
 
+exports.setMarkAsRead = async(req, res) => {
+  try{
+    console.log(req.body)
+    const { notificationId } = req.body;
+    await notifyModel.findByIdAndUpdate(
+      {_id : notificationId},
+      {$set : {
+        MarkAsRead: true
+      }},
+      {new: true}
+    )
+    return res.status(200).json({ message : "Notification mark as Read.."})
+  } catch(err){
+    return res.status(404).json({
+      message : "Internal Server Error"
+    })
+  }
+}
+
 exports.dashboardAPI = async (req, res) => {
   try {
     const orders = await orderModel.find({});

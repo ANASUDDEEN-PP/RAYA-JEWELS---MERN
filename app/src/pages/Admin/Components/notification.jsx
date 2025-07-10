@@ -323,6 +323,7 @@ const NotificationSystem = () => {
   // Mark notification as read
   const markAsRead = async (id) => {
     try {
+      console.log({notificationId: id})
       await axios.put(`${baseUrl}/mark/notification/as/read`, { notificationId: id });
       setNotifications(notifications.map(notification => 
         notification.id === id ? { ...notification, isRead: true } : notification
