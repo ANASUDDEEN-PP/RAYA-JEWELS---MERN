@@ -100,18 +100,26 @@ const StatCard = ({ title, value, change, icon: Icon, color, subtitle }) => {
 const TradingChart = ({ data, profit, loss }) => {
   const isProfit = parseFloat(profit) > Math.abs(parseFloat(loss));
   const netProfit = parseFloat(profit) - Math.abs(parseFloat(loss));
-  
+  const [showOpposite, setShowOpposite] = useState(false);
+
+  // Transform data to show both lines above x-axis
+  const chartData = data.map(item => ({
+    ...item,
+    profit: item.profit || 0,
+    lossDisplay: Math.abs(item.loss || 0)
+  }));
+
   return (
     <div className={`rounded-xl shadow-sm border border-gray-100 p-6 relative overflow-hidden ${
       isProfit ? 'bg-green-50' : 'bg-red-50'
     }`}>
-      {/* Background overlay based on profit/loss */}
+      {/* Background overlay */}
       <div className={`absolute inset-0 ${
         isProfit ? 'bg-green-500' : 'bg-red-500'
       } opacity-5`}></div>
       
       <div className="relative z-10">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <div>
             <h3 className="text-xl font-bold text-gray-900 mb-1">
               Trading Performance
@@ -124,19 +132,45 @@ const TradingChart = ({ data, profit, loss }) => {
               </span>
             </p>
           </div>
-          <div className={`px-4 py-2 rounded-full text-sm font-medium ${
-            isProfit 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-red-100 text-red-800'
-          }`}>
-            {isProfit ? '📈 Profitable' : '📉 Loss'}
+          
+          <div className="flex flex-wrap gap-2">
+            <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+              isProfit 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-red-100 text-red-800'
+            }`}>
+              {isProfit ? '📈 Profitable' : '📉 Loss'}
+            </div>
+            
+            <button
+              onClick={() => setShowOpposite(!showOpposite)}
+              className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${
+                showOpposite 
+                  ? isProfit 
+                    ? 'bg-red-100 text-red-800' 
+                    : 'bg-green-100 text-green-800'
+                  : 'bg-gray-100 text-gray-800'
+              }`}
+            >
+              {showOpposite ? (
+                <>
+                  <CheckCircle size={14} />
+                  {isProfit ? 'Showing Loss' : 'Showing Profit'}
+                </>
+              ) : (
+                <>
+                  <XCircle size={14} />
+                  {isProfit ? 'Show Loss' : 'Show Profit'}
+                </>
+              )}
+            </button>
           </div>
         </div>
         
         <div className="h-96">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={data}
+              data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <defs>
@@ -167,16 +201,52 @@ const TradingChart = ({ data, profit, loss }) => {
                   borderRadius: '8px',
                   color: '#fff'
                 }}
-                formatter={(value) => [`${value.toLocaleString()}`, 'Sales']}
+                formatter={(value, name) => {
+                  if (name === 'profit') return [`$${value.toLocaleString()}`, 'Profit'];
+                  if (name === 'lossDisplay') return [`-$${value.toLocaleString()}`, 'Loss'];
+                  return [`$${value.toLocaleString()}`, 'Sales'];
+                }}
+                labelFormatter={(label) => `Month: ${label}`}
               />
-              <Area
-                type="monotone"
-                dataKey="sales"
-                stroke={isProfit ? "#10B981" : "#EF4444"}
-                strokeWidth={3}
-                fillOpacity={1}
-                fill={isProfit ? "url(#colorProfit)" : "url(#colorLoss)"}
+              <Legend 
+                formatter={(value) => {
+                  if (value === 'profit') return 'Profit';
+                  if (value === 'lossDisplay') return 'Loss';
+                  return value;
+                }}
               />
+              
+              {/* Default line (profit for profit chart, loss for loss chart) */}
+              {(!showOpposite || !isProfit) && (
+                <Area
+                  type="monotone"
+                  dataKey={isProfit ? "profit" : "lossDisplay"}
+                  name={isProfit ? "profit" : "loss"}
+                  stroke={isProfit ? "#10B981" : "#EF4444"}
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill={isProfit ? "url(#colorProfit)" : "url(#colorLoss)"}
+                  animationDuration={5000}
+                  activeDot={{ r: 8 }}
+                  isAnimationActive={true}
+                />
+              )}
+              
+              {/* Opposite line (shown when toggle is on) */}
+              {showOpposite && (
+                <Area
+                  type="monotone"
+                  dataKey={isProfit ? "lossDisplay" : "profit"}
+                  name={isProfit ? "loss" : "profit"}
+                  stroke={isProfit ? "#EF4444" : "#10B981"}
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill={isProfit ? "url(#colorLoss)" : "url(#colorProfit)"}
+                  animationDuration={5000}
+                  activeDot={{ r: 8 }}
+                  isAnimationActive={true}
+                />
+              )}
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -519,10 +589,14 @@ const Dashboard = () => {
 
   // Add sample data for better visualization when we have limited data
   const enhancedSalesData = salesData.length === 1 && salesData[0].month !== "No Data" ? [
-    { month: "May 2025", sales: 45000, orders: 2 },
-    { month: "Jun 2025", sales: 62000, orders: 3 },
-    ...salesData
-  ] : salesData;
+  { month: "May 2025", sales: 45000, profit: 12000, loss: -5000, orders: 2 },
+  { month: "Jun 2025", sales: 62000, profit: 18000, loss: -3000, orders: 3 },
+  ...salesData.map(item => ({
+    ...item,
+    profit: item.sales * 0.3, // example calculation
+    loss: -item.sales * 0.1   // example calculation
+  }))
+] : salesData;
 
   return (
     <div className="flex h-screen bg-gray-50">
