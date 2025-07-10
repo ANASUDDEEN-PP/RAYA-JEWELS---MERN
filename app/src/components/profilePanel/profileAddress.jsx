@@ -35,7 +35,9 @@ const UserAddress = ({ onBack, user }) => {
         name: "",
         address: "",
         city: "",
+        district: "",
         state: "",
+        landmark: "",
         zipCode: "",
         phone: ""
     });
@@ -54,8 +56,10 @@ const UserAddress = ({ onBack, user }) => {
             name: "",
             address: "",
             city: "",
+            district: "",
             state: "",
             zipCode: "",
+            landmark: "",
             phone: ""
         });
     };
@@ -74,7 +78,7 @@ const UserAddress = ({ onBack, user }) => {
                     id: user._id,
                     isSaved : true
                 };
-                
+                console.log(newAddress)
                 const responce = await axios.post(`${baseUrl}/address/add`, newAddress)
                 if (responce.status === 200){
                     setAddresses(prev => [...prev, newAddress]);
@@ -115,8 +119,10 @@ const UserAddress = ({ onBack, user }) => {
             name: "",
             address: "",
             city: "",
+            district: "",
             state: "",
             zipCode: "",
+            landmark: "",
             phone: ""
         });
     };
@@ -348,6 +354,18 @@ const UserAddress = ({ onBack, user }) => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    District
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.district}
+                                    onChange={(e) => handleInputChange('district', e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Enter city"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                     State
                                 </label>
                                 <input
@@ -371,6 +389,18 @@ const UserAddress = ({ onBack, user }) => {
                                     onChange={(e) => handleInputChange('zipCode', e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Enter ZIP code"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    LandMark
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.landmark}
+                                    onChange={(e) => handleInputChange('landmark', e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Enter LandMark"
                                 />
                             </div>
                             <div>

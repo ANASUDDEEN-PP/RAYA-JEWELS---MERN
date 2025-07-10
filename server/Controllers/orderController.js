@@ -12,7 +12,8 @@ exports.addOrder = async (req, res) => {
     const {
       productId, customerId, paymentType,
       addressId, address, city, name, phone,
-      state, zipCode, saveAddress, qty, size
+      state, zipCode, saveAddress, qty, size,
+      landmark, district
     } = req.body;
 
     let addressDoc = null;
@@ -24,6 +25,8 @@ exports.addOrder = async (req, res) => {
         name,
         address,
         city,
+        landmark,
+        district,
         state,
         zipCode,
         phone,

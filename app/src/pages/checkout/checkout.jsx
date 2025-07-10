@@ -43,8 +43,10 @@ const CheckoutPage = () => {
     phone: '',
     address: '',
     city: '',
+    district: '',
     state: '',
-    zipCode: ''
+    zipCode: '',
+    landmark: ''
   });
 
   // Calculate order totals
@@ -88,8 +90,8 @@ const CheckoutPage = () => {
   useEffect(() => {
     if (selectedAddress === '') {
       const isFormFilled = formData.firstName && formData.phone && 
-                          formData.address && formData.city && 
-                          formData.state && formData.zipCode;
+                          formData.address && formData.district && formData.city && 
+                          formData.state && formData.zipCode && formData.landmark;
       setShowAddressWarning(isFormFilled && !saveAddress);
     } else {
       setShowAddressWarning(false);
@@ -127,9 +129,11 @@ const CheckoutPage = () => {
           firstName: selectedAddressData.name,
           phone: selectedAddressData.phone,
           address: selectedAddressData.address,
+          district: selectedAddress.district,
           city: selectedAddressData.city,
           state: selectedAddressData.state,
-          zipCode: selectedAddressData.zipCode
+          zipCode: selectedAddressData.zipCode,
+          landmark: selectedAddress.landmark
         });
       }
     }
@@ -156,6 +160,8 @@ const CheckoutPage = () => {
         phone: formData.phone,
         state: formData.state,
         zipCode: formData.zipCode,
+        district: formData.district,
+        landmark: formData.landmark,
         saveAddress,
         qty: product?.Quantity || 1,
         size: product?.Size || 'Standard',
@@ -167,7 +173,7 @@ const CheckoutPage = () => {
           quantity: item.Quantity || 1
         }))
       };
-
+      console.log(orderData)
       const response = await axios.post(`${baseUrl}/order/add`, orderData);
       // console.log('Order created:', response.data.orderID);
       setOrderId(response.data.orderID);
@@ -542,8 +548,10 @@ const CheckoutPage = () => {
                     <p className="text-sm text-gray-700"><strong>Phone:</strong> {formData.phone}</p>
                     <p className="text-sm text-gray-700"><strong>Address:</strong> {formData.address}</p>
                     <p className="text-sm text-gray-700"><strong>City:</strong> {formData.city}</p>
+                    <p className="text-sm text-gray-700"><strong>District:</strong> {formData.district}</p>
                     <p className="text-sm text-gray-700"><strong>State:</strong> {formData.state}</p>
                     <p className="text-sm text-gray-700"><strong>Zip Code:</strong> {formData.zipCode}</p>
+                    <p className="text-sm text-gray-700"><strong>LandMark:</strong> {formData.landmark}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -565,7 +573,6 @@ const CheckoutPage = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           City
@@ -574,6 +581,22 @@ const CheckoutPage = () => {
                           type="text"
                           name="city"
                           value={formData.city}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Bangalore"
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          District
+                        </label>
+                        <input
+                          type="text"
+                          name="district"
+                          value={formData.district}
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Bangalore"
@@ -611,6 +634,21 @@ const CheckoutPage = () => {
                         required
                       />
                     </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Landmark
+                        </label>
+                        <input
+                          type="text"
+                          name="landmark"
+                          value={formData.landmark}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Bangalore"
+                          required
+                        />
+                      </div>
 
                     {/* Save Address Checkbox */}
                     <div className="mt-4 pt-4 border-t border-gray-200">

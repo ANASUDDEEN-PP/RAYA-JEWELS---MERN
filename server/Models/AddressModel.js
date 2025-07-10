@@ -16,11 +16,17 @@ const addressSchema = new Schema({
     city: {
         type :String
     },
+    district: {
+        type: String
+    },
     state : {
         type :String
     }, 
     zipCode : {
         type : String
+    },
+    landmark: {
+        type: String
     },
     phone : {
         type : String

@@ -3,14 +3,14 @@ const userModel = require("../Models/userModel");
 
 exports.addAddress = async(req, res) => {
     try{
-        const { type, name, address, city, state, zipCode, phone, id, isSaved } = req.body;
+        const { type, name, address, city, state, zipCode, phone, id, isSaved, district, landmark } = req.body;
         // console.log(isSaved);
         const isUser = await userModel.findById(id)
         if(!isUser)
             return res.status(404).json({ message : "NoUserOnMyRecord" });
         const addressData = {
             UserId : isUser._id,
-            type, name, address, city, state, zipCode, phone, isSaved
+            type, name, address, city, state, zipCode, phone, isSaved, district, landmark
         }
         await addressModel.create(addressData);
         return res.status(200).json({ message : "Address Added..."})
