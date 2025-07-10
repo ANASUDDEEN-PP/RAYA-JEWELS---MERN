@@ -6,7 +6,7 @@ const sendNotify = require("../utils/sendNotify");
 
 exports.createProduct = async (req, res) => {
   try {
-    const { productName, description, collection, normalPrice, offerPrice, quantity, material, size, images } = req.body;
+    const { productName, description, collection, normalPrice, offerPrice, quantity, material, size, images, actualPrice } = req.body;
 
     // Validation
     if (!productName || !collection || !normalPrice || !quantity) {
@@ -37,6 +37,7 @@ exports.createProduct = async (req, res) => {
       Description: description,
       ProductName: productName,
       CollectionName: collection,
+      ActualPrice: actualPrice,
       NormalPrice: parseFloat(normalPrice),
       OfferPrice: offerPrice ? parseFloat(offerPrice) : null,
       Quantity: parseInt(quantity),

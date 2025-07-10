@@ -13,6 +13,9 @@ const productSchema = new Schema({
     CollectionName : {
         type : String
     },
+    ActualPrice: {
+        type: String
+    },
     NormalPrice : {
         type : String
     },

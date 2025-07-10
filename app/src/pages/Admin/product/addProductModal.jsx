@@ -14,6 +14,7 @@ const AddProductModel = ({ isOpen, onClose, onProductAdded }) => {
         productName: "",
         description: "",
         collection: "",
+        actualPrice: "",
         normalPrice: "",
         offerPrice: "",
         quantity: "",
@@ -139,7 +140,7 @@ const AddProductModel = ({ isOpen, onClose, onProductAdded }) => {
         }
 
         setIsSubmitting(true);
-        console.log(formData.images)
+        console.log(formData)
 
         try {
             const response = await axios.post(`${baseUrl}/product/create`, {
@@ -233,6 +234,24 @@ const AddProductModel = ({ isOpen, onClose, onProductAdded }) => {
                                     </option>
                                 ))}
                             </select>
+                        </div>
+
+                        {/* Actual Price */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Actual Price *
+                            </label>
+                            <input
+                                type="number"
+                                name="actualPrice"
+                                value={formData.actualPrice}
+                                onChange={handleInputChange}
+                                required
+                                min="0"
+                                step="0.01"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                placeholder="0.00"
+                            />
                         </div>
 
                         {/* Normal Price */}
