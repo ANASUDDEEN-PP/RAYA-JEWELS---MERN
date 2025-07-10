@@ -18,7 +18,7 @@ exports.getAllNotification = async (req, res) => {
 
 exports.setMarkAsRead = async(req, res) => {
   try{
-    console.log(req.body)
+    // console.log(req.body)
     const { notificationId } = req.body;
     await notifyModel.findByIdAndUpdate(
       {_id : notificationId},
@@ -28,6 +28,19 @@ exports.setMarkAsRead = async(req, res) => {
       {new: true}
     )
     return res.status(200).json({ message : "Notification mark as Read.."})
+  } catch(err){
+    return res.status(404).json({
+      message : "Internal Server Error"
+    })
+  }
+}
+
+exports.deleteNotification = async(req, res) => {
+  try{
+    // console.log(req.body)
+    const { notificationId } = req.body;
+    await notifyModel.findByIdAndDelete({ _id : notificationId });
+    return res.status(200).json({ message : "Notification Deleted.."});
   } catch(err){
     return res.status(404).json({
       message : "Internal Server Error"
