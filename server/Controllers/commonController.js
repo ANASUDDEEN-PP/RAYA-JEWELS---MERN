@@ -16,37 +16,44 @@ exports.getAllNotification = async (req, res) => {
     }
 }
 
-exports.setMarkAsRead = async(req, res) => {
-  try{
-    // console.log(req.body)
-    const { notificationId } = req.body;
-    await notifyModel.findByIdAndUpdate(
-      {_id : notificationId},
-      {$set : {
-        MarkAsRead: true
-      }},
-      {new: true}
-    )
-    return res.status(200).json({ message : "Notification mark as Read.."})
-  } catch(err){
-    return res.status(404).json({
-      message : "Internal Server Error"
-    })
-  }
-}
+exports.setMarkAsRead = async (req, res) => {
+  try {
+    const { notificationIds } = req.body;
 
-exports.deleteNotification = async(req, res) => {
-  try{
-    // console.log(req.body)
-    const { notificationId } = req.body;
-    await notifyModel.findByIdAndDelete({ _id : notificationId });
-    return res.status(200).json({ message : "Notification Deleted.."});
-  } catch(err){
-    return res.status(404).json({
-      message : "Internal Server Error"
-    })
+    if (!Array.isArray(notificationIds) || notificationIds.length === 0) {
+      return res.status(400).json({ message: "No notification IDs provided" });
+    }
+
+    await notifyModel.updateMany(
+      { _id: { $in: notificationIds } },
+      { $set: { MarkAsRead: true } }
+    );
+
+    return res.status(200).json({ message: "Notifications marked as read." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
-}
+};
+
+
+exports.deleteNotification = async (req, res) => {
+  try {
+    const { notificationIds } = req.body;
+
+    if (!Array.isArray(notificationIds) || notificationIds.length === 0) {
+      return res.status(400).json({ message: "No notification IDs provided" });
+    }
+
+    await notifyModel.deleteMany({ _id: { $in: notificationIds } });
+
+    return res.status(200).json({ message: "Selected notifications deleted." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 
 exports.dashboardAPI = async (req, res) => {
   try {

@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, X, CheckCircle, AlertCircle, ShoppingCart, Users, Package, TrendingUp, CreditCard, MessageCircle, Filter } from 'lucide-react';
 import axios from 'axios';
-// import io from 'socket.io-client';
 import baseUrl from '../../../url';
 
-// Socket connection
-// const socket = io(baseUrl);
-
 // Notification Item Component
-const NotificationItem = ({ notification, onMarkAsRead, onDelete, isRead }) => {
+const NotificationItem = ({ notification, onMarkAsRead, onDelete, isRead, isSelected, onToggleSelect }) => {
   const getIcon = () => {
     switch (notification.type) {
       case 'success': return <CheckCircle size={20} className="text-green-600" />;
@@ -39,6 +35,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, isRead }) => {
   };
 
   const getBackgroundColor = () => {
+    if (isSelected) return 'bg-blue-50/80';
     if (isRead) return 'bg-gray-50/80 backdrop-blur-sm';
     switch (notification.type) {
       case 'success': return 'bg-green-50/80 backdrop-blur-sm';
@@ -54,7 +51,17 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, isRead }) => {
   };
 
   return (
-    <div className={`flex items-start p-5 rounded-xl border-l-4 ${getBorderColor()} ${getBackgroundColor()} transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group`}>
+    <div className={`flex items-start p-5 rounded-xl border-l-4 ${getBorderColor()} ${getBackgroundColor()} transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group relative`}>
+      {/* Selection checkbox */}
+      <div className="absolute top-4 right-4">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggleSelect(notification.id)}
+          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+        />
+      </div>
+      
       <div className="flex-shrink-0 mr-4 mt-1">
         {getIcon()}
       </div>
@@ -88,7 +95,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, isRead }) => {
             </div>
           </div>
           {!isRead && (
-            <div className="w-3 h-3 bg-blue-500 rounded-full ml-4 mt-2 flex-shrink-0 animate-pulse"></div>
+            <div className="mt-10 w-3 h-3 bg-blue-500 rounded-full ml-4 mt-2 flex-shrink-0 animate-pulse"></div>
           )}
         </div>
       </div>
@@ -121,13 +128,14 @@ const FilterButton = ({ type, label, isActive, onClick, count, icon: Icon }) => 
 };
 
 // Full Screen Notification System Component
-// Full Screen Notification System Component
 const FullScreenNotificationSystem = ({ notifications: initialNotifications, isOpen, onClose, onMarkAsRead, onDelete }) => {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [selectedNotifications, setSelectedNotifications] = useState([]);
 
   useEffect(() => {
     setNotifications(initialNotifications);
+    setSelectedNotifications([]); // Clear selection when notifications change
   }, [initialNotifications]);
 
   const getFilteredNotifications = () => {
@@ -138,6 +146,35 @@ const FullScreenNotificationSystem = ({ notifications: initialNotifications, isO
   const getNotificationCount = (type) => {
     if (type === 'all') return notifications.length;
     return notifications.filter(n => n.type === type).length;
+  };
+
+  const handleSelectAll = () => {
+    const filtered = getFilteredNotifications();
+    if (selectedNotifications.length === filtered.length) {
+      setSelectedNotifications([]);
+    } else {
+      setSelectedNotifications(filtered.map(n => n.id));
+    }
+  };
+
+  const handleBulkMarkAsRead = async () => {
+    if (selectedNotifications.length === 0) return;
+    await onMarkAsRead(selectedNotifications);
+    setSelectedNotifications([]);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedNotifications.length === 0) return;
+    await onDelete(selectedNotifications);
+    setSelectedNotifications([]);
+  };
+
+  const handleToggleSelect = (id) => {
+    setSelectedNotifications(prev => 
+      prev.includes(id) 
+        ? prev.filter(notificationId => notificationId !== id) 
+        : [...prev, id]
+    );
   };
 
   const filterButtons = [
@@ -187,6 +224,40 @@ const FullScreenNotificationSystem = ({ notifications: initialNotifications, isO
               >
                 <X size={24} />
               </button>
+            </div>
+
+            {/* Bulk Actions */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={handleSelectAll}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-semibold px-3 py-1 rounded-full hover:bg-blue-50 transition-all"
+                >
+                  {selectedNotifications.length === filteredNotifications.length ? 'Deselect All' : 'Select All'}
+                </button>
+                
+                {selectedNotifications.length > 0 && (
+                  <>
+                    <button
+                      onClick={handleBulkMarkAsRead}
+                      className="text-sm px-3 py-1 rounded-full font-semibold bg-green-100 text-green-700 hover:bg-green-200 transition-all"
+                    >
+                      Mark as Read ({selectedNotifications.length})
+                    </button>
+                    
+                    <button
+                      onClick={handleBulkDelete}
+                      className="text-sm px-3 py-1 rounded-full font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition-all"
+                    >
+                      Delete ({selectedNotifications.length})
+                    </button>
+                  </>
+                )}
+              </div>
+              
+              <div className="text-sm text-gray-500">
+                {selectedNotifications.length > 0 ? `${selectedNotifications.length} selected` : ''}
+              </div>
             </div>
           </div>
 
@@ -242,6 +313,8 @@ const FullScreenNotificationSystem = ({ notifications: initialNotifications, isO
                         onMarkAsRead={onMarkAsRead}
                         onDelete={onDelete}
                         isRead={false}
+                        isSelected={selectedNotifications.includes(notification.id)}
+                        onToggleSelect={handleToggleSelect}
                       />
                     ))}
                   </div>
@@ -260,6 +333,8 @@ const FullScreenNotificationSystem = ({ notifications: initialNotifications, isO
                         onMarkAsRead={onMarkAsRead}
                         onDelete={onDelete}
                         isRead={true}
+                        isSelected={selectedNotifications.includes(notification.id)}
+                        onToggleSelect={handleToggleSelect}
                       />
                     ))}
                   </div>
@@ -320,61 +395,47 @@ const NotificationSystem = () => {
     }
   };
 
-  // Mark notification as read
-  const markAsRead = async (id) => {
+  // Mark notification(s) as read
+  const markAsRead = async (idOrArray) => {
     try {
-      console.log({notificationId: id})
-      await axios.put(`${baseUrl}/mark/notification/as/read`, { notificationId: id });
-      setNotifications(notifications.map(notification => 
-        notification.id === id ? { ...notification, isRead: true } : notification
-      ));
+      const ids = Array.isArray(idOrArray) ? idOrArray : [idOrArray];
+      
+      // Call bulk API endpoint
+      await axios.put(`${baseUrl}/mark/notifications/as/read`, { notificationIds: ids });
+      
+      // Update local state
+      setNotifications(prevNotifications => 
+        prevNotifications.map(notification => 
+          ids.includes(notification.id) ? { ...notification, isRead: true } : notification
+        )
+      );
     } catch(err) {
-      console.error("Error marking notification as read:", err);
+      console.error("Error marking notification(s) as read:", err);
+      throw err; // Re-throw to handle in calling component
     }
   };
 
-  // Delete notification
-  const deleteNotification = async (id) => {
+  // Delete notification(s)
+  const deleteNotification = async (idOrArray) => {
     try {
-      await axios.delete(`${baseUrl}/delete/notification`, { data: { notificationId: id } });
-      setNotifications(notifications.filter(notification => notification.id !== id));
+      const ids = Array.isArray(idOrArray) ? idOrArray : [idOrArray];
+      console.log(ids)
+      
+      // Call bulk API endpoint
+      await axios.delete(`${baseUrl}/delete/notifications`, { data: { notificationIds: ids } });
+      
+      // Update local state
+      setNotifications(prevNotifications => 
+        prevNotifications.filter(notification => !ids.includes(notification.id))
+      );
     } catch(err) {
-      console.error("Error deleting notification:", err);
+      console.error("Error deleting notification(s):", err);
+      throw err; // Re-throw to handle in calling component
     }
   };
 
-  // Initialize socket and fetch notifications
   useEffect(() => {
     fetchNotifications();
-
-    // // Socket.io listeners
-    // socket.on('new-notification', (newNotification) => {
-    //   const transformedNotification = {
-    //     id: newNotification._id,
-    //     type: mapCategoryToType(newNotification.Category),
-    //     title: newNotification.Title,
-    //     message: newNotification.Content,
-    //     time: newNotification.createdDate,
-    //     isRead: false
-    //   };
-    //   setNotifications(prev => [transformedNotification, ...prev]);
-    // });
-
-    // socket.on('notification-read', (notificationId) => {
-    //   setNotifications(prev => prev.map(n => 
-    //     n.id === notificationId ? { ...n, isRead: true } : n
-    //   ));
-    // });
-
-    // socket.on('notification-deleted', (notificationId) => {
-    //   setNotifications(prev => prev.filter(n => n.id !== notificationId));
-    // });
-
-    // return () => {
-    //   socket.off('new-notification');
-    //   socket.off('notification-read');
-    //   socket.off('notification-deleted');
-    // };
   }, []);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
