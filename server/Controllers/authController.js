@@ -32,9 +32,10 @@ exports.userRegister = async (req, res) => {
             }
             const userWithoutPassword = { ...userExist.toObject() };
             delete userWithoutPassword.Password;
+            const profileImg = await profileModel.findOne({ userId : userWithoutPassword._id, from: "USRDBI" })
 
             if (userExist.Password === password) {
-                return res.status(202).json({ message: "Login Success", user: userWithoutPassword });
+                return res.status(202).json({ message: "Login Success", user: userWithoutPassword, profileImg });
             } else {
                 return res.status(201).json({ message: "Invalid Password" });
             }
@@ -128,6 +129,7 @@ exports.getUserById = async (req, res) => {
             return res.status(404).json({ message : "InvalidID"}); 
         
         const user = await userModel.findById(id);
+
         return res.status(200).json({user})
     } catch(err){   
         return res.status(404).json({ message : "Internal Server Error" });
@@ -143,7 +145,7 @@ exports.setUserProfileImage = async(req, res) => {
 
         if(!await userModel.findById(id) && !isProfile)
             return res.status(404).json({ message : "InvalidID"});
-        await profileModel.findByIdAndUpdate(
+        const profile = await profileModel.findByIdAndUpdate(
             isProfile._id,
             { $set : {
                 ImageUrl : profileImage
@@ -152,7 +154,8 @@ exports.setUserProfileImage = async(req, res) => {
         )
         
         return res.status(200).json({
-            message : "Profile Image Updated..."
+            message : "Profile Image Updated...",
+            profile
         })
     } catch(err){
         return res.status(404).json({

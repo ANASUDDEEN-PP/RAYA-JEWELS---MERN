@@ -35,6 +35,7 @@ const ProductView = () => {
   const { id } = useParams();
 
   const localUser = JSON.parse(localStorage.getItem('userProfile'));
+  const userProfileImg = JSON.parse(localStorage.getItem('userProfileImg'));
 
   const addCart = async () => {
     if (!selectedSize) {
@@ -134,7 +135,7 @@ const ProductView = () => {
         Comment: newComment,
         Date: formattedDate,
         Likes: 0,
-        Avatar: localUser.ProfilePicture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
+        Avatar: userProfileImg.ImageUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
       };
 
       const response = await axios.post(`${baseUrl}/product/post/product`, comment);

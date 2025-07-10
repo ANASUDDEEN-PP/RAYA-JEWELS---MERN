@@ -22,6 +22,11 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
     const fetchUserProfile = async() => {
       try{
         const responce = await axios.get(`${baseUrl}/auth/get/profile/image/${loginUser._id}`);
+        // if(JSON.parse(localStorage.getItem("userProfileImg"))){
+        //   localStorage.removeItem("userProfileImg")
+          localStorage.setItem('userProfileImg', JSON.stringify(responce.data.isProfile));
+        // }
+        console.log("Data :",responce.data.isProfile)
         const imageUrl = responce.data.isProfile ? responce.data.isProfile.ImageUrl : '';
         setProfileImage(imageUrl);
       } catch(err){
