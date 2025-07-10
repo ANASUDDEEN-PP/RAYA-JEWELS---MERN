@@ -94,11 +94,11 @@ exports.dashboardAPI = async (req, res) => {
 
     const monthlySalesGrid = Object.values(monthlySales).sort((a, b) => a.month.localeCompare(b.month));
 
-    // 📅 Last Month Sales Summary
+    // Last Month Sales Summary
     const lastMonthKey = moment().subtract(1, 'months').format("YYYY-MM");
     const lastMonthSale = monthlySales[lastMonthKey] || { sales: 0, orders: 0 };
 
-    // 💰 Profit and Loss (Assuming NormalPrice as cost price)
+    // Profit and Loss (Assuming NormalPrice as cost price)
     let profit = 0;
     let loss = 0;
 
@@ -106,7 +106,7 @@ exports.dashboardAPI = async (req, res) => {
       if (order.paymentStatus === "paid") {
         const product = products.find(p => p._id.toString() === order.productId);
         if (product) {
-          const cost = parseFloat(product.NormalPrice);
+          const cost = parseFloat(product.ActualPrice);
           const selling = parseFloat(product.OfferPrice);
           const quantity = parseInt(order.qty);
           const totalProfit = (selling - cost) * quantity;
