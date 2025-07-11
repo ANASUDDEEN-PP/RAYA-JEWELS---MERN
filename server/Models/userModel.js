@@ -11,8 +11,14 @@ const userSchema = new Schema({
     Mobile : {
         type : String
     },
+    isMobileVerified : {
+        type: String
+    },
     Email : {
         type : String
+    },
+    isEmailVerified: {
+        type: String
     },
     Password : {
         type : String

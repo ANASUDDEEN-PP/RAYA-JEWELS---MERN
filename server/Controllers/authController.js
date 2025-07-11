@@ -80,7 +80,9 @@ exports.userRegister = async (req, res) => {
                 userId: genUserId,
                 Name: name,
                 Mobile: Mobile,
+                isMobileVerified: false,
                 Email: email,
+                isEmailVerified: false,
                 Password: password
             };
             const userPushData = await userModel.create(userData);
@@ -179,5 +181,34 @@ exports.getProfileImage = async(req, res) => {
         return res.status(404).json({
             message : "Internal Server Error"
         })
+    }
+}
+
+exports.editUserProfileData = async(req, res) => {
+    try{
+        const { id } = req.params;
+        const { Name, Email, Mobile } = req.body;
+
+        if(!await userModel.findById(id))
+            return res.status(404).json({ message : "InvalidID" });
+
+        const updatedUser = await userModel.findByIdAndUpdate(
+            id,
+            { $set : {
+                Name, Mobile, Email
+            }},
+            { new: true }
+        );
+
+        const userWithoutPassword = { ...updatedUser.toObject() };
+        delete userWithoutPassword.Password;
+
+        return res.status(200).json({
+            message : "Profile Data Updated...",
+            userWithoutPassword
+        })
+        // console.log(req.body)
+    } catch(err){
+        return res.status(404).json({ message : "Internal Server Error" });
     }
 }

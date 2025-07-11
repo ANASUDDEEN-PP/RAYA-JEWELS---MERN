@@ -26,7 +26,7 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
         //   localStorage.removeItem("userProfileImg")
           localStorage.setItem('userProfileImg', JSON.stringify(responce.data.isProfile));
         // }
-        console.log("Data :",responce.data.isProfile)
+        // console.log("Data :",responce.data.isProfile)
         const imageUrl = responce.data.isProfile ? responce.data.isProfile.ImageUrl : '';
         setProfileImage(imageUrl);
       } catch(err){
@@ -85,12 +85,17 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     // Submit the edited profile data
     console.log('Updated Profile Data:', editedProfile);
     
-    // Here you would typically call an API to update the profile
-    // For example: onUpdateProfile(editedProfile);
+    const responce = await axios.put(`${baseUrl}/auth/edit/profile/${loginUser._id}`,editedProfile);
+    if(responce.status === 200){
+      localStorage.setItem('userProfile', JSON.stringify(responce.data.userWithoutPassword));
+      window.location.reload();
+    } else {
+      alert("Something Went Wrong")
+    }
     
     setIsEditing(false);
     // You might want to update the userProfile prop or trigger a refresh
