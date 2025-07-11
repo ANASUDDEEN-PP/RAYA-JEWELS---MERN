@@ -3,6 +3,7 @@ const notifyModel = require("../Models/notificationModel");
 const orderModel = require("../Models/orderModel");
 const productModel = require("../Models/productModel");
 const userModel = require("../Models/userModel");
+const imageModel = require("../Models/ImageModel");
 const moment = require('moment');
 
 exports.getAllNotification = async (req, res) => {
@@ -155,3 +156,14 @@ exports.dashboardAPI = async (req, res) => {
     });
   }
 };
+
+exports.getAllSearchElements = async(req, res) => {
+  try{
+    const products = await productModel.find({});
+    return res.status(200).json(products)
+  } catch(err){
+    return res.status(404).json({
+      message : "Internal Server Error"
+    })
+  }
+}
