@@ -3,16 +3,9 @@ import {
   Home, 
   Users, 
   Package, 
-  ShoppingCart, 
-  Grid, 
-  UserCheck,
-  Menu, 
+  ShoppingCart,
   X,
-  User,
-  Settings,
-  HelpCircle,
-  LogOut,
-  ChevronDown
+  BadgeIndianRupee
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -24,6 +17,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { icon: Users, label: 'Users', path: '/admin-user' },
     { icon: Package, label: 'Products', path: '/admin-product' },
     { icon: ShoppingCart, label: 'Orders', path: '/admin-orders' },
+    // { icon: BadgeIndianRupee, label: 'Transaction', path: '/admin/transaction' },
     // { icon: Grid, label: 'Collections', path: '/collections' },
     // { icon: UserCheck, label: 'Admins', path: '/admins' },
   ];

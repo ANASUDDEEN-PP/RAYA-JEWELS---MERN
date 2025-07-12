@@ -157,13 +157,37 @@ exports.dashboardAPI = async (req, res) => {
   }
 };
 
-exports.getAllSearchElements = async(req, res) => {
-  try{
+exports.getAllSearchElements = async (req, res) => {
+  try {
     const products = await productModel.find({});
-    return res.status(200).json(products)
-  } catch(err){
-    return res.status(404).json({
-      message : "Internal Server Error"
-    })
+    const productIds = products.map(p => p._id);
+
+    // Fetch only imageId and ImageUrl fields from matching images
+    const images = await imageModel.find(
+      { imageId: { $in: productIds } },
+      { imageId: 1, ImageUrl: 1 } // only fetch these two fields
+    );
+
+    const response = {
+      product: products.map(product => {
+        const productImage = images.find(img =>
+          img.imageId.toString() === product._id.toString()
+        );
+
+        return {
+          ...product.toObject(),
+          imageUrl: productImage?.ImageUrl || null
+        };
+      })
+    };
+
+    return res.status(200).json(response);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
   }
-}
+};
+
+
