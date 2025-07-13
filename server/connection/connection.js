@@ -1,19 +1,22 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-module.exports = () =>{
-    try{
-        //mongoDB Connection
-        mongoose.connect(
-            //connection string change according to your string
-            process.env.MONGOOSE_ATLAS_CONNECTION
-        );
-        mongoose.connection.on('connected', () => {
-        console.log('✅ Connected to MongoDB');
-        });
-        mongoose.connection.on('error', (err) => {
-        console.error(`❌ MongoDB connection error: ${err}`);
-        });
-    } catch(err){
-        console.log(err);
-    }
-}
+
+module.exports = () => {
+  try {
+    mongoose.connect(process.env.MONGOOSE_ATLAS_CONNECTION, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      tlsAllowInvalidCertificates: true, // Use this instead of sslValidate
+    });
+
+    mongoose.connection.on('connected', () => {
+      console.log('✅ Connected to MongoDB');
+    });
+
+    mongoose.connection.on('error', (err) => {
+      console.error(`❌ MongoDB connection error: ${err}`);
+    });
+  } catch (err) {
+    console.log(`❌ Initial Connection Error: ${err}`);
+  }
+};
