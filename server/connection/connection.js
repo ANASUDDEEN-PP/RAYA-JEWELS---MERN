@@ -5,7 +5,7 @@ module.exports = () =>{
         //mongoDB Connection
         mongoose.connect(
             //connection string change according to your string
-            process.env.MONGOOSE_CONNECTION
+            process.env.MONGOOSE_ATLAS_CONNECTION
         );
         mongoose.connection.on('connected', () => {
         console.log('✅ Connected to MongoDB');
