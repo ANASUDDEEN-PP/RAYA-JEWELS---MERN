@@ -237,3 +237,71 @@ exports.getComments = async (req, res) => {
     });
   }
 }
+
+exports.getRandomSixProduct = async (req, res) => {
+  try {
+    const products = await productModel.aggregate([
+      { $sample: { size: 6 } }
+    ]);
+
+    const productIds = products.map(p => p._id);
+
+    const images = await imageModel.find(
+      { imageId: { $in: productIds } },
+      { imageId: 1, ImageUrl: 1 }
+    );
+
+    const response = {
+      products: products.map(prd => {
+        const productImage = images.find(img =>
+          img.imageId.toString() === prd._id.toString()
+        );
+
+        return {
+          ...prd,
+          imageUrl: productImage?.ImageUrl || null
+        };
+      })
+    };
+
+    return res.status(200).json(response);
+  } catch (err) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: err.message
+    });
+  }
+};
+
+exports.getAllProducts = async (req, res) => {
+  try {
+    const products = await productModel.find({});
+    const productIds = products.map(p => p._id);
+
+    const images = await imageModel.find(
+      { imageId: { $in: productIds } },
+      { imageId: 1, ImageUrl: 1 }
+    );
+
+    const response = {
+      products: products.map(prd => {
+        const productImage = images.find(img =>
+          img.imageId.toString() === prd._id.toString()
+        );
+
+        return {
+          ...prd.toObject(),
+          imageUrl: productImage?.ImageUrl || null
+        };
+      })
+    };
+
+    return res.status(200).json(response);
+  } catch (err) {
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: err.message
+    });
+  }
+};
+

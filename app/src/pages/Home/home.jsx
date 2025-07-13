@@ -22,6 +22,7 @@ const JewelryEcommerce = () => {
   const scrollRef = useRef(null);
   const navigate = useNavigate();
   const [showLoginWarning, setShowLoginWarning] = useState(false);
+  const [featuredProducts, setFeaturedProduct] = useState([]);
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -66,53 +67,19 @@ const JewelryEcommerce = () => {
         console.error("Error fetching categories:", err);
       }
     };
+    const fetchGetSixProducts = async() => {
+      try{
+        const res = await axios.get(`${baseUrl}/product/get/random/product`);
+        console.log(res)
+        setFeaturedProduct(res.data.products);
+      } catch(err){
+        console.log(err);
+      }
+    }
     fetchData();
+    fetchGetSixProducts();
   }, []);
 
-  const featuredProducts = [
-    {
-      id: 1,
-      name: "Diamond Eternity Ring",
-      price: 2899,
-      originalPrice: 3299,
-      image:
-        "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400&h=400&fit=crop",
-      rating: 4.9,
-      reviews: 124,
-      badge: "Bestseller",
-    },
-    {
-      id: 2,
-      name: "Pearl Drop Earrings",
-      price: 899,
-      image:
-        "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop",
-      rating: 4.8,
-      reviews: 89,
-      badge: "New",
-    },
-    {
-      id: 3,
-      name: "Gold Chain Necklace",
-      price: 1599,
-      originalPrice: 1899,
-      image:
-        "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop",
-      rating: 4.7,
-      reviews: 156,
-      badge: "Sale",
-    },
-    {
-      id: 4,
-      name: "Tennis Bracelet",
-      price: 2199,
-      image:
-        "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400&h=400&fit=crop",
-      rating: 4.9,
-      reviews: 78,
-      badge: "Premium",
-    },
-  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -147,6 +114,7 @@ const JewelryEcommerce = () => {
     e.preventDefault();
     if (localStorage.getItem('isLoggedIn') === 'true') {
       navigate(`/view/categories/${name}`);
+      window.scrollTo(0,0);
     } else {
       setShowLoginWarning(true);
     }
@@ -312,16 +280,16 @@ const JewelryEcommerce = () => {
           <div className="flex flex-wrap justify-center gap-8 mb-8">
             {featuredProducts.map((product) => (
               <Link 
-                to="/view/product" 
+                to={`/view/product/${product._id}`} 
                 key={product.id}
                 className="group"
-                aria-label={`View ${product.name} details`}
+                aria-label={`View ${product.ProductName} details`}
               >
                 <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden w-72">
                   <div className="relative">
                     <img
-                      src={product.image}
-                      alt={product.name}
+                      src={product.imageUrl}
+                      alt={product.ProductName}
                       className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                     />
@@ -345,8 +313,8 @@ const JewelryEcommerce = () => {
                       className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-all"
                       aria-label={
                         favorites.has(product.id)
-                          ? `Remove ${product.name} from favorites`
-                          : `Add ${product.name} to favorites`
+                          ? `Remove ${product.ProductName} from favorites`
+                          : `Add ${product.ProductName} to favorites`
                       }
                     >
                       <Heart
@@ -361,7 +329,7 @@ const JewelryEcommerce = () => {
 
                   <div className="p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {product.name}
+                      {product.ProductName}
                     </h3>
 
                     <div className="flex items-center mb-3">
@@ -385,11 +353,11 @@ const JewelryEcommerce = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="text-2xl font-bold text-gray-900">
-                          ${product.price}
+                          ${product.OfferPrice}
                         </span>
-                        {product.originalPrice && (
+                        {product.NormalPrice && (
                           <span className="text-lg text-gray-500 line-through">
-                            ${product.originalPrice}
+                            ${product.NormalPrice}
                           </span>
                         )}
                       </div>
@@ -401,7 +369,11 @@ const JewelryEcommerce = () => {
           </div>
 
           <div className="text-center">
-            <button 
+            <button
+              onClick={() => {
+                navigate("/all/product");
+                window.scrollTo(0,0);
+              }}
               className="bg-black hover:bg-gray-800 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105"
               aria-label="View all products"
             >
