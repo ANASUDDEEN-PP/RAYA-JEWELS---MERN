@@ -3,11 +3,7 @@ const mongoose = require('mongoose');
 
 module.exports = () => {
   try {
-    mongoose.connect(process.env.MONGOOSE_ATLAS_CONNECTION, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      tlsAllowInvalidCertificates: true, // Use this instead of sslValidate
-    });
+    mongoose.connect(process.env.MONGOOSE_ATLAS_CONNECTION);
 
     mongoose.connection.on('connected', () => {
       console.log('✅ Connected to MongoDB');
