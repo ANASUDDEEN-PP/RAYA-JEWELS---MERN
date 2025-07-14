@@ -14,7 +14,7 @@ import {
   Users,
   Package,
   ShoppingCart,
-  Loader,
+  Loader2,
 } from "lucide-react";
 import {
   PieChart,
@@ -519,7 +519,7 @@ const Dashboard = () => {
           <Navbar toggleSidebar={toggleSidebar} />
           <main className="flex-1 overflow-y-auto p-6 flex items-center justify-center">
             <div className="flex flex-col items-center">
-              <Loader className="animate-spin text-blue-500" size={48} />
+              <Loader2 className="animate-spin text-blue-500" size={48} />
               <p className="mt-4 text-gray-600">Loading dashboard data...</p>
             </div>
           </main>

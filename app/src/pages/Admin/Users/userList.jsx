@@ -35,7 +35,7 @@ const UserListPage = () => {
         setError("Failed to load users. Please try again later.");
         setUsers([]);
       } finally {
-        setLoading(true);
+        setLoading(false);
       }
     };
 
