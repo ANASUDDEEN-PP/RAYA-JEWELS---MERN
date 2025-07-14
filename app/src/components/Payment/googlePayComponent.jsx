@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, Check } from 'lucide-react';
+import { X, Upload, Check, Loader2 } from 'lucide-react'; // Added Loader2 for spinner
 import axios from 'axios';
 import baseUrl from '../../url';
 
@@ -12,6 +12,7 @@ const GooglePayPopup = ({ isOpen, onClose, onPaymentComplete, orderTotal, orderI
     screenshotName: ''
   });
   const [dragOver, setDragOver] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Added loading state
 
   useEffect(() => {
     if (isOpen) {
@@ -62,6 +63,7 @@ const GooglePayPopup = ({ isOpen, onClose, onPaymentComplete, orderTotal, orderI
   const handleSubmit = async () => {
     if (formData.screenshotBase64) {
       try {
+        setIsSubmitting(true); // Start loading
         const res = await axios.post(`${baseUrl}/order/gpay/payment/details`, formData);
         if (res.status === 200) {
           setCurrentStep('success');
@@ -77,9 +79,10 @@ const GooglePayPopup = ({ isOpen, onClose, onPaymentComplete, orderTotal, orderI
         } else {
           alert("Something went wrong...")
         }
-
       } catch (err) {
         console.log(err);
+      } finally {
+        setIsSubmitting(false); // Stop loading regardless of success/error
       }
     } else {
       alert('Please upload the screenshot before submitting.');
@@ -93,6 +96,7 @@ const GooglePayPopup = ({ isOpen, onClose, onPaymentComplete, orderTotal, orderI
       screenshotBase64: null,
       screenshotName: ''
     });
+    setIsSubmitting(false); // Reset loading state
     onClose();
   };
 
@@ -141,7 +145,7 @@ const GooglePayPopup = ({ isOpen, onClose, onPaymentComplete, orderTotal, orderI
               <p className="text-xs text-gray-500 mb-6">Amount: ₹{orderTotal?.toFixed(2)}</p>
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                 <p className="text-yellow-800 text-sm">
-                  After payment, click “Payment Completed” to upload your screenshot.
+                  After payment, click "Payment Completed" to upload your screenshot.
                 </p>
               </div>
               <button
@@ -184,10 +188,17 @@ const GooglePayPopup = ({ isOpen, onClose, onPaymentComplete, orderTotal, orderI
 
               <button
                 onClick={handleSubmit}
-                disabled={!formData.screenshotBase64}
-                className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                disabled={!formData.screenshotBase64 || isSubmitting}
+                className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
               >
-                Submit Screenshot
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Screenshot'
+                )}
               </button>
             </div>
           )}
