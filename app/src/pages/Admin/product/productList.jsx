@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Search, Edit, Loader2, Eye, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Sidebar from "../Components/sideBar";
 import NavBar from "../Components/navBar";
 import axios from "axios";
@@ -38,9 +38,9 @@ const ProductListPage = () => {
             setIsLoading(true);
             setError(null);
             const response = await axios.get(`${baseUrl}/product/get/all`);
-            console.log("Products :",response)
+            console.log("Products :", response)
             const rawProducts = response.data.products || [];
-            
+
             // Ensure all products have required fields with defaults
             const validProducts = rawProducts.map(product => ({
                 _id: product._id || '',
@@ -53,7 +53,7 @@ const ProductListPage = () => {
                 material: product.Material || 'Not specified',
                 size: product.Size || 'Not specified'
             }));
-            
+
             setProducts(validProducts);
         } catch (err) {
             console.error("Error fetching products:", err);
@@ -70,7 +70,7 @@ const ProductListPage = () => {
 
     const filteredProducts = useMemo(() => {
         if (!searchTerm) return products;
-        
+
         const searchTermLower = searchTerm.toLowerCase();
         return products.filter((product) => {
             return (
@@ -142,9 +142,9 @@ const ProductListPage = () => {
     };
 
     const handleAction = (action, product) => {
-      if(action == "View"){
-        navigate(`/admin-product-view/${product._id}`)
-      }
+        if (action == "View") {
+            navigate(`/admin-product-view/${product._id}`)
+        }
     };
 
     const handleProductAdded = (newProduct) => {
@@ -161,23 +161,12 @@ const ProductListPage = () => {
         }]);
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex h-screen bg-gray-100">
-                <div className="m-auto text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                    <p className="mt-4 text-lg text-gray-700">Loading products...</p>
-                </div>
-            </div>
-        );
-    }
-
     if (error) {
         return (
             <div className="flex h-screen bg-gray-100">
                 <div className="m-auto text-center">
                     <p className="text-red-500 text-lg mb-4">{error}</p>
-                    <button 
+                    <button
                         onClick={fetchProducts}
                         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                     >
@@ -242,76 +231,84 @@ const ProductListPage = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Sl No
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Product ID
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Product Name
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Collection
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Quantity
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {currentProducts.length > 0 ? (
-                                            currentProducts.map((product, index) => (
-                                                <tr key={product._id} className="hover:bg-gray-50 transition-colors">
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {startIndex + index + 1}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-medium text-blue-600">
-                                                            {product.productId}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-medium text-gray-900">
-                                                            {product.productName}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap">
-                                                        <span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-                                                            {product.collectionName}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap">
-                                                        <div
-                                                            className={`text-sm font-medium ${
-                                                                product.quantity < 20
-                                                                    ? "text-red-600"
-                                                                    : product.quantity < 50
-                                                                        ? "text-yellow-600"
-                                                                        : "text-green-600"
-                                                            }`}
-                                                        >
-                                                            {product.quantity}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        <div className="flex space-x-2">
-                                                            <button
-                                                                onClick={() => handleAction("View", product)}
-                                                                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors"
-                                                                title="View Product"
-                                                            >
-                                                                <Eye className="h-4 w-4" />
-                                                            </button>
-                                                            {/* <button
+                        {isLoading && (
+                            <div className="flex flex-col items-center justify-center py-12 gap-4">
+                                <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+                                <p className="text-gray-600">Loading Orders...</p>
+                            </div>
+                        )}
+
+                        {!isLoading && (
+                            <>
+                                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Sl No
+                                                    </th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Product ID
+                                                    </th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Product Name
+                                                    </th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Collection
+                                                    </th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Quantity
+                                                    </th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Actions
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {currentProducts.length > 0 ? (
+                                                    currentProducts.map((product, index) => (
+                                                        <tr key={product._id} className="hover:bg-gray-50 transition-colors">
+                                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                                {startIndex + index + 1}
+                                                            </td>
+                                                            <td className="px-4 py-4 whitespace-nowrap">
+                                                                <div className="text-sm font-medium text-blue-600">
+                                                                    {product.productId}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-4 whitespace-nowrap">
+                                                                <div className="text-sm font-medium text-gray-900">
+                                                                    {product.productName}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-4 whitespace-nowrap">
+                                                                <span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                                                                    {product.collectionName}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-4 whitespace-nowrap">
+                                                                <div
+                                                                    className={`text-sm font-medium ${product.quantity < 20
+                                                                        ? "text-red-600"
+                                                                        : product.quantity < 50
+                                                                            ? "text-yellow-600"
+                                                                            : "text-green-600"
+                                                                        }`}
+                                                                >
+                                                                    {product.quantity}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                                <div className="flex space-x-2">
+                                                                    <button
+                                                                        onClick={() => handleAction("View", product)}
+                                                                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors"
+                                                                        title="View Product"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                    </button>
+                                                                    {/* <button
                                                                 onClick={() => handleAction("Edit", product)}
                                                                 className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-full transition-colors"
                                                                 title="Edit Product"
@@ -325,82 +322,81 @@ const ProductListPage = () => {
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </button> */}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan="6" className="px-6 py-4 text-center">
-                                                    <p className="text-gray-500">
-                                                        {searchTerm 
-                                                            ? "No products match your search criteria." 
-                                                            : "No products available. Add a product to get started."}
-                                                    </p>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {filteredProducts.length > itemsPerPage && (
-                                <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between border-t border-gray-200">
-                                    <div className="text-sm text-gray-700 mb-2 md:mb-0">
-                                        Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
-                                        <span className="font-medium">
-                                            {Math.min(endIndex, filteredProducts.length)}
-                                        </span>{" "}
-                                        of <span className="font-medium">{filteredProducts.length}</span>{" "}
-                                        results
-                                    </div>
-                                    <div className="flex items-center space-x-1">
-                                        <button
-                                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                            disabled={currentPage === 1}
-                                            className={`px-3 py-1 rounded-md ${
-                                                currentPage === 1
-                                                    ? "text-gray-400 cursor-not-allowed"
-                                                    : "text-gray-700 hover:bg-gray-100"
-                                            }`}
-                                        >
-                                            <ChevronLeft className="h-5 w-5" />
-                                        </button>
-
-                                        {getPaginationButtons().map((button, index) => (
-                                            <React.Fragment key={index}>
-                                                {button === "..." ? (
-                                                    <span className="px-2 py-1">...</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))
                                                 ) : (
-                                                    <button
-                                                        onClick={() => setCurrentPage(button)}
-                                                        className={`px-3 py-1 rounded-md ${
-                                                            currentPage === button
-                                                                ? "bg-blue-600 text-white"
-                                                                : "text-gray-700 hover:bg-gray-100"
-                                                        }`}
-                                                    >
-                                                        {button}
-                                                    </button>
+                                                    <tr>
+                                                        <td colSpan="6" className="px-6 py-4 text-center">
+                                                            <p className="text-gray-500">
+                                                                {searchTerm
+                                                                    ? "No products match your search criteria."
+                                                                    : "No products available. Add a product to get started."}
+                                                            </p>
+                                                        </td>
+                                                    </tr>
                                                 )}
-                                            </React.Fragment>
-                                        ))}
-
-                                        <button
-                                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                                            disabled={currentPage === totalPages}
-                                            className={`px-3 py-1 rounded-md ${
-                                                currentPage === totalPages
-                                                    ? "text-gray-400 cursor-not-allowed"
-                                                    : "text-gray-700 hover:bg-gray-100"
-                                            }`}
-                                        >
-                                            <ChevronRight className="h-5 w-5" />
-                                        </button>
+                                            </tbody>
+                                        </table>
                                     </div>
+
+                                    {filteredProducts.length > itemsPerPage && (
+                                        <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between border-t border-gray-200">
+                                            <div className="text-sm text-gray-700 mb-2 md:mb-0">
+                                                Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
+                                                <span className="font-medium">
+                                                    {Math.min(endIndex, filteredProducts.length)}
+                                                </span>{" "}
+                                                of <span className="font-medium">{filteredProducts.length}</span>{" "}
+                                                results
+                                            </div>
+                                            <div className="flex items-center space-x-1">
+                                                <button
+                                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                                    disabled={currentPage === 1}
+                                                    className={`px-3 py-1 rounded-md ${currentPage === 1
+                                                        ? "text-gray-400 cursor-not-allowed"
+                                                        : "text-gray-700 hover:bg-gray-100"
+                                                        }`}
+                                                >
+                                                    <ChevronLeft className="h-5 w-5" />
+                                                </button>
+
+                                                {getPaginationButtons().map((button, index) => (
+                                                    <React.Fragment key={index}>
+                                                        {button === "..." ? (
+                                                            <span className="px-2 py-1">...</span>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => setCurrentPage(button)}
+                                                                className={`px-3 py-1 rounded-md ${currentPage === button
+                                                                    ? "bg-blue-600 text-white"
+                                                                    : "text-gray-700 hover:bg-gray-100"
+                                                                    }`}
+                                                            >
+                                                                {button}
+                                                            </button>
+                                                        )}
+                                                    </React.Fragment>
+                                                ))}
+
+                                                <button
+                                                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                                                    disabled={currentPage === totalPages}
+                                                    className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                                                        ? "text-gray-400 cursor-not-allowed"
+                                                        : "text-gray-700 hover:bg-gray-100"
+                                                        }`}
+                                                >
+                                                    <ChevronRight className="h-5 w-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
+                            </>
+                        )}
                     </div>
 
                     {showAddProductModal && (
