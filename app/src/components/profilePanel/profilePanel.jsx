@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { UserX, User, LogOut, X, ChevronDown, Package, Settings, MapPin, CreditCard, Edit2, Save, Camera } from "lucide-react";
+import { UserX, User, LogOut, X, ChevronDown, Package, Settings, MapPin, CreditCard, Edit2, Save, Camera, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import UserAddress from "./profileAddress";
 import axios from "axios";
@@ -9,32 +9,37 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showAddresses, setShowAddresses] = useState(false);
-  const [profileImage, setProfileImage] = useState({});
+  const [profileImage, setProfileImage] = useState(null);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [editedProfile, setEditedProfile] = useState({
     Name: userProfile?.Name || '',
     Email: userProfile?.Email || '',
     Mobile: userProfile?.Mobile || ''
   });
   const navigate = useNavigate();
-  const loginUser = JSON.parse(localStorage.getItem("userProfile"))
+  const loginUser = JSON.parse(localStorage.getItem("userProfile"));
 
   useEffect(() => {
     const fetchUserProfile = async() => {
-      try{
-        const responce = await axios.get(`${baseUrl}/auth/get/profile/image/${loginUser._id}`);
-        // if(JSON.parse(localStorage.getItem("userProfileImg"))){
-        //   localStorage.removeItem("userProfileImg")
-          localStorage.setItem('userProfileImg', JSON.stringify(responce.data.isProfile));
-        // }
-        // console.log("Data :",responce.data.isProfile)
-        const imageUrl = responce.data.isProfile ? responce.data.isProfile.ImageUrl : '';
-        setProfileImage(imageUrl);
-      } catch(err){
+      setImageLoading(true);
+      try {
+        const response = await axios.get(`${baseUrl}/auth/get/profile/image/${loginUser._id}`);
+        if (response.data.isProfile) {
+          localStorage.setItem('userProfileImg', JSON.stringify(response.data.isProfile));
+          setProfileImage(response.data.isProfile.ImageUrl);
+        } else {
+          setProfileImage(null);
+        }
+      } catch(err) {
         console.log(err);
+        setProfileImage(null);
+      } finally {
+        setImageLoading(false);
       }
     }
     fetchUserProfile();
-  })
+  }, [loginUser._id]);
 
   // Function to generate initials from name
   const getInitials = (name) => {
@@ -51,18 +56,32 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
   };
 
   // Function to handle profile image change
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const responce = await axios.post(`${baseUrl}/auth/set/profile/img/${loginUser._id}`, {
-          profileImage : event.target.result
-        });
-        console.log(responce)
-        // For demo purposes, we'll just log it
-      };
-      reader.readAsDataURL(file);
+      setUploadingImage(true);
+      try {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const response = await axios.post(`${baseUrl}/auth/set/profile/img/${loginUser._id}`, {
+              profileImage: event.target.result
+            });
+            if (response.data.isProfile) {
+              localStorage.setItem('userProfileImg', JSON.stringify(response.data.isProfile));
+              setProfileImage(response.data.isProfile.ImageUrl);
+            }
+          } catch (error) {
+            console.error("Error uploading image:", error);
+          } finally {
+            setUploadingImage(false);
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        console.error("Error processing image:", error);
+        setUploadingImage(false);
+      }
     }
   };
 
@@ -148,7 +167,11 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                     ) : (
                       <div className="flex flex-col items-center">
                         <div className="mb-4 relative group">
-                          {profileImage ? (
+                          {imageLoading ? (
+                            <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center">
+                              <Loader2 className="h-6 w-6 text-gray-500 animate-spin" />
+                            </div>
+                          ) : profileImage ? (
                             <img
                               className="h-24 w-24 rounded-full object-cover"
                               src={profileImage}
@@ -160,17 +183,24 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                             </div>
                           )}
                           
-                          <label className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all cursor-pointer">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleImageChange}
-                              className="hidden"
-                            />
-                            <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </label>
+                          {!imageLoading && (
+                            <label className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all cursor-pointer">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                className="hidden"
+                                disabled={uploadingImage}
+                              />
+                              {uploadingImage ? (
+                                <Loader2 className="h-6 w-6 text-white animate-spin" />
+                              ) : (
+                                <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                              )}
+                            </label>
+                          )}
                           
-                          {!isEditing && (
+                          {!isEditing && !imageLoading && !uploadingImage && (
                             <button
                               onClick={handleEditToggle}
                               className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1.5 hover:bg-blue-600 transition-colors"
@@ -180,6 +210,7 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                           )}
                         </div>
 
+                        {/* Rest of your component remains the same */}
                         {isEditing ? (
                           <div className="w-full max-w-sm space-y-4">
                             <div>
