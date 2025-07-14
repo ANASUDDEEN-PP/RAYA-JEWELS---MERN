@@ -19,7 +19,7 @@ import AboutUs from "../pages/Admin/Settings/settingsSub";
 import ProfileSettings from "../pages/Admin/Settings/profileSettings"
 import CollectionSettings from "../pages/Admin/Settings/collectionSettings";
 import OrderDetailsPage from "../pages/Admin/Orders/orderView/orderView";
-import TransactionList from "../pages/Admin/transaction/transaction"
+import TransactionList from "../pages/Admin/transaction/transaction";
 
 const routeHelper = [
   {
