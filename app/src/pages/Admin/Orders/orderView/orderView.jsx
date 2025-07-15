@@ -8,6 +8,7 @@ import PaymentDetailsPopup from './paymentDetails';
 import axios from 'axios';
 import baseUrl from '../../../../url';
 import toast, { Toaster } from 'react-hot-toast';
+import UnauthorizedPage from '../../../../components/unauthorized Alert/unAuth';
 
 const OrderDetailsPage = () => {
     const [loading, setLoading] = useState(true);
@@ -205,6 +206,15 @@ const OrderDetailsPage = () => {
             return dateString;
         }
     };
+
+    const isAdmin = JSON.parse(localStorage.getItem("adminCode"));
+  if (!isAdmin && isAdmin !== "ADMRAYA1752604097026") {
+    return (
+      <div>
+        <UnauthorizedPage />
+      </div>
+    );
+  }
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 relative">

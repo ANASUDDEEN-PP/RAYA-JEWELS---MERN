@@ -4,6 +4,7 @@ import NavBar from '../../components/navBar';
 import axios from 'axios';
 import baseUrl from '../../url';
 import Footer from "../../components/footer"
+import UnauthorizedPage from '../../components/unauthorized Alert/unAuth';
 
 const ProductsShowcase = () => {
     const [products, setProducts] = useState([]);
@@ -11,6 +12,9 @@ const ProductsShowcase = () => {
     const [cartItems, setCartItems] = useState(new Set());
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const localUser = JSON.parse(localStorage.getItem("userProfile")) || null;
+    console.log(localUser)
 
     // Shuffle array function
     const shuffleArray = (array) => {
@@ -91,6 +95,15 @@ const ProductsShowcase = () => {
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                     <p className="text-red-500">{error}</p>
                 </div>
+            </div>
+        );
+    }
+
+    if (!localUser) {
+        return (
+            <div>
+                <NavBar />
+                <UnauthorizedPage />
             </div>
         );
     }

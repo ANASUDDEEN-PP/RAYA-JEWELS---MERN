@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, User, Camera, Phone, Mail, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Components/sideBarSettings';
+import UnauthorizedPage from '../../../components/unauthorized Alert/unAuth';
 
 export default function SettingsPage() {
 
@@ -39,6 +40,15 @@ export default function SettingsPage() {
         alert('Profile settings updated successfully!');
     };
     const navigate = useNavigate();
+
+    const isAdmin = JSON.parse(localStorage.getItem("adminCode"));
+  if (!isAdmin && isAdmin !== "ADMRAYA1752604097026") {
+    return (
+      <div>
+        <UnauthorizedPage />
+      </div>
+    );
+  }
 
     return (
         <div className="min-h-screen bg-gray-50">

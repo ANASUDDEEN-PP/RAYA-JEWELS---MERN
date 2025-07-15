@@ -5,6 +5,7 @@ import Sidebar from '../Components/sideBar';
 import axios from 'axios';
 import baseUrl from '../../../url';
 import { useNavigate } from 'react-router-dom';
+import UnauthorizedPage from '../../../components/unauthorized Alert/unAuth';
 
 const OrderListPage = () => {
     // State management
@@ -109,6 +110,14 @@ const OrderListPage = () => {
         }
         return pages;
     };
+    const isAdmin = JSON.parse(localStorage.getItem("adminCode"));
+      if (!isAdmin && isAdmin !== "ADMRAYA1752604097026") {
+        return (
+          <div>
+            <UnauthorizedPage />
+          </div>
+        );
+      }
 
     return (
         <div className="flex h-screen bg-gray-100">

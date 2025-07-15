@@ -17,6 +17,7 @@ import axios from "axios";
 import baseUrl from "../../url";
 import CommentsSection from "./CommentSection";
 import toast, { Toaster } from "react-hot-toast";
+import UnauthorizedPage from "../../components/unauthorized Alert/unAuth";
 
 const ProductView = () => {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -182,6 +183,15 @@ const ProductView = () => {
     { label: "Sizes Available", value: product.Size },
     { label: "Quantity Available", value: product.Quantity },
   ];
+
+  if (!localUser) {
+        return (
+            <div>
+                <NavBar />
+                <UnauthorizedPage />
+            </div>
+        );
+    }
 
   return (
     <div>

@@ -1,13 +1,25 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Edit2, Trash2, ChevronLeft, ChevronRight, Upload, Plus, X, Save, Camera } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import {
+  ArrowLeft,
+  Edit2,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Upload,
+  Plus,
+  X,
+  Save,
+  Camera,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import UnauthorizedPage from "../../../components/unauthorized Alert/unAuth";
 
 const ProductActionView = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const navigate = useNavigate();
-  
+
   // Sample product data
   const [productData, setProductData] = useState({
     id: 1,
@@ -20,21 +32,22 @@ const ProductActionView = () => {
     stock: 25,
     rating: 4.5,
     reviews: 128,
-    description: "Experience crystal-clear audio with our premium wireless headphones featuring active noise cancellation, 30-hour battery life, and comfortable over-ear design.",
+    description:
+      "Experience crystal-clear audio with our premium wireless headphones featuring active noise cancellation, 30-hour battery life, and comfortable over-ear design.",
     features: [
       "Active Noise Cancellation",
       "30-hour battery life",
       "Bluetooth 5.0 connectivity",
       "Premium leather ear cups",
-      "Quick charge - 10 min for 3 hours"
+      "Quick charge - 10 min for 3 hours",
     ],
     specifications: {
-      "Weight": "280g",
+      Weight: "280g",
       "Driver Size": "40mm",
       "Frequency Response": "20Hz - 20kHz",
-      "Impedance": "32 ohms",
-      "Connectivity": "Bluetooth 5.0, 3.5mm jack"
-    }
+      Impedance: "32 ohms",
+      Connectivity: "Bluetooth 5.0, 3.5mm jack",
+    },
   });
 
   const [images, setImages] = useState([
@@ -45,11 +58,11 @@ const ProductActionView = () => {
     "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=500&h=500&fit=crop",
     "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=500&h=500&fit=crop",
     "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=500&fit=crop",
-    "https://images.unsplash.com/photo-1588508065123-287b28e013da?w=500&h=500&fit=crop"
+    "https://images.unsplash.com/photo-1588508065123-287b28e013da?w=500&h=500&fit=crop",
   ]);
 
   const handleBack = () => {
-    console.log('Going back to product list');
+    console.log("Going back to product list");
     navigate(-1);
   };
 
@@ -59,7 +72,7 @@ const ProductActionView = () => {
 
   const handleSave = () => {
     setIsEditing(false);
-    console.log('Saving product data:', productData);
+    console.log("Saving product data:", productData);
   };
 
   const handleCancel = () => {
@@ -68,55 +81,64 @@ const ProductActionView = () => {
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      console.log('Deleting product:', productData.id);
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      console.log("Deleting product:", productData.id);
     }
   };
 
   const handleInputChange = (field, value) => {
-    setProductData(prev => ({
+    setProductData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleSpecificationChange = (key, value) => {
-    setProductData(prev => ({
+    setProductData((prev) => ({
       ...prev,
       specifications: {
         ...prev.specifications,
-        [key]: value
-      }
+        [key]: value,
+      },
     }));
   };
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    setSelectedFiles(prev => [...prev, ...files]);
-    
-    files.forEach(file => {
+    setSelectedFiles((prev) => [...prev, ...files]);
+
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setImages(prev => [...prev, e.target.result]);
+        setImages((prev) => [...prev, e.target.result]);
       };
       reader.readAsDataURL(file);
     });
   };
 
   const removeImage = (index) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+    setImages((prev) => prev.filter((_, i) => i !== index));
     if (currentImageIndex >= images.length - 1) {
       setCurrentImageIndex(Math.max(0, images.length - 2));
     }
   };
 
   const nextImage = () => {
-    setCurrentImageIndex(prev => (prev + 1) % images.length);
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex(prev => (prev - 1 + images.length) % images.length);
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
+
+  const isAdmin = JSON.parse(localStorage.getItem("adminCode"));
+  if (!isAdmin && isAdmin !== "ADMRAYA1752604097026") {
+    return (
+      <div>
+        <UnauthorizedPage />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -133,12 +155,14 @@ const ProductActionView = () => {
               </button>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {isEditing ? 'Edit Product' : 'Product Details'}
+                  {isEditing ? "Edit Product" : "Product Details"}
                 </h1>
-                <p className="text-sm text-gray-500">Manage your product information</p>
+                <p className="text-sm text-gray-500">
+                  Manage your product information
+                </p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {!isEditing ? (
                 <>
@@ -182,12 +206,13 @@ const ProductActionView = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* Left Side - Product Images */}
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Product Images</h2>
-              
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                Product Images
+              </h2>
+
               {/* Main image display */}
               <div className="relative mb-4">
                 <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
@@ -205,7 +230,7 @@ const ProductActionView = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Navigation arrows */}
                   {images.length > 1 && (
                     <>
@@ -236,8 +261,8 @@ const ProductActionView = () => {
                           onClick={() => setCurrentImageIndex(index)}
                           className={`w-full aspect-square rounded-md overflow-hidden border-2 transition-all ${
                             currentImageIndex === index
-                              ? 'border-blue-500 ring-2 ring-blue-200'
-                              : 'border-gray-200 hover:border-gray-300'
+                              ? "border-blue-500 ring-2 ring-blue-200"
+                              : "border-gray-200 hover:border-gray-300"
                           }`}
                         >
                           <img
@@ -265,7 +290,9 @@ const ProductActionView = () => {
 
               {/* Image count */}
               <div className="text-sm text-gray-500 text-center">
-                {images.length > 0 ? `${currentImageIndex + 1} of ${images.length} images` : 'No images'}
+                {images.length > 0
+                  ? `${currentImageIndex + 1} of ${images.length} images`
+                  : "No images"}
               </div>
             </div>
           </div>
@@ -278,13 +305,21 @@ const ProductActionView = () => {
                 <div className="space-y-6">
                   {/* Basic Info */}
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{productData.name}</h2>
-                    <p className="text-lg text-gray-600 mb-4">{productData.brand}</p>
-                    
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                      {productData.name}
+                    </h2>
+                    <p className="text-lg text-gray-600 mb-4">
+                      {productData.brand}
+                    </p>
+
                     <div className="flex items-center space-x-4 mb-4">
-                      <span className="text-3xl font-bold text-green-600">${productData.price}</span>
+                      <span className="text-3xl font-bold text-green-600">
+                        ${productData.price}
+                      </span>
                       {productData.originalPrice > productData.price && (
-                        <span className="text-lg text-gray-500 line-through">${productData.originalPrice}</span>
+                        <span className="text-lg text-gray-500 line-through">
+                          ${productData.originalPrice}
+                        </span>
                       )}
                     </div>
 
@@ -303,23 +338,34 @@ const ProductActionView = () => {
                       </div>
                       <div>
                         <span className="font-medium">Rating:</span>
-                        <span className="ml-2">{productData.rating}/5 ({productData.reviews})</span>
+                        <span className="ml-2">
+                          {productData.rating}/5 ({productData.reviews})
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   {/* Description */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                    <p className="text-gray-700 leading-relaxed">{productData.description}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                      Description
+                    </h3>
+                    <p className="text-gray-700 leading-relaxed">
+                      {productData.description}
+                    </p>
                   </div>
 
                   {/* Features */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Key Features</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                      Key Features
+                    </h3>
                     <ul className="space-y-2">
                       {productData.features.map((feature, index) => (
-                        <li key={index} className="flex items-start text-gray-700">
+                        <li
+                          key={index}
+                          className="flex items-start text-gray-700"
+                        >
                           <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2 flex-shrink-0"></span>
                           {feature}
                         </li>
@@ -329,111 +375,165 @@ const ProductActionView = () => {
 
                   {/* Specifications */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Specifications</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                      Specifications
+                    </h3>
                     <div className="space-y-3">
-                      {Object.entries(productData.specifications).map(([key, value]) => (
-                        <div key={key} className="flex justify-between py-2 border-b border-gray-100 last:border-b-0">
-                          <span className="font-medium text-gray-600">{key}:</span>
-                          <span className="text-gray-900 text-right">{value}</span>
-                        </div>
-                      ))}
+                      {Object.entries(productData.specifications).map(
+                        ([key, value]) => (
+                          <div
+                            key={key}
+                            className="flex justify-between py-2 border-b border-gray-100 last:border-b-0"
+                          >
+                            <span className="font-medium text-gray-600">
+                              {key}:
+                            </span>
+                            <span className="text-gray-900 text-right">
+                              {value}
+                            </span>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
               ) : (
                 /* Edit Mode */
                 <div className="space-y-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Edit Product Details</h2>
-                  
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    Edit Product Details
+                  </h2>
+
                   <div className="grid grid-cols-1 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Product Name
+                      </label>
                       <input
                         type="text"
                         value={productData.name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("name", e.target.value)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
-                    
+
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Brand
+                      </label>
                       <input
                         type="text"
                         value={productData.brand}
-                        onChange={(e) => handleInputChange('brand', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("brand", e.target.value)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Price
+                        </label>
                         <input
                           type="number"
                           step="0.01"
                           value={productData.price}
-                          onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "price",
+                              parseFloat(e.target.value)
+                            )
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Stock</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Stock
+                        </label>
                         <input
                           type="number"
                           value={productData.stock}
-                          onChange={(e) => handleInputChange('stock', parseInt(e.target.value))}
+                          onChange={(e) =>
+                            handleInputChange("stock", parseInt(e.target.value))
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Description
+                      </label>
                       <textarea
                         rows="4"
                         value={productData.description}
-                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("description", e.target.value)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Features (one per line)</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Features (one per line)
+                      </label>
                       <textarea
                         rows="4"
-                        value={productData.features.join('\n')}
-                        onChange={(e) => handleInputChange('features', e.target.value.split('\n'))}
+                        value={productData.features.join("\n")}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "features",
+                            e.target.value.split("\n")
+                          )
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Specifications</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Specifications
+                      </label>
                       <div className="space-y-3">
-                        {Object.entries(productData.specifications).map(([key, value]) => (
-                          <div key={key} className="grid grid-cols-2 gap-3">
-                            <input
-                              type="text"
-                              value={key}
-                              onChange={(e) => {
-                                const newSpecs = { ...productData.specifications };
-                                delete newSpecs[key];
-                                newSpecs[e.target.value] = value;
-                                setProductData(prev => ({ ...prev, specifications: newSpecs }));
-                              }}
-                              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Specification name"
-                            />
-                            <input
-                              type="text"
-                              value={value}
-                              onChange={(e) => handleSpecificationChange(key, e.target.value)}
-                              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Specification value"
-                            />
-                          </div>
-                        ))}
+                        {Object.entries(productData.specifications).map(
+                          ([key, value]) => (
+                            <div key={key} className="grid grid-cols-2 gap-3">
+                              <input
+                                type="text"
+                                value={key}
+                                onChange={(e) => {
+                                  const newSpecs = {
+                                    ...productData.specifications,
+                                  };
+                                  delete newSpecs[key];
+                                  newSpecs[e.target.value] = value;
+                                  setProductData((prev) => ({
+                                    ...prev,
+                                    specifications: newSpecs,
+                                  }));
+                                }}
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Specification name"
+                              />
+                              <input
+                                type="text"
+                                value={value}
+                                onChange={(e) =>
+                                  handleSpecificationChange(key, e.target.value)
+                                }
+                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Specification value"
+                              />
+                            </div>
+                          )
+                        )}
                       </div>
                     </div>
                   </div>
@@ -445,8 +545,10 @@ const ProductActionView = () => {
           {/* Right Side - Add Images */}
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Manage Images</h2>
-              
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                Manage Images
+              </h2>
+
               {/* Upload Area */}
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors mb-6">
                 <input
@@ -465,7 +567,9 @@ const ProductActionView = () => {
                     <Upload className="w-8 h-8 text-blue-600" />
                   </div>
                   <div>
-                    <span className="text-lg font-medium text-gray-900 block">Upload Images</span>
+                    <span className="text-lg font-medium text-gray-900 block">
+                      Upload Images
+                    </span>
                     <span className="text-sm text-gray-600">
                       Click to browse or drag and drop
                     </span>
@@ -482,7 +586,7 @@ const ProductActionView = () => {
                   <Camera className="w-5 h-5" />
                   <span>Take Photo</span>
                 </button>
-                
+
                 <button className="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-3 rounded-lg transition-colors flex items-center justify-center space-x-2">
                   <Plus className="w-5 h-5" />
                   <span>Add from Gallery</span>
@@ -491,7 +595,9 @@ const ProductActionView = () => {
 
               {/* Image Stats */}
               <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-900 mb-2">Image Statistics</h3>
+                <h3 className="text-sm font-medium text-gray-900 mb-2">
+                  Image Statistics
+                </h3>
                 <div className="space-y-2 text-sm text-gray-600">
                   <div className="flex justify-between">
                     <span>Total Images:</span>
@@ -499,12 +605,18 @@ const ProductActionView = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Main Image:</span>
-                    <span className="font-medium">{images.length > 0 ? 'Set' : 'Not Set'}</span>
+                    <span className="font-medium">
+                      {images.length > 0 ? "Set" : "Not Set"}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Status:</span>
-                    <span className={`font-medium ${images.length > 0 ? 'text-green-600' : 'text-orange-600'}`}>
-                      {images.length > 0 ? 'Ready' : 'Needs Images'}
+                    <span
+                      className={`font-medium ${
+                        images.length > 0 ? "text-green-600" : "text-orange-600"
+                      }`}
+                    >
+                      {images.length > 0 ? "Ready" : "Needs Images"}
                     </span>
                   </div>
                 </div>
@@ -512,7 +624,9 @@ const ProductActionView = () => {
 
               {/* Tips */}
               <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <h3 className="text-sm font-medium text-blue-900 mb-2">💡 Tips</h3>
+                <h3 className="text-sm font-medium text-blue-900 mb-2">
+                  💡 Tips
+                </h3>
                 <ul className="text-xs text-blue-700 space-y-1">
                   <li>• Use high-quality images (1200x1200px minimum)</li>
                   <li>• Show different angles of your product</li>

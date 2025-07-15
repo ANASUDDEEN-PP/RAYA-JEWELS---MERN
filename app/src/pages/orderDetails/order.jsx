@@ -11,6 +11,7 @@ import {
 import NavBar from "../../components/navBar";
 import axios from "axios";
 import baseUrl from "../../url";
+import UnauthorizedPage from "../../components/unauthorized Alert/unAuth";
 
 export default function OrderDetailsPage() {
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -20,7 +21,7 @@ export default function OrderDetailsPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
-  
+
   // Safely get user from localStorage
   const user = JSON.parse(localStorage.getItem("userProfile")) || { _id: "" };
 
@@ -31,7 +32,7 @@ export default function OrderDetailsPage() {
         const response = await axios.get(
           `${baseUrl}/order/user/get/${user._id}`
         );
-        
+
         let rawOrders = response.data?.orders || response.data || {};
         let orders = Object.values(rawOrders);
 
@@ -90,18 +91,20 @@ export default function OrderDetailsPage() {
       // console.log(cancellationReason, currentOrder.id)
       // Here you would typically make an API call to cancel the order
       await axios.put(`${baseUrl}/order/user/cancel/${currentOrder.id}`, {
-        reason: cancellationReason
+        reason: cancellationReason,
       });
 
       // Simulate API call
       // await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Update local state
-      setOrdersData(ordersData.map(order => 
-        order.orderId === currentOrder.orderId 
-          ? { ...order, status: "Cancelled" } 
-          : order
-      ));
+      setOrdersData(
+        ordersData.map((order) =>
+          order.orderId === currentOrder.orderId
+            ? { ...order, status: "Cancelled" }
+            : order
+        )
+      );
 
       alert(
         `Order cancellation request submitted successfully.\nReason: ${cancellationReason}\nYou will receive a confirmation email shortly.`
@@ -135,7 +138,7 @@ export default function OrderDetailsPage() {
 
   const getStatusColor = (status) => {
     if (!status) return "text-gray-600 bg-gray-100";
-    
+
     switch (status.toLowerCase()) {
       case "confirmed":
         return "text-green-600 bg-green-100";
@@ -149,6 +152,15 @@ export default function OrderDetailsPage() {
         return "text-gray-600 bg-gray-100";
     }
   };
+
+  if (!JSON.parse(localStorage.getItem("userProfile"))) {
+    return (
+      <div>
+        <NavBar />
+        <UnauthorizedPage />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -216,23 +228,25 @@ export default function OrderDetailsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-900">
-                Cancel Order
-              </h3>
-              <button 
+              <h3 className="text-xl font-bold text-gray-900">Cancel Order</h3>
+              <button
                 onClick={closeCancelModal}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
-            
+
             <p className="text-gray-600 mb-4">
-              Are you sure you want to cancel this order? Please provide a reason for cancellation.
+              Are you sure you want to cancel this order? Please provide a
+              reason for cancellation.
             </p>
-            
+
             <div className="mb-4">
-              <label htmlFor="cancellationReason" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="cancellationReason"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Reason for cancellation
               </label>
               <textarea
@@ -244,7 +258,7 @@ export default function OrderDetailsPage() {
                 onChange={(e) => setCancellationReason(e.target.value)}
               />
             </div>
-            
+
             <div className="flex justify-end space-x-3">
               <button
                 onClick={closeCancelModal}

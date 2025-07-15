@@ -38,6 +38,7 @@ import NavBar from "../Components/navBar";
 import SideBar from "../Components/sideBar";
 import axios from "axios";
 import baseUrl from "../../../url";
+import UnauthorizedPage from "../../../components/unauthorized Alert/unAuth";
 
 // Sidebar Component
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -103,21 +104,25 @@ const TradingChart = ({ data, profit, loss }) => {
   const [showOpposite, setShowOpposite] = useState(false);
 
   // Transform data to show both lines above x-axis
-  const chartData = data.map(item => ({
+  const chartData = data.map((item) => ({
     ...item,
     profit: item.profit || 0,
-    lossDisplay: Math.abs(item.loss || 0)
+    lossDisplay: Math.abs(item.loss || 0),
   }));
 
   return (
-    <div className={`rounded-xl shadow-sm border border-gray-100 p-6 relative overflow-hidden ${
-      isProfit ? 'bg-green-50' : 'bg-red-50'
-    }`}>
+    <div
+      className={`rounded-xl shadow-sm border border-gray-100 p-6 relative overflow-hidden ${
+        isProfit ? "bg-green-50" : "bg-red-50"
+      }`}
+    >
       {/* Background overlay */}
-      <div className={`absolute inset-0 ${
-        isProfit ? 'bg-green-500' : 'bg-red-500'
-      } opacity-5`}></div>
-      
+      <div
+        className={`absolute inset-0 ${
+          isProfit ? "bg-green-500" : "bg-red-500"
+        } opacity-5`}
+      ></div>
+
       <div className="relative z-10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <div>
@@ -125,48 +130,53 @@ const TradingChart = ({ data, profit, loss }) => {
               Trading Performance
             </h3>
             <p className="text-sm text-gray-600">
-              Net P&L: <span className={`font-bold ${
-                isProfit ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {isProfit ? '+' : '-'}${Math.abs(netProfit).toLocaleString()}
+              Net P&L:{" "}
+              <span
+                className={`font-bold ${
+                  isProfit ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {isProfit ? "+" : "-"}${Math.abs(netProfit).toLocaleString()}
               </span>
             </p>
           </div>
-          
+
           <div className="flex flex-wrap gap-2">
-            <div className={`px-4 py-2 rounded-full text-sm font-medium ${
-              isProfit 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}>
-              {isProfit ? '📈 Profitable' : '📉 Loss'}
+            <div
+              className={`px-4 py-2 rounded-full text-sm font-medium ${
+                isProfit
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {isProfit ? "📈 Profitable" : "📉 Loss"}
             </div>
-            
+
             <button
               onClick={() => setShowOpposite(!showOpposite)}
               className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 ${
-                showOpposite 
-                  ? isProfit 
-                    ? 'bg-red-100 text-red-800' 
-                    : 'bg-green-100 text-green-800'
-                  : 'bg-gray-100 text-gray-800'
+                showOpposite
+                  ? isProfit
+                    ? "bg-red-100 text-red-800"
+                    : "bg-green-100 text-green-800"
+                  : "bg-gray-100 text-gray-800"
               }`}
             >
               {showOpposite ? (
                 <>
                   <CheckCircle size={14} />
-                  {isProfit ? 'Showing Loss' : 'Showing Profit'}
+                  {isProfit ? "Showing Loss" : "Showing Profit"}
                 </>
               ) : (
                 <>
                   <XCircle size={14} />
-                  {isProfit ? 'Show Loss' : 'Show Profit'}
+                  {isProfit ? "Show Loss" : "Show Profit"}
                 </>
               )}
             </button>
           </div>
         </div>
-        
+
         <div className="h-96">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
@@ -175,47 +185,45 @@ const TradingChart = ({ data, profit, loss }) => {
             >
               <defs>
                 <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0.1} />
                 </linearGradient>
                 <linearGradient id="colorLoss" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#EF4444" stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#EF4444" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="month" 
-                tick={{ fontSize: 12 }}
-                stroke="#6b7280"
-              />
-              <YAxis 
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6b7280" />
+              <YAxis
                 tick={{ fontSize: 12 }}
                 stroke="#6b7280"
                 tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
               />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: '#fff'
+                  backgroundColor: "#1f2937",
+                  border: "none",
+                  borderRadius: "8px",
+                  color: "#fff",
                 }}
                 formatter={(value, name) => {
-                  if (name === 'profit') return [`$${value.toLocaleString()}`, 'Profit'];
-                  if (name === 'lossDisplay') return [`-$${value.toLocaleString()}`, 'Loss'];
-                  return [`$${value.toLocaleString()}`, 'Sales'];
+                  if (name === "profit")
+                    return [`$${value.toLocaleString()}`, "Profit"];
+                  if (name === "lossDisplay")
+                    return [`-$${value.toLocaleString()}`, "Loss"];
+                  return [`$${value.toLocaleString()}`, "Sales"];
                 }}
                 labelFormatter={(label) => `Month: ${label}`}
               />
-              <Legend 
+              <Legend
                 formatter={(value) => {
-                  if (value === 'profit') return 'Profit';
-                  if (value === 'lossDisplay') return 'Loss';
+                  if (value === "profit") return "Profit";
+                  if (value === "lossDisplay") return "Loss";
                   return value;
                 }}
               />
-              
+
               {/* Default line (profit for profit chart, loss for loss chart) */}
               {(!showOpposite || !isProfit) && (
                 <Area
@@ -231,7 +239,7 @@ const TradingChart = ({ data, profit, loss }) => {
                   isAnimationActive={true}
                 />
               )}
-              
+
               {/* Opposite line (shown when toggle is on) */}
               {showOpposite && (
                 <Area
@@ -298,26 +306,33 @@ const ProfitLossSummary = ({ profit, loss }) => {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className={`p-3 rounded-lg ${
-            isPositive ? 'bg-green-100' : 'bg-red-100'
-          }`}>
-            <DollarSign className={`${
-              isPositive ? 'text-green-600' : 'text-red-600'
-            }`} size={24} />
+          <div
+            className={`p-3 rounded-lg ${
+              isPositive ? "bg-green-100" : "bg-red-100"
+            }`}
+          >
+            <DollarSign
+              className={`${isPositive ? "text-green-600" : "text-red-600"}`}
+              size={24}
+            />
           </div>
           <div className="text-right">
-            <div className={`text-xs font-medium ${
-              isPositive ? 'text-green-600' : 'text-red-600'
-            }`}>
-              NET {isPositive ? 'PROFIT' : 'LOSS'}
+            <div
+              className={`text-xs font-medium ${
+                isPositive ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              NET {isPositive ? "PROFIT" : "LOSS"}
             </div>
           </div>
         </div>
         <div>
-          <p className={`text-3xl font-bold ${
-            isPositive ? 'text-green-600' : 'text-red-600'
-          }`}>
-            {isPositive ? '+' : '-'}${Math.abs(netProfit).toFixed(2)}
+          <p
+            className={`text-3xl font-bold ${
+              isPositive ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {isPositive ? "+" : "-"}${Math.abs(netProfit).toFixed(2)}
           </p>
           <p className="text-sm text-gray-500 mt-1">Net Result</p>
         </div>
@@ -333,7 +348,9 @@ const MonthlySalesAnalysis = ({ salesData }) => {
       {/* Bar Chart */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Monthly Sales Overview</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Monthly Sales Overview
+          </h3>
           <BarChart2 className="text-gray-400" size={20} />
         </div>
         <ResponsiveContainer width="100%" height={300}>
@@ -341,9 +358,7 @@ const MonthlySalesAnalysis = ({ salesData }) => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip 
-              formatter={(value) => [`$${value.toFixed(2)}`, 'Sales']}
-            />
+            <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, "Sales"]} />
             <Bar dataKey="sales" fill="#3B82F6" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -360,13 +375,11 @@ const MonthlySalesAnalysis = ({ salesData }) => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip 
-              formatter={(value) => [`$${value.toFixed(2)}`, 'Sales']}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="sales" 
-              stroke="#10B981" 
+            <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, "Sales"]} />
+            <Line
+              type="monotone"
+              dataKey="sales"
+              stroke="#10B981"
               strokeWidth={3}
               dot={{ r: 6 }}
             />
@@ -380,64 +393,64 @@ const MonthlySalesAnalysis = ({ salesData }) => {
 // Order Status Component
 const OrderStatusGrid = ({ data }) => {
   const orderStatusData = [
-    { 
-      name: "Processing", 
-      value: data.orderProcessing || 0, 
+    {
+      name: "Processing",
+      value: data.orderProcessing || 0,
       color: "bg-blue-500",
       icon: Clock,
-      textColor: "text-blue-600"
+      textColor: "text-blue-600",
     },
-    { 
-      name: "Confirmed", 
-      value: data.orderConfirm || 0, 
+    {
+      name: "Confirmed",
+      value: data.orderConfirm || 0,
       color: "bg-green-500",
       icon: CheckCircle,
-      textColor: "text-green-600"
+      textColor: "text-green-600",
     },
-    { 
-      name: "Shipped", 
-      value: data.orderShipped || 0, 
+    {
+      name: "Shipped",
+      value: data.orderShipped || 0,
       color: "bg-purple-500",
       icon: Truck,
-      textColor: "text-purple-600"
+      textColor: "text-purple-600",
     },
-    { 
-      name: "Delivered", 
-      value: data.orderDelivered || 0, 
+    {
+      name: "Delivered",
+      value: data.orderDelivered || 0,
       color: "bg-emerald-500",
       icon: CheckCircle,
-      textColor: "text-emerald-600"
+      textColor: "text-emerald-600",
     },
-    { 
-      name: "Cancelled", 
-      value: data.orderCancelled || 0, 
+    {
+      name: "Cancelled",
+      value: data.orderCancelled || 0,
       color: "bg-red-500",
       icon: XCircle,
-      textColor: "text-red-600"
+      textColor: "text-red-600",
     },
   ];
 
   const paymentStatusData = [
-    { 
-      name: "Paid", 
-      value: data.paymentPaid || 0, 
+    {
+      name: "Paid",
+      value: data.paymentPaid || 0,
       color: "bg-green-500",
       icon: CheckCircle,
-      textColor: "text-green-600"
+      textColor: "text-green-600",
     },
-    { 
-      name: "Pending", 
-      value: data.paymentPending || 0, 
+    {
+      name: "Pending",
+      value: data.paymentPending || 0,
       color: "bg-yellow-500",
       icon: Clock,
-      textColor: "text-yellow-600"
+      textColor: "text-yellow-600",
     },
-    { 
-      name: "Failed", 
-      value: data.paymentFailed || 0, 
+    {
+      name: "Failed",
+      value: data.paymentFailed || 0,
       color: "bg-red-500",
       icon: XCircle,
-      textColor: "text-red-600"
+      textColor: "text-red-600",
     },
   ];
 
@@ -445,11 +458,15 @@ const OrderStatusGrid = ({ data }) => {
     <div className="space-y-6">
       {/* Order Status */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Order Status</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">
+          Order Status
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {orderStatusData.map((item, index) => (
             <div key={index} className="bg-gray-50 rounded-lg p-4 text-center">
-              <div className={`${item.color} p-3 rounded-lg mx-auto mb-3 w-12 h-12 flex items-center justify-center`}>
+              <div
+                className={`${item.color} p-3 rounded-lg mx-auto mb-3 w-12 h-12 flex items-center justify-center`}
+              >
                 <item.icon className="text-white" size={20} />
               </div>
               <p className={`text-2xl font-bold ${item.textColor} mb-1`}>
@@ -463,11 +480,15 @@ const OrderStatusGrid = ({ data }) => {
 
       {/* Payment Status */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Payment Status</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">
+          Payment Status
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {paymentStatusData.map((item, index) => (
             <div key={index} className="bg-gray-50 rounded-lg p-4 text-center">
-              <div className={`${item.color} p-3 rounded-lg mx-auto mb-3 w-12 h-12 flex items-center justify-center`}>
+              <div
+                className={`${item.color} p-3 rounded-lg mx-auto mb-3 w-12 h-12 flex items-center justify-center`}
+              >
                 <item.icon className="text-white" size={20} />
               </div>
               <p className={`text-2xl font-bold ${item.textColor} mb-1`}>
@@ -494,7 +515,7 @@ const Dashboard = () => {
       try {
         setLoading(true);
         const response = await axios.get(`${baseUrl}/get/dashboard/data`);
-        console.log(response)
+        console.log(response);
         setData(response.data.dashboardData);
       } catch (err) {
         setError(err.message || "Failed to fetch dashboard data");
@@ -510,6 +531,15 @@ const Dashboard = () => {
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+
+  const isAdmin = JSON.parse(localStorage.getItem("adminCode"));
+  if (!isAdmin && isAdmin !== "ADMRAYA1752604097026") {
+    return (
+      <div>
+        <UnauthorizedPage />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -588,15 +618,30 @@ const Dashboard = () => {
   })) || [{ month: "No Data", sales: 0, orders: 0 }];
 
   // Add sample data for better visualization when we have limited data
-  const enhancedSalesData = salesData.length === 1 && salesData[0].month !== "No Data" ? [
-  { month: "May 2025", sales: 45000, profit: 12000, loss: -5000, orders: 2 },
-  { month: "Jun 2025", sales: 62000, profit: 18000, loss: -3000, orders: 3 },
-  ...salesData.map(item => ({
-    ...item,
-    profit: item.sales * 0.3, // example calculation
-    loss: -item.sales * 0.1   // example calculation
-  }))
-] : salesData;
+  const enhancedSalesData =
+    salesData.length === 1 && salesData[0].month !== "No Data"
+      ? [
+          {
+            month: "May 2025",
+            sales: 45000,
+            profit: 12000,
+            loss: -5000,
+            orders: 2,
+          },
+          {
+            month: "Jun 2025",
+            sales: 62000,
+            profit: 18000,
+            loss: -3000,
+            orders: 3,
+          },
+          ...salesData.map((item) => ({
+            ...item,
+            profit: item.sales * 0.3, // example calculation
+            loss: -item.sales * 0.1, // example calculation
+          })),
+        ]
+      : salesData;
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -648,9 +693,9 @@ const Dashboard = () => {
               />
               <StatCard
                 title="Revenue"
-                value={`${
-                  (data.monthlySalesGrid?.[0]?.sales || 0).toLocaleString()
-                }`}
+                value={`${(
+                  data.monthlySalesGrid?.[0]?.sales || 0
+                ).toLocaleString()}`}
                 change={15.8}
                 icon={DollarSign}
                 color="bg-yellow-500"
@@ -660,23 +705,18 @@ const Dashboard = () => {
 
             {/* Trading Chart - Full Width */}
             <div className="mb-8">
-              <TradingChart 
-                data={enhancedSalesData} 
+              <TradingChart
+                data={enhancedSalesData}
                 profit={data.profit}
                 loss={data.loss}
               />
             </div>
 
             {/* Profit/Loss Summary */}
-            <ProfitLossSummary 
-              profit={data.profit}
-              loss={data.loss}
-            />
+            <ProfitLossSummary profit={data.profit} loss={data.loss} />
 
             {/* Monthly Sales Analysis */}
-            <MonthlySalesAnalysis 
-              salesData={enhancedSalesData}
-            />
+            <MonthlySalesAnalysis salesData={enhancedSalesData} />
 
             {/* Order Status Grid */}
             <OrderStatusGrid data={data} />

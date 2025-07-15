@@ -6,6 +6,7 @@ import axios from "axios";
 import baseUrl from "../../../url";
 import AddProductModal from "./addProductModal";
 import { useNavigate } from "react-router-dom";
+import UnauthorizedPage from "../../../components/unauthorized Alert/unAuth";
 
 const ProductListPage = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -160,6 +161,15 @@ const ProductListPage = () => {
             size: newProduct.size || 'Not specified'
         }]);
     };
+
+    const isAdmin = JSON.parse(localStorage.getItem("adminCode"));
+  if (!isAdmin && isAdmin !== "ADMRAYA1752604097026") {
+    return (
+      <div>
+        <UnauthorizedPage />
+      </div>
+    );
+  }
 
     if (error) {
         return (

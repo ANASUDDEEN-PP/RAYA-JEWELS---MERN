@@ -1,9 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import {
+  Search,
+  Edit,
+  Trash2,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Loader2,
+} from "lucide-react";
 import NavBar from "../Components/navBar";
 import Sidebar from "../Components/sideBar";
-import axios from 'axios';
-import baseUrl from '../../../url';
+import axios from "axios";
+import baseUrl from "../../../url";
+import UnauthorizedPage from "../../../components/unauthorized Alert/unAuth";
 
 const UserListPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,15 +30,16 @@ const UserListPage = () => {
       try {
         setLoading(true);
         const response = await axios.get(`${baseUrl}/auth/get/all`);
-        
+
         // Transform data if needed (example: ensure consistent property names)
-        const formattedUsers = response.data.users?.map(user => ({
-          id: user.id || user._id,
-          name: user.Name || user.Name || 'Unknown',
-          email: user.Email || user.Email || 'No email',
-          phone: user.Mobile || user.Mobile || user.Mobile || 'No phone'
-        })) || [];
-        
+        const formattedUsers =
+          response.data.users?.map((user) => ({
+            id: user.id || user._id,
+            name: user.Name || user.Name || "Unknown",
+            email: user.Email || user.Email || "No email",
+            phone: user.Mobile || user.Mobile || user.Mobile || "No phone",
+          })) || [];
+
         setUsers(formattedUsers);
         setError(null);
       } catch (err) {
@@ -43,7 +55,7 @@ const UserListPage = () => {
   }, []);
 
   // Filter users based on search term
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user) => {
     const searchLower = searchTerm.toLowerCase();
     return (
       user.name.toLowerCase().includes(searchLower) ||
@@ -106,10 +118,19 @@ const UserListPage = () => {
   };
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+
+  const isAdmin = JSON.parse(localStorage.getItem("adminCode"));
+  if (!isAdmin && isAdmin !== "ADMRAYA1752604097026") {
+    return (
+      <div>
+        <UnauthorizedPage />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -131,10 +152,14 @@ const UserListPage = () => {
                   User Management
                 </h1>
                 <p className="text-gray-600">
-                  Total Users: <span className="font-semibold text-blue-600">{filteredUsers.length}</span>
+                  Total Users:{" "}
+                  <span className="font-semibold text-blue-600">
+                    {filteredUsers.length}
+                  </span>
                   {filteredUsers.length > 0 && (
                     <span className="ml-2 text-sm text-gray-500">
-                      (Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)})
+                      (Showing {startIndex + 1}-
+                      {Math.min(endIndex, filteredUsers.length)})
                     </span>
                   )}
                 </p>
@@ -168,8 +193,16 @@ const UserListPage = () => {
               <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    <svg
+                      className="h-5 w-5 text-red-500"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                   <div className="ml-3">
@@ -207,7 +240,10 @@ const UserListPage = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {currentUsers.length > 0 ? (
                         currentUsers.map((user, index) => (
-                          <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                          <tr
+                            key={user.id}
+                            className="hover:bg-gray-50 transition-colors"
+                          >
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {startIndex + index + 1}
                             </td>
@@ -249,8 +285,13 @@ const UserListPage = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
-                            {searchTerm ? 'No users match your search' : 'No users found'}
+                          <td
+                            colSpan="5"
+                            className="px-6 py-4 text-center text-sm text-gray-500"
+                          >
+                            {searchTerm
+                              ? "No users match your search"
+                              : "No users found"}
                           </td>
                         </tr>
                       )}
@@ -262,9 +303,16 @@ const UserListPage = () => {
                 {filteredUsers.length > itemsPerPage && (
                   <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-sm text-gray-700">
-                      Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-                      <span className="font-medium">{Math.min(endIndex, filteredUsers.length)}</span> of{' '}
-                      <span className="font-medium">{filteredUsers.length}</span> results
+                      Showing{" "}
+                      <span className="font-medium">{startIndex + 1}</span> to{" "}
+                      <span className="font-medium">
+                        {Math.min(endIndex, filteredUsers.length)}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-medium">
+                        {filteredUsers.length}
+                      </span>{" "}
+                      results
                     </div>
                     <div className="flex items-center gap-1">
                       <button
@@ -276,14 +324,16 @@ const UserListPage = () => {
                         <ChevronsLeft className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
+                        onClick={() =>
+                          setCurrentPage(Math.max(currentPage - 1, 1))
+                        }
                         disabled={currentPage === 1}
                         className="px-3 py-1 rounded-md disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 hover:text-blue-600 hover:bg-blue-50 flex items-center gap-1"
                       >
                         <ChevronLeft className="h-4 w-4" />
                         <span>Previous</span>
                       </button>
-                      
+
                       <div className="flex items-center gap-1 mx-2">
                         {getPaginationButtons().map((page, index) => (
                           <React.Fragment key={index}>
@@ -294,8 +344,8 @@ const UserListPage = () => {
                                 onClick={() => setCurrentPage(page)}
                                 className={`w-8 h-8 flex items-center justify-center rounded-md text-sm ${
                                   currentPage === page
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-gray-700 hover:bg-blue-50'
+                                    ? "bg-blue-600 text-white"
+                                    : "text-gray-700 hover:bg-blue-50"
                                 }`}
                               >
                                 {page}
@@ -304,9 +354,11 @@ const UserListPage = () => {
                           </React.Fragment>
                         ))}
                       </div>
-                      
+
                       <button
-                        onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
+                        onClick={() =>
+                          setCurrentPage(Math.min(currentPage + 1, totalPages))
+                        }
                         disabled={currentPage === totalPages}
                         className="px-3 py-1 rounded-md disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 hover:text-blue-600 hover:bg-blue-50 flex items-center gap-1"
                       >
