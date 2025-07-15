@@ -21,7 +21,15 @@ import CollectionSettings from "../pages/Admin/Settings/collectionSettings";
 import OrderDetailsPage from "../pages/Admin/Orders/orderView/orderView";
 import TransactionList from "../pages/Admin/transaction/transaction";
 
+
+// Error Page
+import ErrorPage from "../pages/errorPage/errorPage"
+
 const routeHelper = [
+  {
+    path: "*",
+    comp: <ErrorPage />,
+  },
   {
     path: "/",
     comp: <StartPage />,
