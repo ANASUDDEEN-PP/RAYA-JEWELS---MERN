@@ -188,7 +188,7 @@ const JewelryEcommerce = () => {
       </section>
 
       {/* Categories Section */}
-      <section className="py-16 bg-gray-50 relative">
+      <section className="py-16 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -295,38 +295,6 @@ const JewelryEcommerce = () => {
                       className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                     />
-                    <div className="absolute top-4 left-4">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          product.badge === "Bestseller"
-                            ? "bg-green-100 text-green-800"
-                            : product.badge === "New"
-                            ? "bg-blue-100 text-blue-800"
-                            : product.badge === "Sale"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-purple-100 text-purple-800"
-                        }`}
-                      >
-                        {product.badge}
-                      </span>
-                    </div>
-                    <button
-                      onClick={(e) => toggleFavorite(product.id, e)}
-                      className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-all"
-                      aria-label={
-                        favorites.has(product.id)
-                          ? `Remove ${product.ProductName} from favorites`
-                          : `Add ${product.ProductName} to favorites`
-                      }
-                    >
-                      <Heart
-                        className={`h-5 w-5 ${
-                          favorites.has(product.id)
-                            ? "text-red-500 fill-current"
-                            : "text-gray-400"
-                        }`}
-                      />
-                    </button>
                   </div>
 
                   <div className="p-6">
@@ -355,11 +323,11 @@ const JewelryEcommerce = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="text-2xl font-bold text-gray-900">
-                          ${product.OfferPrice}
+                          ₹{product.OfferPrice}
                         </span>
                         {product.NormalPrice && (
                           <span className="text-lg text-gray-500 line-through">
-                            ${product.NormalPrice}
+                            ₹{product.NormalPrice}
                           </span>
                         )}
                       </div>

@@ -136,7 +136,7 @@ const TradingChart = ({ data, profit, loss }) => {
                   isProfit ? "text-green-600" : "text-red-600"
                 }`}
               >
-                {isProfit ? "+" : "-"}${Math.abs(netProfit).toLocaleString()}
+                {isProfit ? "+" : "-"}₹{Math.abs(netProfit).toLocaleString()}
               </span>
             </p>
           </div>
@@ -281,7 +281,7 @@ const ProfitLossSummary = ({ profit, loss }) => {
         </div>
         <div>
           <p className="text-3xl font-bold text-green-600">
-            ${parseFloat(profit || 0).toFixed(2)}
+            ₹{parseFloat(profit || 0).toFixed(2)}
           </p>
           <p className="text-sm text-gray-500 mt-1">Total Earnings</p>
         </div>
@@ -298,7 +298,7 @@ const ProfitLossSummary = ({ profit, loss }) => {
         </div>
         <div>
           <p className="text-3xl font-bold text-red-600">
-            ${Math.abs(parseFloat(loss || 0)).toFixed(2)}
+            ₹{Math.abs(parseFloat(loss || 0)).toFixed(2)}
           </p>
           <p className="text-sm text-gray-500 mt-1">Total Losses</p>
         </div>
@@ -332,7 +332,7 @@ const ProfitLossSummary = ({ profit, loss }) => {
               isPositive ? "text-green-600" : "text-red-600"
             }`}
           >
-            {isPositive ? "+" : "-"}${Math.abs(netProfit).toFixed(2)}
+            {isPositive ? "+" : "-"}₹{Math.abs(netProfit).toFixed(2)}
           </p>
           <p className="text-sm text-gray-500 mt-1">Net Result</p>
         </div>

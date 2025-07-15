@@ -58,7 +58,7 @@ const ProductDetails = ({ productData, loading, productImage }) => {
         </div>
         <div>
           <label className="text-sm text-gray-600 font-medium">Price</label>
-          <p className="text-gray-800 font-semibold">${productData.OfferPrice}</p>
+          <p className="text-gray-800 font-semibold">₹{productData.OfferPrice}</p>
         </div>
       </div>
     </div>

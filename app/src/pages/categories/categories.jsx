@@ -79,7 +79,7 @@ const RingCategoryList = () => {
   return (
     <div>
       <NavBar />
-      <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto p-6 min-h-screen">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800">
@@ -113,36 +113,6 @@ const RingCategoryList = () => {
                           alt={product.ProductName}
                           className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        <div className="absolute top-4 left-4">
-                          <span
-                            className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                              product.badge === "Bestseller"
-                                ? "bg-green-100 text-green-800"
-                                : product.badge === "New"
-                                ? "bg-blue-100 text-blue-800"
-                                : product.badge === "Sale"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-purple-100 text-purple-800"
-                            }`}
-                          >
-                            {product.badge}
-                          </span>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            toggleFavorite(product.id);
-                          }}
-                          className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-all"
-                        >
-                          <Heart
-                            className={`h-5 w-5 ${
-                              favorites.has(product.id)
-                                ? "text-red-500 fill-current"
-                                : "text-gray-400"
-                            }`}
-                          />
-                        </button>
                       </div>
 
                       <div className="p-6">

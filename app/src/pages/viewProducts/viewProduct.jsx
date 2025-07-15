@@ -270,11 +270,11 @@ const ProductView = () => {
                 {/* Pricing */}
                 <div className="space-y-2">
                   <div className="flex items-center space-x-4">
-                    <span className="text-gray-500 line-through text-xl">${product.NormalPrice}</span>
-                    <span className="text-green-600 font-bold text-3xl">${product.OfferPrice}</span>
+                    <span className="text-gray-500 line-through text-xl">₹{product.NormalPrice}</span>
+                    <span className="text-green-600 font-bold text-3xl">₹{product.OfferPrice}</span>
                   </div>
                   <p className="text-sm text-green-600 font-medium">
-                    Save ${(parseFloat(product.NormalPrice) - parseFloat(product.OfferPrice)).toFixed(2)} (
+                    Save ₹{(parseFloat(product.NormalPrice) - parseFloat(product.OfferPrice)).toFixed(2)} (
                     {Math.round((1 - parseFloat(product.OfferPrice) / parseFloat(product.NormalPrice)) * 100) + "% off"}
                     )
                   </p>
