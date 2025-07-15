@@ -10,18 +10,33 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showAddresses, setShowAddresses] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
-  const [imageLoading, setImageLoading] = useState(true);
+  const [imageLoading, setImageLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editedProfile, setEditedProfile] = useState({
-    Name: userProfile?.Name || '',
-    Email: userProfile?.Email || '',
-    Mobile: userProfile?.Mobile || ''
+    Name: '',
+    Email: '',
+    Mobile: ''
   });
   const navigate = useNavigate();
-  const loginUser = JSON.parse(localStorage.getItem("userProfile"));
+  const loginUser = JSON.parse(localStorage.getItem("userProfile")) || null;
+
+  useEffect(() => {
+    if (userProfile) {
+      setEditedProfile({
+        Name: userProfile.Name || '',
+        Email: userProfile.Email || '',
+        Mobile: userProfile.Mobile || ''
+      });
+    }
+  }, [userProfile]);
 
   useEffect(() => {
     const fetchUserProfile = async() => {
+      if (!loginUser) {
+        setImageLoading(false);
+        return;
+      }
+      
       setImageLoading(true);
       try {
         const response = await axios.get(`${baseUrl}/auth/get/profile/image/${loginUser._id}`);
@@ -39,9 +54,8 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
       }
     }
     fetchUserProfile();
-  }, [loginUser._id]);
+  }, [loginUser?._id]);
 
-  // Function to generate initials from name
   const getInitials = (name) => {
     if (!name) return '';
     
@@ -55,8 +69,9 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
     return initials;
   };
 
-  // Function to handle profile image change
   const handleImageChange = async (e) => {
+    if (!loginUser) return;
+    
     const file = e.target.files[0];
     if (file) {
       setUploadingImage(true);
@@ -87,7 +102,6 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
 
   const handleEditToggle = () => {
     if (isEditing) {
-      // Reset to original values if canceling
       setEditedProfile({
         Name: userProfile?.Name || '',
         Email: userProfile?.Email || '',
@@ -105,19 +119,20 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
   };
 
   const handleSubmit = async() => {
-    // Submit the edited profile data
-    console.log('Updated Profile Data:', editedProfile);
+    if (!loginUser) return;
     
-    const responce = await axios.put(`${baseUrl}/auth/edit/profile/${loginUser._id}`,editedProfile);
-    if(responce.status === 200){
-      localStorage.setItem('userProfile', JSON.stringify(responce.data.userWithoutPassword));
-      window.location.reload();
-    } else {
-      alert("Something Went Wrong")
+    try {
+      const response = await axios.put(`${baseUrl}/auth/edit/profile/${loginUser._id}`, editedProfile);
+      if(response.status === 200){
+        localStorage.setItem('userProfile', JSON.stringify(response.data.userWithoutPassword));
+        window.location.reload();
+      }
+    } catch (error) {
+      alert("Something Went Wrong");
+      console.error(error);
     }
     
     setIsEditing(false);
-    // You might want to update the userProfile prop or trigger a refresh
   };
 
   const handleAddressClick = () => {
@@ -183,7 +198,7 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                             </div>
                           )}
                           
-                          {!imageLoading && (
+                          {!imageLoading && userProfile && (
                             <label className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all cursor-pointer">
                               <input
                                 type="file"
@@ -200,7 +215,7 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                             </label>
                           )}
                           
-                          {!isEditing && !imageLoading && !uploadingImage && (
+                          {!isEditing && !imageLoading && !uploadingImage && userProfile && (
                             <button
                               onClick={handleEditToggle}
                               className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1.5 hover:bg-blue-600 transition-colors"
@@ -210,7 +225,6 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                           )}
                         </div>
 
-                        {/* Rest of your component remains the same */}
                         {isEditing ? (
                           <div className="w-full max-w-sm space-y-4">
                             <div>
@@ -272,7 +286,6 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                               {userProfile.joinDate}
                             </p>
 
-                            {/* Dropdown Menu */}
                             <div className="mt-6 w-full relative">
                               <button
                                 onClick={() => setShowDropdown(!showDropdown)}
@@ -303,7 +316,6 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                           </>
                         )}
 
-                        {/* Sign out button - only show when not viewing addresses */}
                         <div className="mt-8 w-full">
                           <button
                             onClick={onLogout}

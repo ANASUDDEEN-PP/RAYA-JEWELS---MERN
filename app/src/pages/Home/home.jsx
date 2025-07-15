@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Heart,
-  Star,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  X 
-} from "lucide-react";
+import { Heart, Star, ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 import Footer from "../../components/footer";
 import NavBar from "../../components/navBar";
 import { Link, useNavigate } from "react-router-dom";
@@ -60,26 +53,27 @@ const JewelryEcommerce = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${baseUrl}/collection/home/get/collection`);
+        const response = await axios.get(
+          `${baseUrl}/collection/home/get/collection`
+        );
         // console.log(response)
         setCategories(response.data.collections);
       } catch (err) {
         console.error("Error fetching categories:", err);
       }
     };
-    const fetchGetSixProducts = async() => {
-      try{
+    const fetchGetSixProducts = async () => {
+      try {
         const res = await axios.get(`${baseUrl}/product/get/random/product`);
-        console.log(res)
+        console.log(res);
         setFeaturedProduct(res.data.products);
-      } catch(err){
+      } catch (err) {
         console.log(err);
       }
-    }
+    };
     fetchData();
     fetchGetSixProducts();
   }, []);
-
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -110,15 +104,22 @@ const JewelryEcommerce = () => {
     );
   };
 
-  const handleClick = (name) => (e) => {
+  const handleClick = (name, category) => (e) => {
     e.preventDefault();
-    if (localStorage.getItem('isLoggedIn') === 'true') {
-      navigate(`/view/categories/${name}`);
-      window.scrollTo(0,0);
+    if (localStorage.getItem("isLoggedIn") === "true") {
+      if (category === "category") {
+        navigate(`/view/categories/${name}`);
+        window.scrollTo(0, 0);
+      } else if (category === "product") {
+        navigate(`/view/product/${name}`);
+      } else if (category === "btnClick"){
+        navigate("/all/product");
+        window.scrollTo(0, 0);
+      }
     } else {
       setShowLoginWarning(true);
     }
-};
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -205,7 +206,7 @@ const JewelryEcommerce = () => {
                 onClick={() => scroll("left")}
                 className="absolute mt-12 left-4 md:left-8 top-1/2 transform -translate-y-1/2 z-10 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
                 style={{
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                  boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
                 }}
                 aria-label="Scroll categories left"
               >
@@ -217,7 +218,7 @@ const JewelryEcommerce = () => {
                 onClick={() => scroll("right")}
                 className="absolute mt-12 right-4 md:right-8 top-1/2 transform -translate-y-1/2 z-10 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
                 style={{
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                  boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
                 }}
                 aria-label="Scroll categories right"
               >
@@ -237,7 +238,7 @@ const JewelryEcommerce = () => {
             {categories.map((category, index) => (
               <Link
                 to="#"
-                onClick={handleClick(category.id)}
+                onClick={handleClick(category.id, "category")}
                 key={index}
                 className="flex-shrink-0 w-60 group cursor-pointer"
                 aria-label={`View ${category.name} collection`}
@@ -279,8 +280,9 @@ const JewelryEcommerce = () => {
 
           <div className="flex flex-wrap justify-center gap-8 mb-8">
             {featuredProducts.map((product) => (
-              <Link 
-                to={`/view/product/${product._id}`} 
+              <Link
+                onClick={handleClick(product._id, "product")}
+                // to={`/view/product/${product._id}`}
                 key={product.id}
                 className="group"
                 aria-label={`View ${product.ProductName} details`}
@@ -370,10 +372,7 @@ const JewelryEcommerce = () => {
 
           <div className="text-center">
             <button
-              onClick={() => {
-                navigate("/all/product");
-                window.scrollTo(0,0);
-              }}
+              onClick={handleClick("", "btnClick")}
               className="bg-black hover:bg-gray-800 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105"
               aria-label="View all products"
             >
@@ -401,7 +400,7 @@ const JewelryEcommerce = () => {
               className="flex-1 px-6 py-4 rounded-full text-gray-900 outline-none focus:ring-4 focus:ring-yellow-300"
               aria-label="Email for newsletter subscription"
             />
-            <button 
+            <button
               className="bg-black hover:bg-gray-800 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105"
               aria-label="Subscribe to newsletter"
             >
