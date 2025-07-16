@@ -138,7 +138,7 @@ const confirmDelete = async () => {
                                     <div>
                                       <div className="flex justify-between text-base font-medium text-gray-900">
                                         <h3>
-                                          <Link to={`/product/${item.id}`} onClick={toggleCart}>
+                                          <Link to={`/view/product/${item.prdId}`} onClick={toggleCart}>
                                             {item.prdName}
                                           </Link>
                                         </h3>
@@ -191,7 +191,7 @@ const confirmDelete = async () => {
 
                   {/* Cart Footer */}
                   {!loading && cartItems.length > 0 && (
-                    <div className="border-t border-gray-200 py-6 px-4 sm:px-6">
+                    <div className="border-t mb-[30px] border-gray-200 py-6 px-4 sm:px-6">
                       <div className="flex justify-between text-base font-medium text-gray-900">
                         <p>Subtotal</p>
                         <p>${calculateSubtotal()}</p>
@@ -199,7 +199,7 @@ const confirmDelete = async () => {
                       <p className="mt-0.5 text-sm text-gray-500">
                         Shipping and taxes calculated at checkout.
                       </p>
-                      <div className="mt-6">
+                      {/* <div className="mt-6">
                         <Link
                           to="/checkout"
                           onClick={toggleCart}
@@ -207,7 +207,7 @@ const confirmDelete = async () => {
                         >
                           Checkout
                         </Link>
-                      </div>
+                      </div> */}
                       <div className="mt-6 flex justify-center text-sm text-gray-500">
                         <p>
                           or{' '}
