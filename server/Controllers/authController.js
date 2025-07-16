@@ -92,13 +92,6 @@ exports.userRegister = async (req, res) => {
                 ImageUrl : ""
             }
             await profileModel.create(profileData)
-
-            const cartData = {
-                UserId : userPushData._id,
-                Date : Date.now(),
-                Items : []
-            }
-            await cartModel.create(cartData);
             sendNotify({name, email, Mobile}, "USRG");
             return res.status(200).json({ message: "User created successfully" });
         } else {
