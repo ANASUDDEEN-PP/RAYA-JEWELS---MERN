@@ -51,6 +51,7 @@ export default class NavBar extends Component {
       isCartOpen: false,
       showLoginWarning: false,
       isProfileOpen: false,
+      isLoading: false,
       searchQuery: "",
       cartItems: [],
       searchResults: [],
@@ -66,14 +67,21 @@ export default class NavBar extends Component {
   componentDidMount() {
     const { userProfile } = this.state;
     if (userProfile && userProfile._id) {
-      const responce = axios.get(`${baseUrl}/cart/get/${userProfile._id}`)
-      .then((responce) => {
-        this.setState({ cartItems: responce.data.userCartItems || [] });
-      }) .catch((err) => {
-        console.log(err)
-      })
+      this.setState({ isLoading: true });
+      axios.get(`${baseUrl}/cart/get/${userProfile._id}`)
+        .then((response) => {
+          this.setState({
+            cartItems: response.data.userCartItems || [],
+            isLoading: false,
+          });
+        })
+        .catch((err) => {
+          console.error(err);
+          this.setState({ isLoading: false });
+        });
     }
   }
+
 
   toggleMenu = () => {
     this.setState((prevState) => ({ isMenuOpen: !prevState.isMenuOpen }));
@@ -259,8 +267,13 @@ export default class NavBar extends Component {
                   <div className="relative">
                     <button onClick={this.toggleCart}>
                       <ShoppingBag className="h-6 w-6 text-gray-700 hover:text-yellow-600 cursor-pointer transition-colors ml-3" />
+
                       <span className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        {cartItems.reduce((total, item) => total + item.quantity, 0)}
+                        {this.state.isLoading ? (
+                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          cartItems.reduce((total, item) => total + item.quantity, 0)
+                        )}
                       </span>
                     </button>
                   </div>
@@ -308,6 +321,7 @@ export default class NavBar extends Component {
             isCartOpen={isCartOpen}
             toggleCart={this.toggleCart}
             cartItems={cartItems}
+            loading={this.state.isLoading}
             onIncreaseQuantity={this.handleIncreaseQuantity}
             onDecreaseQuantity={this.handleDecreaseQuantity}
             onRemoveItem={this.handleRemoveItem}
