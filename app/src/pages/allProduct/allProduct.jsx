@@ -5,6 +5,7 @@ import axios from "axios";
 import baseUrl from "../../url";
 import Footer from "../../components/footer";
 import UnauthorizedPage from "../../components/unauthorized Alert/unAuth";
+import { Link } from "react-router-dom";
 
 const ProductsShowcase = () => {
   const [products, setProducts] = useState([]);
@@ -72,11 +73,10 @@ const ProductsShowcase = () => {
     return Array.from({ length: 5 }, (_, index) => (
       <Star
         key={index}
-        className={`w-3 h-3 ${
-          index < safeRating
+        className={`w-3 h-3 ${index < safeRating
             ? "fill-yellow-400 text-yellow-400"
             : "text-gray-300"
-        }`}
+          }`}
       />
     ));
   };
@@ -148,44 +148,48 @@ const ProductsShowcase = () => {
                     className="bg-white rounded-lg shadow-sm sm:shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
                   >
                     {/* Image Container */}
-                    <div className="relative aspect-square bg-gray-100">
-                      {product.imageUrl && (
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name || "Product image"}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="p-2 sm:p-4">
-                      <h3 className="text-xs sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-2">
-                        {product.ProductName || "Unnamed Product"}
-                      </h3>
-
-                      {/* Rating */}
-                      <div className="flex items-center gap-0.5 sm:gap-1 mb-1 sm:mb-3">
-                        <div className="flex">{renderStars(rating)}</div>
-                        <span className="text-[10px] sm:text-sm text-gray-500 ml-0.5 sm:ml-1">
-                          ({reviews})
-                        </span>
+                    <Link
+                      to={`/view/product/${product._id}`}
+                    >
+                      <div className="relative aspect-square bg-gray-100">
+                        {product.imageUrl && (
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name || "Product image"}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                       </div>
 
-                      {/* Price and Add to Cart */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <span className="text-xs sm:text-xl font-bold text-gray-900">
-                            ₹{product.OfferPrice}
+                      {/* Product Info */}
+                      <div className="p-2 sm:p-4">
+                        <h3 className="text-xs sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 line-clamp-2">
+                          {product.ProductName || "Unnamed Product"}
+                        </h3>
+
+                        {/* Rating */}
+                        <div className="flex items-center gap-0.5 sm:gap-1 mb-1 sm:mb-3">
+                          <div className="flex">{renderStars(rating)}</div>
+                          <span className="text-[10px] sm:text-sm text-gray-500 ml-0.5 sm:ml-1">
+                            ({reviews})
                           </span>
-                          {product.NormalPrice > product.OfferPrice && (
-                            <span className="text-[10px] sm:text-sm text-gray-500 line-through">
-                              ₹{product.NormalPrice}
+                        </div>
+
+                        {/* Price and Add to Cart */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <span className="text-xs sm:text-xl font-bold text-gray-900">
+                              ₹{product.OfferPrice}
                             </span>
-                          )}
+                            {product.NormalPrice > product.OfferPrice && (
+                              <span className="text-[10px] sm:text-sm text-gray-500 line-through">
+                                ₹{product.NormalPrice}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   </div>
                 );
               })}
