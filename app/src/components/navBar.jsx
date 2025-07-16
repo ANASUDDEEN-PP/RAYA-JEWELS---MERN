@@ -57,7 +57,9 @@ export default class NavBar extends Component {
       searchResults: [],
       qtyLoadingId: null,
       userProfile: JSON.parse(localStorage.getItem("userProfile")) || null,
-      isLoggedIn: JSON.parse(localStorage.getItem("isLoggedIn")) || false
+      isLoggedIn: JSON.parse(localStorage.getItem("isLoggedIn")) || false,
+      showDeleteAlert: false,
+      itemToDelete: null
     };
   }
 
@@ -132,40 +134,52 @@ export default class NavBar extends Component {
   };
 
   handleQuantity = async (itemId, status) => {
-  try {
-    const { userProfile } = this.state;
+    try {
+      const { userProfile } = this.state;
 
-    this.setState({ qtyLoadingId: itemId }); // Show loading on this item
+      this.setState({ qtyLoadingId: itemId }); // Show loading on this item
 
-    const updatedCart = {
-      UserId: userProfile._id,
-      Quantity: 1,
-      itemsData: itemId,
-      status,
-    };
+      const updatedCart = {
+        UserId: userProfile._id,
+        Quantity: 1,
+        itemsData: itemId,
+        status,
+      };
 
-    const response = await axios.post(`${baseUrl}/cart/add/item`, updatedCart);
+      const response = await axios.post(`${baseUrl}/cart/add/item`, updatedCart);
 
-    // Optional: fetch updated cart from server
-    const updatedCartItems = await axios.get(`${baseUrl}/cart/get/${userProfile._id}`);
+      // Optional: fetch updated cart from server
+      const updatedCartItems = await axios.get(`${baseUrl}/cart/get/${userProfile._id}`);
 
-    this.setState({
-      cartItems: updatedCartItems.data.cartItems || [],
-      qtyLoadingId: null, // Reset loading state
-    });
-  } catch (err) {
-    console.log(err);
-    this.setState({ qtyLoadingId: null }); // Reset even if error
-  }
-};
-
-
-  handleRemoveItem = (itemId) => {
-    this.setState((prevState) => ({
-      cartItems: prevState.cartItems.filter((item) => item.id !== itemId),
-    }));
-    console.log(itemId)
+      this.setState({
+        cartItems: updatedCartItems.data.cartItems || [],
+        qtyLoadingId: null, // Reset loading state
+      });
+    } catch (err) {
+      console.log(err);
+      this.setState({ qtyLoadingId: null }); // Reset even if error
+    }
   };
+
+
+  handleRemoveItem = async (itemId) => {
+    
+  };
+
+  showDeleteConfirmation = (itemId) => {
+    this.setState({
+      showDeleteAlert: true,
+      itemToDelete: itemId
+    });
+  };
+
+  cancelDelete = () => {
+    this.setState({
+      showDeleteAlert: false,
+      itemToDelete: null
+    });
+  };
+
 
   handleLogout = () => {
     const logoutMsg = window.confirm("Are you sure you want to logout?");
@@ -329,14 +343,18 @@ export default class NavBar extends Component {
 
         {isLoggedIn && isCartOpen && (
           <Cart
-            isCartOpen={isCartOpen}
+            isCartOpen={this.state.isCartOpen}
             toggleCart={this.toggleCart}
-            cartItems={cartItems}
+            cartItems={this.state.cartItems}
             loading={this.state.isLoading}
             onHandleQty={this.handleQuantity}
-            onRemoveItem={this.handleRemoveItem}
             qtyLoadingId={this.state.qtyLoadingId}
+            showDeleteAlert={this.state.showDeleteAlert}
+            itemToDelete={this.state.itemToDelete}
+            onConfirmDelete={this.handleRemoveItem} // This will actually delete the item
+            onCancelDelete={this.cancelDelete}
           />
+
         )}
 
         {showLoginWarning && <LoginWarning onClose={this.closeLoginWarning} />}

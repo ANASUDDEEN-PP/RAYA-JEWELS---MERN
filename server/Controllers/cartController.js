@@ -8,41 +8,45 @@ const formatDate = require("../utils/dateFormat");
 exports.addToCart = async (req, res) => {
   try {
     const { UserId, Quantity, itemsData, status } = req.body;
-    let newQty = "";
 
-    // Validate user and product
+    // Validate user
     const user = await userModel.findById(UserId);
     if (!user) return res.status(404).json({ message: "InvalidUserID" });
 
+    // Validate product
     const product = await productModel.findById(itemsData);
     if (!product) return res.status(404).json({ message: "InvalidProductID" });
 
-    // Check if item is already in cart for the user
+    // Check if the product is already in the cart for the user
     const existingCartItem = await cartModel.findOne({ UserId, Item: itemsData });
 
-    //if cart updated values
-    if(status != "" && status === "decrease")
-        newQty = parseInt(existingCartItem.Qty) - parseInt(Quantity);
-    else
-        newQty = parseInt(existingCartItem.Qty) + parseInt(Quantity);
-
     if (existingCartItem) {
-      // Update quantity
+      // Calculate new quantity based on status
+      let newQty;
+      if (status === "decrease") {
+        newQty = parseInt(existingCartItem.Qty) - parseInt(Quantity);
+        // Prevent quantity from going below 1
+        if (newQty < 1) {
+          await cartModel.findByIdAndDelete(existingCartItem._id);
+          return res.status(200).json({ message: "Item removed from cart." });
+        }
+      } else {
+        newQty = parseInt(existingCartItem.Qty) + parseInt(Quantity);
+      }
+
+      // Update cart item
       const updated = await cartModel.findByIdAndUpdate(
         existingCartItem._id,
-        {
-          $set: {
-            Qty: newQty,
-          },
-        },
+        { $set: { Qty: newQty } },
         { new: true }
       );
+
       return res.status(200).json({
         message: "Cart item updated.",
         data: updated,
       });
     } else {
-      // Create new cart item
+      // If not exists, create a new cart item
       const newCartItem = {
         UserId,
         Date: formatDate("NNMMYY|TT:TT"),
@@ -65,6 +69,7 @@ exports.addToCart = async (req, res) => {
     });
   }
 };
+
 
 exports.getCartOfUser = async (req, res) => {
   try {
@@ -145,5 +150,22 @@ exports.editCartQty = async (req, res) => {
         return res.status(500).json({
             message: "Internal Server Error"
         });
+    }
+}
+
+exports.removeCartElements = async(req, res) => {
+    try{
+        const { id } = req.params;
+        if(!await cartModel.findById(id))
+            return res.status(404).json({ message : "InvalidID" });
+
+        await cartModel.findByIdAndDelete(id);
+        return res.status(200).json({
+            message : "Product Removed From the Cart..."
+        })
+    } catch(err){
+        return res.status(404).json({
+            message : "Internal Server Error"
+        })
     }
 }

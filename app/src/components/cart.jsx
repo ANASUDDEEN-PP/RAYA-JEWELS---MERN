@@ -1,28 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
+import axios from 'axios';
+import baseUrl from '../url';
 
-// Add this CSS for animation and loader
+// CSS for animation and loader
 const cartStyles = `
   @keyframes slideInFromRight {
-    from { 
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to { 
-      transform: translateX(0);
-      opacity: 1;
-    }
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
-
-  .animate-slideInFromRight { 
-    animation: slideInFromRight 0.4s ease-out forwards; 
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
+  .animate-slideInFromRight { animation: slideInFromRight 0.4s ease-out forwards; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .loader {
     border: 4px solid rgba(0, 0, 0, 0.1);
     border-left-color: #facc15;
@@ -39,11 +28,36 @@ const Cart = ({
   cartItems = [],
   loading = false,
   onHandleQty,
-  onRemoveItem,
   qtyLoadingId
 }) => {
-  const localUser = JSON.parse(localStorage.getItem("userProfile")) || null;
-  console.log("CartItems :", cartItems)
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleDeleteClick = (cartId) => {
+    setItemToDelete(cartId);
+    setShowDeleteAlert(true);
+  };
+
+const confirmDelete = async () => {
+  setDeleteLoading(true);
+  try {
+    await axios.delete(`${baseUrl}/cart/delete/${itemToDelete}`);
+    setShowDeleteAlert(false);
+    window.location.reload();
+  } catch (err) {
+    console.log(err);
+  } finally {
+    setDeleteLoading(false);
+    setItemToDelete(null);
+  }
+};
+
+
+  const cancelDelete = () => {
+    setShowDeleteAlert(false);
+    setItemToDelete(null);
+  };
 
   const calculateSubtotal = () => {
     return cartItems.reduce((sum, item) => sum + item.price * item.Qty, 0).toFixed(2);
@@ -69,6 +83,7 @@ const Cart = ({
             <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex">
               <div className="w-screen max-w-md animate-slideInFromRight">
                 <div className="h-full flex flex-col bg-white shadow-xl">
+                  {/* Cart Header */}
                   <div className="flex-1 py-6 overflow-y-auto px-4 sm:px-6">
                     <div className="flex items-start justify-between">
                       <h2 className="text-lg font-medium text-gray-900">
@@ -158,7 +173,7 @@ const Cart = ({
                                       <button
                                         type="button"
                                         className="flex items-center font-medium text-red-600 hover:text-red-500"
-                                        onClick={() => onRemoveItem(item.id)}
+                                        onClick={() => handleDeleteClick(item.cartId)}
                                       >
                                         <Trash2 className="h-4 w-4 mr-1" />
                                         Remove
@@ -174,6 +189,7 @@ const Cart = ({
                     )}
                   </div>
 
+                  {/* Cart Footer */}
                   {!loading && cartItems.length > 0 && (
                     <div className="border-t border-gray-200 py-6 px-4 sm:px-6">
                       <div className="flex justify-between text-base font-medium text-gray-900">
@@ -210,6 +226,58 @@ const Cart = ({
               </div>
             </div>
           </div>
+
+          {/* Delete Confirmation Alert */}
+          {showDeleteAlert && (
+            <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-6 sm:p-0 sm:items-center sm:justify-center">
+              <div className="fixed inset-0 transition-opacity">
+                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+              </div>
+              <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+                <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <div className="sm:flex sm:items-start">
+                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                      <Trash2 className="h-6 w-6 text-red-600" />
+                    </div>
+                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">
+                        Remove item
+                      </h3>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500">
+                          Are you sure you want to remove this item from your cart?
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                  <button
+  onClick={confirmDelete}
+  type="button"
+  disabled={deleteLoading}
+  className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 ${
+    deleteLoading ? "bg-red-400" : "bg-red-600 hover:bg-red-700"
+  } text-base font-medium text-white focus:outline-none sm:ml-3 sm:w-auto sm:text-sm`}
+>
+  {deleteLoading ? (
+    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+  ) : (
+    "Remove"
+  )}
+</button>
+
+                  <button
+                    onClick={cancelDelete}
+                    type="button"
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
