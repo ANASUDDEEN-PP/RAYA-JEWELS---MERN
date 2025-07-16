@@ -3,117 +3,113 @@ const userModel = require("../Models/userModel");
 const productModel = require("../Models/productModel");
 const imageModel = require("../Models/ImageModel");
 
+const formatDate = require("../utils/dateFormat");
+
 exports.addToCart = async (req, res) => {
-    try {
-        const { UserId, Quantity, itemsData } = req.body;
+  try {
+    const { UserId, Quantity, itemsData, status } = req.body;
+    let newQty = "";
 
-        // Validate input
-        if (!UserId || !Quantity || !itemsData) {
-            return res.status(400).json({ message: "Missing required fields" });
-        }
+    // Validate user and product
+    const user = await userModel.findById(UserId);
+    if (!user) return res.status(404).json({ message: "InvalidUserID" });
 
-        // Check if quantity is valid
-        if (Quantity <= 0) {
-            return res.status(400).json({ message: "Quantity must be greater than 0" });
-        }
+    const product = await productModel.findById(itemsData);
+    if (!product) return res.status(404).json({ message: "InvalidProductID" });
 
-        // Check if product exists
-        const product = await productModel.findById(itemsData);
-        if (!product) {
-            return res.status(404).json({ message: "Product not found" });
-        }
+    // Check if item is already in cart for the user
+    const existingCartItem = await cartModel.findOne({ UserId, Item: itemsData });
 
-        // Check if user exists
-        const user = await userModel.findById(UserId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
+    //if cart updated values
+    if(status != "" && status === "decrease")
+        newQty = parseInt(existingCartItem.Qty) - parseInt(Quantity);
+    else
+        newQty = parseInt(existingCartItem.Qty) + parseInt(Quantity);
 
-        // Find or create cart
-        let cart = await cartModel.findOne({ UserId });
+    if (existingCartItem) {
+      // Update quantity
+      const updated = await cartModel.findByIdAndUpdate(
+        existingCartItem._id,
+        {
+          $set: {
+            Qty: newQty,
+          },
+        },
+        { new: true }
+      );
+      return res.status(200).json({
+        message: "Cart item updated.",
+        data: updated,
+      });
+    } else {
+      // Create new cart item
+      const newCartItem = {
+        UserId,
+        Date: formatDate("NNMMYY|TT:TT"),
+        Item: itemsData,
+        Qty: Quantity,
+      };
 
-        if (cart) {
-            // If item already exists in cart, update quantity
-            const itemIndex = cart.Items.findIndex(item => item.type.toString() === itemsData);
+      const createdItem = await cartModel.create(newCartItem);
 
-            if (itemIndex > -1) {
-                const newQty = cart.Items[itemIndex].Qty + Quantity;
-                cart.Items[itemIndex].Qty = newQty;
-            } else {
-                cart.Items.push({ type: itemsData, Qty: Quantity });
-            }
-            await cartModel.findByIdAndUpdate(
-                { _id: cart._id },
-                { $set: cart },
-                { new: true }
-            )
-            return res.status(200).json({
-                message: "Item added to cart successfully..."
-            })
-        } else {
-            // Create new cart if it doesn't exist
-            const newCart = {
-                UserId,
-                Date: Date.now(),
-                Items: [{ type: itemsData, Qty: Quantity }]
-            };
-            await cartModel.create(newCart);
-            return res.status(200).json({
-                message: "Build Cart... Item Added To Cart",
-            });
-        }
-    } catch (err) {
-        console.error("Error in addToCart:", err);
-        return res.status(500).json({
-            message: "Internal Server Error",
-            error: process.env.NODE_ENV === 'development' ? err.message : undefined
-        });
+      return res.status(200).json({
+        message: "Item added to cart.",
+        data: createdItem,
+      });
     }
-}
+  } catch (err) {
+    console.error("Error in addToCart:", err);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
 
 exports.getCartOfUser = async (req, res) => {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        const userExists = await userModel.findById(id);
-        if (!userExists)
-            return res.status(401).json({ message: "NoUserOnOurRecord" });
-
-        const cartItems = await cartModel.findOne({ UserId: id });
-        if (cartItems && cartItems.Items) {
-            const userCartItems = [];
-            for (let i = 0; i < cartItems.Items.length; i++) {
-                const item = cartItems.Items[i];
-                if (!item || !item.type || !item.Qty) continue; // skip if data is malformed
-
-                const productData = await productModel.findById(item.type);
-                if (!productData) continue;
-
-                const productImage = await imageModel.findOne({ imageId: productData._id });
-
-                userCartItems.push({
-                    id: cartItems._id,
-                    productId: productData._id,
-                    image: productImage?.ImageUrl || null,
-                    name: productData.ProductName,
-                    price: productData.OfferPrice,
-                    quantity: item.Qty
-                });
-            }
-
-            return res.status(200).json({ userCartItems });
-        }
-
-        return res.status(200).json({
-            message: "No Products On Cart"
-        });
-
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({
-            message: "Internal Server Error"
-        });
+    const userExists = await userModel.findById(id);
+    if (!userExists) {
+      return res.status(401).json({ message: "NoUserOnOurRecord" });
     }
+
+    const cartItems = await cartModel.find({ UserId: id });
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(200).json({ message: "No Products On Cart" });
+    }
+
+    const productIds = cartItems.map(i => i.Item);
+
+    const products = await productModel.find({ _id: { $in: productIds } });
+    const images = await imageModel.find({ imageId: { $in: productIds } });
+
+    // Merge data into one response array
+    const mergedCartData = cartItems.map((cartItem) => {
+      const product = products.find(p => p._id.toString() === cartItem.Item.toString());
+      const image = images.find(img => img.imageId.toString() === cartItem.Item.toString());
+
+      return {
+        cartId: cartItem._id,
+        prdId: product?._id,
+        prdName: product?.ProductName,
+        prdImg: image?.ImageUrl || null,
+        Qty: cartItem.Qty,
+        price: product?.OfferPrice || 0,
+      };
+    });
+
+    return res.status(200).json({
+      cartItems: mergedCartData
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
 };
 
 exports.editCartQty = async (req, res) => {

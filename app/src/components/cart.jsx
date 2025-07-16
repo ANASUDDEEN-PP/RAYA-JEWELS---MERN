@@ -38,18 +38,19 @@ const Cart = ({
   toggleCart,
   cartItems = [],
   loading = false,
-  onIncreaseQuantity,
-  onDecreaseQuantity,
+  onHandleQty,
   onRemoveItem,
+  qtyLoadingId
 }) => {
   const localUser = JSON.parse(localStorage.getItem("userProfile")) || null;
+  console.log("CartItems :", cartItems)
 
   const calculateSubtotal = () => {
-    return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2);
+    return cartItems.reduce((sum, item) => sum + item.price * item.Qty, 0).toFixed(2);
   };
 
   const calculateTotalItems = () => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
+    return cartItems.reduce((total, item) => total + parseInt(item.Qty), 0);
   };
 
   return (
@@ -112,8 +113,8 @@ const Cart = ({
                                 <li key={`${item.id}-${item.size || ''}`} className="py-6 flex">
                                   <div className="flex-shrink-0 w-24 h-24 rounded-md overflow-hidden border border-gray-200">
                                     <img
-                                      src={item.image}
-                                      alt={item.name}
+                                      src={item.prdImg}
+                                      alt={item.prdName}
                                       className="w-full h-full object-center object-cover"
                                       loading="lazy"
                                     />
@@ -123,36 +124,36 @@ const Cart = ({
                                       <div className="flex justify-between text-base font-medium text-gray-900">
                                         <h3>
                                           <Link to={`/product/${item.id}`} onClick={toggleCart}>
-                                            {item.name}
+                                            {item.prdName}
                                           </Link>
                                         </h3>
-                                        <p className="ml-4">${(item.price * item.quantity).toFixed(2)}</p>
+                                        <p className="ml-4">${(item.price * item.Qty).toFixed(2)}</p>
                                       </div>
-                                      {item.size && (
-                                        <p className="mt-1 text-sm text-gray-500">Size: {item.size}</p>
-                                      )}
-                                      {item.color && (
-                                        <p className="mt-1 text-sm text-gray-500">Color: {item.color}</p>
-                                      )}
                                     </div>
                                     <div className="flex-1 flex items-end justify-between text-sm">
-                                      <div className="flex items-center border border-gray-300 rounded-md">
-                                        <button
-                                          type="button"
-                                          className="px-2 py-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
-                                          onClick={() => onDecreaseQuantity(item.id)}
-                                          disabled={item.quantity <= 1}
-                                        >
-                                          <Minus className="h-4 w-4" />
-                                        </button>
-                                        <span className="px-2 text-gray-700">{item.quantity}</span>
-                                        <button
-                                          type="button"
-                                          className="px-2 py-1 text-gray-500 hover:text-gray-700"
-                                          onClick={() => onIncreaseQuantity(item.id)}
-                                        >
-                                          <Plus className="h-4 w-4" />
-                                        </button>
+                                      <div className="flex items-center border border-gray-300 rounded-md px-2 py-1">
+                                        {qtyLoadingId === item.prdId ? (
+                                          <div className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                          <>
+                                            <button
+                                              type="button"
+                                              className="px-2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                                              onClick={() => onHandleQty(item.prdId, "decrease")}
+                                              disabled={item.Qty <= 1}
+                                            >
+                                              <Minus className="h-4 w-4" />
+                                            </button>
+                                            <span className="px-2 text-gray-700">{item.Qty}</span>
+                                            <button
+                                              type="button"
+                                              className="px-2 text-gray-500 hover:text-gray-700"
+                                              onClick={() => onHandleQty(item.prdId, "increase")}
+                                            >
+                                              <Plus className="h-4 w-4" />
+                                            </button>
+                                          </>
+                                        )}
                                       </div>
                                       <button
                                         type="button"

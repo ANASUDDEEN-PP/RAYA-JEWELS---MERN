@@ -7,8 +7,11 @@ const cartSchema = new Schema ({
     Date : {
         type : String
     },
-    Items : {
-        type : Object
+    Item : {
+        type : String
+    },
+    Qty: {
+        type: String
     }
 });
 module.exports = mongoose.model('cart', cartSchema);

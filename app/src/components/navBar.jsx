@@ -55,6 +55,7 @@ export default class NavBar extends Component {
       searchQuery: "",
       cartItems: [],
       searchResults: [],
+      qtyLoadingId: null,
       userProfile: JSON.parse(localStorage.getItem("userProfile")) || null,
       isLoggedIn: JSON.parse(localStorage.getItem("isLoggedIn")) || false
     };
@@ -71,7 +72,7 @@ export default class NavBar extends Component {
       axios.get(`${baseUrl}/cart/get/${userProfile._id}`)
         .then((response) => {
           this.setState({
-            cartItems: response.data.userCartItems || [],
+            cartItems: response.data.cartItems || [],
             isLoading: false,
           });
         })
@@ -130,30 +131,40 @@ export default class NavBar extends Component {
     }));
   };
 
-  handleIncreaseQuantity = (itemId) => {
-    console.log("Increaseomg")
-    this.setState((prevState) => ({
-      cartItems: prevState.cartItems.map((item) =>
-        item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
-      ),
-    }));
-  };
+  handleQuantity = async (itemId, status) => {
+  try {
+    const { userProfile } = this.state;
 
-  handleDecreaseQuantity = (itemId) => {
-    console.log("Decreasing");
-    this.setState((prevState) => ({
-      cartItems: prevState.cartItems.map((item) =>
-        item.id === itemId
-          ? { ...item, quantity: Math.max(1, item.quantity - 1) }
-          : item
-      ),
-    }));
-  };
+    this.setState({ qtyLoadingId: itemId }); // Show loading on this item
+
+    const updatedCart = {
+      UserId: userProfile._id,
+      Quantity: 1,
+      itemsData: itemId,
+      status,
+    };
+
+    const response = await axios.post(`${baseUrl}/cart/add/item`, updatedCart);
+
+    // Optional: fetch updated cart from server
+    const updatedCartItems = await axios.get(`${baseUrl}/cart/get/${userProfile._id}`);
+
+    this.setState({
+      cartItems: updatedCartItems.data.cartItems || [],
+      qtyLoadingId: null, // Reset loading state
+    });
+  } catch (err) {
+    console.log(err);
+    this.setState({ qtyLoadingId: null }); // Reset even if error
+  }
+};
+
 
   handleRemoveItem = (itemId) => {
     this.setState((prevState) => ({
       cartItems: prevState.cartItems.filter((item) => item.id !== itemId),
     }));
+    console.log(itemId)
   };
 
   handleLogout = () => {
@@ -272,7 +283,7 @@ export default class NavBar extends Component {
                         {this.state.isLoading ? (
                           <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          cartItems.reduce((total, item) => total + item.quantity, 0)
+                          cartItems.reduce((total, item) => total + parseInt(item.Qty), 0)
                         )}
                       </span>
                     </button>
@@ -322,9 +333,9 @@ export default class NavBar extends Component {
             toggleCart={this.toggleCart}
             cartItems={cartItems}
             loading={this.state.isLoading}
-            onIncreaseQuantity={this.handleIncreaseQuantity}
-            onDecreaseQuantity={this.handleDecreaseQuantity}
+            onHandleQty={this.handleQuantity}
             onRemoveItem={this.handleRemoveItem}
+            qtyLoadingId={this.state.qtyLoadingId}
           />
         )}
 
