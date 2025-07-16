@@ -63,7 +63,7 @@ const JewelryAuthPage = () => {
                 navigate(authData.data.navigate)
             } else if (authData.status == 202 && authData.data.message == "Login Success") {
                 localStorage.setItem('userProfile', JSON.stringify(authData.data.user));
-                localStorage.setItem('userProfileImg', JSON.stringify(authData.data.profileImg));
+                // localStorage.setItem('userProfileImg', JSON.stringify(authData.data.profileImg));
                 localStorage.setItem('isLoggedIn', true);
                 navigate('/')
             }

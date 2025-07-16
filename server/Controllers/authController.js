@@ -32,10 +32,10 @@ exports.userRegister = async (req, res) => {
             }
             const userWithoutPassword = { ...userExist.toObject() };
             delete userWithoutPassword.Password;
-            const profileImg = await profileModel.findOne({ userId : userWithoutPassword._id, from: "USRDBI" })
+            // const profileImg = await profileModel.findOne({ userId : userWithoutPassword._id, from: "USRDBI" })
 
             if (userExist.Password === password) {
-                return res.status(202).json({ message: "Login Success", user: userWithoutPassword, profileImg });
+                return res.status(202).json({ message: "Login Success", user: userWithoutPassword, /*profileImg */});
             } else {
                 return res.status(201).json({ message: "Invalid Password" });
             }
