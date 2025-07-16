@@ -32,6 +32,8 @@ const ProductView = () => {
   const [hoverRating, setHoverRating] = useState(0);
   const [rating, setRating] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
+  const [addToCartLoading, setAddToCartLoading] = useState(false);
+
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -43,7 +45,9 @@ const ProductView = () => {
       toast.error("Please select a size");
       return;
     }
-    
+
+    setAddToCartLoading(true); // start loading
+
     try {
       const item = {
         UserId: localUser._id,
@@ -52,27 +56,31 @@ const ProductView = () => {
         Size: selectedSize,
         ProductName: product.ProductName,
         OfferPrice: product.OfferPrice
-      }
+      };
+
       const response = await axios.post(`${baseUrl}/cart/add/item`, item);
-      if (response.status == 200) {
+
+      if (response.status === 200) {
         toast.success(response.data.message);
-        window.location.reload();
-      }
-      else {
+        window.location.reload(); // optional: remove if not needed
+      } else {
         toast.error(response.data.message);
       }
     } catch (err) {
       console.log(err);
       toast.error("Failed to add to cart");
+    } finally {
+      setAddToCartLoading(false); // stop loading
     }
-  }
+  };
+
 
   const handleCheckout = () => {
     if (!selectedSize) {
       toast.error("Please select a size");
       return;
     }
-    
+
     navigate("/checkout", {
       state: {
         product: {
@@ -185,13 +193,13 @@ const ProductView = () => {
   ];
 
   if (!localUser) {
-        return (
-            <div>
-                <NavBar />
-                <UnauthorizedPage />
-            </div>
-        );
-    }
+    return (
+      <div>
+        <NavBar />
+        <UnauthorizedPage />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -257,8 +265,8 @@ const ProductView = () => {
                       <Star
                         key={i}
                         className={`h-5 w-5 ${i < Math.round(averageRating)
-                            ? "text-yellow-400 fill-current"
-                            : "text-gray-300"
+                          ? "text-yellow-400 fill-current"
+                          : "text-gray-300"
                           }`}
                       />
                     ))}
@@ -302,11 +310,10 @@ const ProductView = () => {
                               <button
                                 key={i}
                                 onClick={() => setSelectedSize(size.trim())}
-                                className={`px-3 py-1 border rounded-md text-sm ${
-                                  selectedSize === size.trim() 
-                                    ? 'bg-black text-white border-black' 
+                                className={`px-3 py-1 border rounded-md text-sm ${selectedSize === size.trim()
+                                    ? 'bg-black text-white border-black'
                                     : 'border-gray-300 hover:bg-gray-100'
-                                }`}
+                                  }`}
                               >
                                 {size.trim()}
                               </button>
@@ -363,12 +370,18 @@ const ProductView = () => {
                           Check Out - ${(parseFloat(product.OfferPrice) * quantity).toFixed(2)}
                         </span>
                       </button>
-                      <button onClick={addCart} className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2">
+                      <button
+                        onClick={addCart}
+                        disabled={addToCartLoading}
+                        className={`w-full ${addToCartLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-black hover:bg-gray-800'
+                          } text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2`}
+                      >
                         <ShoppingBag className="h-5 w-5" />
                         <span>
-                          Add to Cart - ${(parseFloat(product.OfferPrice) * quantity).toFixed(2)}
+                          {addToCartLoading ? "Adding to Cart..." : `Add to Cart - ₹${(parseFloat(product.OfferPrice) * quantity).toFixed(2)}`}
                         </span>
                       </button>
+
                     </>
                   ) : (
                     <button

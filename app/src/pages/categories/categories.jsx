@@ -17,6 +17,8 @@ const RingCategoryList = () => {
   const [ringCategories, setCategories] = useState([]);
   const [categoryName, setCategorieName] = useState("");
   const [loading, setLoading] = useState(true); // Add loading state
+  const [addToCartLoading, setAddToCartLoading] = useState(false);
+
 
   //fetch the data from localstorage
   const localUser = JSON.parse(localStorage.getItem("userProfile")) || null;
@@ -41,26 +43,23 @@ const RingCategoryList = () => {
   }, [id]);
 
   const addToCart = async (prd) => {
-    const items = {
-      UserId: localUser._id,
-      Quantity: 1,
-      itemsData: prd._id,
-    };
-    const responce = await axios.post(`${baseUrl}/cart/add/item`, items);
-    if (responce.status == 200) {
-      toast.success(responce.data.message);
-      window.location.reload();
-    } else toast.error(responce.data.message);
-  };
-
-  const toggleFavorite = (productId) => {
-    const newFavorites = new Set(favorites);
-    if (newFavorites.has(productId)) {
-      newFavorites.delete(productId);
-    } else {
-      newFavorites.add(productId);
+    try {
+      const items = {
+        UserId: localUser._id,
+        Quantity: 1,
+        itemsData: prd._id,
+      };
+      setAddToCartLoading(true)
+      const responce = await axios.post(`${baseUrl}/cart/add/item`, items);
+      if (responce.status == 200) {
+        toast.success(responce.data.message);
+        window.location.reload();
+      } else toast.error(responce.data.message);
+    } catch (err) {
+      console.log(err);
+    } finally{
+      setAddToCartLoading(false)
     }
-    setFavorites(newFavorites);
   };
 
   const getTotalItems = () => {
@@ -105,73 +104,74 @@ const RingCategoryList = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {ringCategories.length > 0
               ? ringCategories.map((product) => (
-                  <Link to={`/view/product/${product._id}`} key={product.id}>
-                    <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden w-72">
-                      <div className="relative">
-                        <img
-                          src={product.images[0]?.ImageUrl}
-                          alt={product.ProductName}
-                          className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-
-                      <div className="p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          {product.ProductName}
-                        </h3>
-
-                        <div className="flex items-center mb-3">
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${
-                                  i < Math.floor(product.rating)
-                                    ? "text-yellow-400 fill-current"
-                                    : "text-gray-300"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-sm text-gray-600 ml-2">
-                            ({product.reviews})
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-2xl font-bold text-gray-900">
-                              ${product.OfferPrice}
-                            </span>
-                            {product.OfferPrice && (
-                              <span className="text-lg text-gray-500 line-through">
-                                ${product.NormalPrice}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            addToCart(product);
-                          }}
-                          className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200"
-                        >
-                          <ShoppingBag className="w-4 h-4" />
-                          Add to Cart
-                        </button>
-                      </div>
+                <Link to={`/view/product/${product._id}`} key={product.id}>
+                  <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden w-72">
+                    <div className="relative">
+                      <img
+                        src={product.images[0]?.ImageUrl}
+                        alt={product.ProductName}
+                        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
                     </div>
-                  </Link>
-                ))
-              : !loading && (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-gray-500 text-lg">
-                      No products found in this category
-                    </p>
+
+                    <div className="p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {product.ProductName}
+                      </h3>
+
+                      <div className="flex items-center mb-3">
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-4 w-4 ${i < Math.floor(product.rating)
+                                  ? "text-yellow-400 fill-current"
+                                  : "text-gray-300"
+                                }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-gray-600 ml-2">
+                          ({product.reviews})
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-2xl font-bold text-gray-900">
+                            ${product.OfferPrice}
+                          </span>
+                          {product.OfferPrice && (
+                            <span className="text-lg text-gray-500 line-through">
+                              ${product.NormalPrice}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addToCart(product);
+                        }}
+                        className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200"
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>
+                          {addToCartLoading ? "Adding to Cart..." : `Add to Cart`}
+                        </span>
+                      </button>
+                    </div>
                   </div>
-                )}
+                </Link>
+              ))
+              : !loading && (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-gray-500 text-lg">
+                    No products found in this category
+                  </p>
+                </div>
+              )}
           </div>
         )}
 
