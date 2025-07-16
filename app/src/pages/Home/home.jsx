@@ -12,6 +12,8 @@ const JewelryEcommerce = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [favorites, setFavorites] = useState(new Set());
   const [categories, setCategories] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const scrollRef = useRef(null);
   const navigate = useNavigate();
   const [showLoginWarning, setShowLoginWarning] = useState(false);
@@ -53,27 +55,32 @@ const JewelryEcommerce = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoadingCategories(true);
         const response = await axios.get(
           `${baseUrl}/collection/home/get/collection`
         );
-        // console.log(response)
         setCategories(response.data.collections);
       } catch (err) {
         console.error("Error fetching categories:", err);
+      } finally {
+        setIsLoadingCategories(false);
       }
     };
     const fetchGetSixProducts = async () => {
       try {
+        setIsLoadingProducts(true);
         const res = await axios.get(`${baseUrl}/product/get/random/product`);
-        console.log(res);
         setFeaturedProduct(res.data.products);
       } catch (err) {
         console.log(err);
+      } finally {
+        setIsLoadingProducts(false);
       }
     };
     fetchData();
     fetchGetSixProducts();
   }, []);
+
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -112,7 +119,7 @@ const JewelryEcommerce = () => {
         window.scrollTo(0, 0);
       } else if (category === "product") {
         navigate(`/view/product/${name}`);
-      } else if (category === "btnClick"){
+      } else if (category === "btnClick") {
         navigate("/all/product");
         window.scrollTo(0, 0);
       }
@@ -120,6 +127,35 @@ const JewelryEcommerce = () => {
       setShowLoginWarning(true);
     }
   };
+
+  const CategoryShimmer = () => (
+    <div className="flex-shrink-0 w-60">
+      <div className="relative overflow-hidden rounded-2xl mb-4">
+        <div className="w-full h-48 bg-gray-200 animate-pulse"></div>
+      </div>
+      <div className="h-6 w-3/4 bg-gray-200 rounded animate-pulse mb-2"></div>
+      <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+    </div>
+  );
+
+  // Shimmer component for products
+  const ProductShimmer = () => (
+    <div className="bg-white rounded-2xl shadow-lg w-72">
+      <div className="relative">
+        <div className="w-full h-64 bg-gray-200 animate-pulse"></div>
+      </div>
+      <div className="p-6">
+        <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mb-4"></div>
+        <div className="flex mb-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-4 w-4 bg-gray-200 rounded-full mr-1 animate-pulse"></div>
+          ))}
+          <div className="h-4 w-8 bg-gray-200 rounded ml-2 animate-pulse"></div>
+        </div>
+        <div className="h-6 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-white">
@@ -131,9 +167,8 @@ const JewelryEcommerce = () => {
         {heroSlides.map((slide, index) => (
           <div
             key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentSlide ? "opacity-100" : "opacity-0"
-            }`}
+            className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"
+              }`}
           >
             <div
               className="w-full h-full bg-cover bg-center bg-black bg-opacity-40 bg-blend-overlay"
@@ -178,9 +213,8 @@ const JewelryEcommerce = () => {
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === currentSlide ? "bg-white" : "bg-white bg-opacity-50"
-              }`}
+              className={`w-3 h-3 rounded-full transition-all ${index === currentSlide ? "bg-white" : "bg-white bg-opacity-50"
+                }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
@@ -199,8 +233,8 @@ const JewelryEcommerce = () => {
             </p>
           </div>
 
-          {/* Arrow buttons */}
-          {categories.length > 4 && (
+          {/* Arrow buttons - only show when categories are loaded */}
+          {!isLoadingCategories && categories.length > 4 && (
             <>
               <button
                 onClick={() => scroll("left")}
@@ -235,29 +269,41 @@ const JewelryEcommerce = () => {
             className="flex space-x-6 overflow-x-auto scrollbar-hide scroll-smooth px-4 md:px-8"
             aria-label="Categories list"
           >
-            {categories.map((category, index) => (
-              <Link
-                to="#"
-                onClick={handleClick(category.id, "category")}
-                key={index}
-                className="flex-shrink-0 w-60 group cursor-pointer"
-                aria-label={`View ${category.name} collection`}
-              >
-                <div className="relative overflow-hidden rounded-2xl mb-4">
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300"></div>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                  {category.name}
-                </h3>
-                <p className="text-gray-600">{category.count}+ pieces</p>
-              </Link>
-            ))}
+            {isLoadingCategories ? (
+              // Show shimmer while loading
+              <>
+                <CategoryShimmer />
+                <CategoryShimmer />
+                <CategoryShimmer />
+                <CategoryShimmer />
+                <CategoryShimmer />
+              </>
+            ) : (
+              // Show actual categories when loaded
+              categories.map((category, index) => (
+                <Link
+                  to="#"
+                  onClick={handleClick(category.id, "category")}
+                  key={index}
+                  className="flex-shrink-0 w-60 group cursor-pointer"
+                  aria-label={`View ${category.name} collection`}
+                >
+                  <div className="relative overflow-hidden rounded-2xl mb-4">
+                    <img
+                      src={category.image}
+                      alt={category.name}
+                      className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300"></div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                    {category.name}
+                  </h3>
+                  <p className="text-gray-600">{category.count}+ pieces</p>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -279,63 +325,74 @@ const JewelryEcommerce = () => {
           </div>
 
           <div className="flex flex-wrap justify-center gap-8 mb-8">
-            {featuredProducts.map((product) => (
-              <Link
-                onClick={handleClick(product._id, "product")}
-                // to={`/view/product/${product._id}`}
-                key={product.id}
-                className="group"
-                aria-label={`View ${product.ProductName} details`}
-              >
-                <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden w-72">
-                  <div className="relative">
-                    <img
-                      src={product.imageUrl}
-                      alt={product.ProductName}
-                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  </div>
-
-                  <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {product.ProductName}
-                    </h3>
-
-                    <div className="flex items-center mb-3">
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < Math.floor(product.rating)
-                                ? "text-yellow-400 fill-current"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm text-gray-600 ml-2">
-                        ({product.reviews})
-                      </span>
+            {isLoadingProducts ? (
+              // Show shimmer while loading
+              <>
+                <ProductShimmer />
+                <ProductShimmer />
+                <ProductShimmer />
+                <ProductShimmer />
+                <ProductShimmer />
+                <ProductShimmer />
+              </>
+            ) : (
+              // Show actual products when loaded
+              featuredProducts.map((product) => (
+                <Link
+                  onClick={handleClick(product._id, "product")}
+                  key={product.id}
+                  className="group"
+                  aria-label={`View ${product.ProductName} details`}
+                >
+                  <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden w-72">
+                    <div className="relative">
+                      <img
+                        src={product.imageUrl}
+                        alt={product.ProductName}
+                        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-2xl font-bold text-gray-900">
-                          ₹{product.OfferPrice}
+                    <div className="p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {product.ProductName}
+                      </h3>
+
+                      <div className="flex items-center mb-3">
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-4 w-4 ${i < Math.floor(product.rating)
+                                  ? "text-yellow-400 fill-current"
+                                  : "text-gray-300"
+                                }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-gray-600 ml-2">
+                          ({product.reviews})
                         </span>
-                        {product.NormalPrice && (
-                          <span className="text-lg text-gray-500 line-through">
-                            ₹{product.NormalPrice}
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-2xl font-bold text-gray-900">
+                            ₹{product.OfferPrice}
                           </span>
-                        )}
+                          {product.NormalPrice && (
+                            <span className="text-lg text-gray-500 line-through">
+                              ₹{product.NormalPrice}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))
+            )}
           </div>
 
           <div className="text-center">

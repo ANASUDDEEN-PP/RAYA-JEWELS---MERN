@@ -7,7 +7,6 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import baseUrl from "../../url";
 import toast, { Toaster } from "react-hot-toast";
-import { Spinner } from "@heroui/react";
 import UnauthorizedPage from "../../components/unauthorized Alert/unAuth";
 
 const RingCategoryList = () => {
@@ -16,17 +15,15 @@ const RingCategoryList = () => {
   const { id } = useParams();
   const [ringCategories, setCategories] = useState([]);
   const [categoryName, setCategorieName] = useState("");
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [loading, setLoading] = useState(true);
   const [addToCartLoading, setAddToCartLoading] = useState(false);
 
-
-  //fetch the data from localstorage
   const localUser = JSON.parse(localStorage.getItem("userProfile")) || null;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true); // Set loading to true when starting fetch
+        setLoading(true);
         const responce = await axios.get(
           `${baseUrl}/product/get/collection/product/${id}`
         );
@@ -36,7 +33,7 @@ const RingCategoryList = () => {
         console.log(err);
         toast.error("Failed to load products");
       } finally {
-        setLoading(false); // Set loading to false when fetch completes
+        setLoading(false);
       }
     };
     fetchData();
@@ -49,7 +46,7 @@ const RingCategoryList = () => {
         Quantity: 1,
         itemsData: prd._id,
       };
-      setAddToCartLoading(true)
+      setAddToCartLoading(true);
       const responce = await axios.post(`${baseUrl}/cart/add/item`, items);
       if (responce.status == 200) {
         toast.success(responce.data.message);
@@ -57,13 +54,46 @@ const RingCategoryList = () => {
       } else toast.error(responce.data.message);
     } catch (err) {
       console.log(err);
-    } finally{
-      setAddToCartLoading(false)
+    } finally {
+      setAddToCartLoading(false);
     }
   };
 
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  // Shimmer loading component
+  const ShimmerLoader = () => {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {[...Array(8)].map((_, index) => (
+          <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden w-72">
+            <div className="relative">
+              <div className="w-full h-64 bg-gray-200 animate-pulse"></div>
+            </div>
+            <div className="p-6">
+              <div className="h-6 bg-gray-200 rounded animate-pulse mb-4 w-3/4"></div>
+              <div className="flex items-center mb-4">
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="h-4 w-4 bg-gray-200 rounded-full animate-pulse"></div>
+                  ))}
+                </div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-8 ml-2"></div>
+              </div>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex space-x-2">
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-16"></div>
+                  <div className="h-5 bg-gray-200 rounded animate-pulse w-12"></div>
+                </div>
+              </div>
+              <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (!localUser) {
@@ -82,7 +112,11 @@ const RingCategoryList = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800">
-            {categoryName} Category
+            {loading ? (
+              <div className="h-10 bg-gray-200 rounded animate-pulse w-64"></div>
+            ) : (
+              `${categoryName} Category`
+            )}
           </h1>
           <div className="relative">
             {getTotalItems() > 0 && (
@@ -93,17 +127,14 @@ const RingCategoryList = () => {
           </div>
         </div>
 
-        {/* Loading Indicator */}
+        {/* Content */}
         {loading ? (
-          <div className="flex flex-col justify-center items-center h-64">
-            <Spinner className="mb-5 animate-pulse" color="warning" size="lg" />
-            <h1 className="animate-pulse text-[20px]">Wait Some Moments</h1>
-          </div>
+          <ShimmerLoader />
         ) : (
           /* Product Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {ringCategories.length > 0
-              ? ringCategories.map((product) => (
+            {ringCategories.length > 0 ? (
+              ringCategories.map((product) => (
                 <Link to={`/view/product/${product._id}`} key={product.id}>
                   <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden w-72">
                     <div className="relative">
@@ -124,10 +155,11 @@ const RingCategoryList = () => {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`h-4 w-4 ${i < Math.floor(product.rating)
+                              className={`h-4 w-4 ${
+                                i < Math.floor(product.rating)
                                   ? "text-yellow-400 fill-current"
                                   : "text-gray-300"
-                                }`}
+                              }`}
                             />
                           ))}
                         </div>
@@ -165,13 +197,13 @@ const RingCategoryList = () => {
                   </div>
                 </Link>
               ))
-              : !loading && (
-                <div className="col-span-full text-center py-12">
-                  <p className="text-gray-500 text-lg">
-                    No products found in this category
-                  </p>
-                </div>
-              )}
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500 text-lg">
+                  No products found in this category
+                </p>
+              </div>
+            )}
           </div>
         )}
 
