@@ -8,6 +8,7 @@ import AllOrderList from "../pages/orderDetails/order"
 
 //Authentication pages
 import LoginPage from "../pages/Auth/login";
+import JewelryOTPPage from "../pages/Auth/oneTimePass";
 
 //Admin Module
 import AdminDashboard from "../pages/Admin/Dashboard/Dahsboard";
@@ -49,6 +50,10 @@ const routeHelper = [
   {
     path: "/auth",
     comp: <LoginPage />,
+  },
+  {
+    path: "/auth-otp",
+    comp: <JewelryOTPPage />,
   },
   {
     path: "/admin-dash",

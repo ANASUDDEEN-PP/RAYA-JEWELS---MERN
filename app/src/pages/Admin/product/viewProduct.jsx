@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Edit2,
@@ -11,58 +11,62 @@ import {
   Save,
   Camera,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import UnauthorizedPage from "../../../components/unauthorized Alert/unAuth";
+import axios from "axios";
+import baseUrl from "../../../url";
 
 const ProductActionView = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [productData, setProductData] = useState(null);
+  const [images, setImages] = useState([]);
   const navigate = useNavigate();
 
-  // Sample product data
-  const [productData, setProductData] = useState({
-    id: 1,
-    name: "Premium Wireless Headphones",
-    brand: "TechSound",
-    price: 299.99,
-    originalPrice: 399.99,
-    category: "Electronics",
-    sku: "TS-WH-001",
-    stock: 25,
-    rating: 4.5,
-    reviews: 128,
-    description:
-      "Experience crystal-clear audio with our premium wireless headphones featuring active noise cancellation, 30-hour battery life, and comfortable over-ear design.",
-    features: [
-      "Active Noise Cancellation",
-      "30-hour battery life",
-      "Bluetooth 5.0 connectivity",
-      "Premium leather ear cups",
-      "Quick charge - 10 min for 3 hours",
-    ],
-    specifications: {
-      Weight: "280g",
-      "Driver Size": "40mm",
-      "Frequency Response": "20Hz - 20kHz",
-      Impedance: "32 ohms",
-      Connectivity: "Bluetooth 5.0, 3.5mm jack",
-    },
-  });
+  const { id } = useParams();
 
-  const [images, setImages] = useState([
-    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
-    "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500&h=500&fit=crop",
-    "https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=500&h=500&fit=crop",
-    "https://images.unsplash.com/photo-1583394838336-acd977c5203e?w=500&h=500&fit=crop",
-    "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=500&h=500&fit=crop",
-    "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=500&h=500&fit=crop",
-    "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=500&fit=crop",
-    "https://images.unsplash.com/photo-1588508065123-287b28e013da?w=500&h=500&fit=crop",
-  ]);
+  useEffect(() => {
+    const fetchProductData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${baseUrl}/product/get/${id}`);
+        const data = response.data;
+        console.log(data)
+
+        // Transform API data to match our component structure
+        const transformedProduct = {
+          id: data.product._id,
+          ProductId: data.product.ProductId,
+          name: data.product.ProductName,
+          description: data.product.Description,
+          category: data.product.CollectionName,
+          price: data.product.OfferPrice,
+          originalPrice: data.product.NormalPrice,
+          actualPrice: data.product.ActualPrice || data.product.NormalPrice, // Add actualPrice
+          stock: data.product.Quantity,
+          material: data.product.Material,
+          size: data.product.Size,
+          specifications: {
+            Material: data.product.Material,
+            Size: data.product.Size,
+          },
+          features: data.product.Description ? [data.product.Description] : [],
+        };
+
+        setProductData(transformedProduct);
+        setImages(data.images.map(img => img.ImageUrl));
+        setLoading(false);
+      } catch (err) {
+        console.log(err);
+        setLoading(false);
+      }
+    };
+    fetchProductData();
+  }, [id]);
 
   const handleBack = () => {
-    console.log("Going back to product list");
     navigate(-1);
   };
 
@@ -70,9 +74,30 @@ const ProductActionView = () => {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsEditing(false);
-    console.log("Saving product data:", productData);
+    try {
+      // Prepare updated data in the format your API expects
+      const updatedData = {
+        ProductName: productData.name,
+        Description: productData.description,
+        CollectionName: productData.category,
+        OfferPrice: productData.price,
+        NormalPrice: productData.originalPrice,
+        ActualPrice: productData.actualPrice,
+        Quantity: productData.stock,
+        Material: productData.specifications.Material,
+        Size: productData.specifications.Size,
+      };
+
+      console.log(updatedData)
+
+      await axios.put(`${baseUrl}/product/update/${id}`, updatedData);
+      // Optionally show success message
+    } catch (err) {
+      console.error("Error updating product:", err);
+      // Optionally show error message
+    }
   };
 
   const handleCancel = () => {
@@ -80,9 +105,14 @@ const ProductActionView = () => {
     setSelectedFiles([]);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this product?")) {
-      console.log("Deleting product:", productData.id);
+      try {
+        await axios.delete(`${baseUrl}/product/delete/${id}`);
+        navigate(-1); // Go back after deletion
+      } catch (err) {
+        console.error("Error deleting product:", err);
+      }
     }
   };
 
@@ -133,9 +163,93 @@ const ProductActionView = () => {
 
   const isAdmin = JSON.parse(localStorage.getItem("adminCode"));
   if (!isAdmin && isAdmin !== "ADMRAYA1752604097026") {
+    return <UnauthorizedPage />;
+  }
+
+  // Loading shimmer effect
+  if (loading || !productData) {
     return (
-      <div>
-        <UnauthorizedPage />
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-4">
+                <button className="p-2 rounded-lg">
+                  <ArrowLeft className="w-5 h-5 text-gray-300" />
+                </button>
+                <div>
+                  <div className="h-6 w-40 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mt-1"></div>
+                </div>
+              </div>
+              <div className="flex space-x-3">
+                <div className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
+                <div className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Image loading shimmer */}
+            <div className="lg:col-span-1 space-y-6">
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="h-6 w-40 bg-gray-200 rounded animate-pulse mb-4"></div>
+                <div className="aspect-square bg-gray-200 rounded-lg animate-pulse mb-4"></div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="aspect-square bg-gray-200 rounded-md animate-pulse"></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Details loading shimmer */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
+                <div className="space-y-4">
+                  <div className="h-8 w-64 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="space-y-3">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="flex justify-between">
+                        <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -259,11 +373,10 @@ const ProductActionView = () => {
                       <div key={index} className="relative">
                         <button
                           onClick={() => setCurrentImageIndex(index)}
-                          className={`w-full aspect-square rounded-md overflow-hidden border-2 transition-all ${
-                            currentImageIndex === index
+                          className={`w-full aspect-square rounded-md overflow-hidden border-2 transition-all ${currentImageIndex === index
                               ? "border-blue-500 ring-2 ring-blue-200"
                               : "border-gray-200 hover:border-gray-300"
-                          }`}
+                            }`}
                         >
                           <img
                             src={image}
@@ -309,38 +422,61 @@ const ProductActionView = () => {
                       {productData.name}
                     </h2>
                     <p className="text-lg text-gray-600 mb-4">
-                      {productData.brand}
+                      {productData.ProductId || "N/A"}
                     </p>
 
                     <div className="flex items-center space-x-4 mb-4">
                       <span className="text-3xl font-bold text-green-600">
-                        ${productData.price}
+                        ₹{productData.price}
                       </span>
                       {productData.originalPrice > productData.price && (
                         <span className="text-lg text-gray-500 line-through">
-                          ${productData.originalPrice}
+                          ₹{productData.originalPrice}
                         </span>
                       )}
                     </div>
 
+                    <div className="flex items-center space-x-4 mb-4">
+                      <span className="text-lg font-medium">
+                        Actual Price: <span className="text-gray-600">₹{productData.actualPrice}</span>
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="font-medium">Stock:</span>
+                      <span
+                        className={`ml-2 text-[20px] font-semibold ${productData.stock === 0
+                            ? "text-gray-500"
+                            : productData.stock <= 4
+                              ? "text-red-600"
+                              : productData.stock <= 7
+                                ? "text-yellow-500"
+                                : "text-green-600"
+                          }`}
+                      >
+                        {productData.stock === 0 ? "Out of Stock" : `${productData.stock} units`}
+                      </span>
+
+                      {productData.stock === 0 && (
+                        <p className="text-red-500 text-sm mt-1">Out of Stock</p>
+                      )}
+
+                      {productData.stock > 0 && productData.stock <= 4 && (
+                        <p className="text-white bg-red-500 text-sm mt-1 p-2 animate-pulse">Limited Stock!...Please restock</p>
+                      )}
+
+                      {productData.stock > 4 && productData.stock <= 7 && (
+                        <p className="text-white bg-yellow-500 text-sm mt-1 p-2 animate-pulse">Stock running low. Consider restocking.</p>
+                      )}
+                    </div>
                     <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
-                      <div>
-                        <span className="font-medium">SKU:</span>
-                        <span className="ml-2">{productData.sku}</span>
-                      </div>
-                      <div>
-                        <span className="font-medium">Stock:</span>
-                        <span className="ml-2">{productData.stock} units</span>
-                      </div>
                       <div>
                         <span className="font-medium">Category:</span>
                         <span className="ml-2">{productData.category}</span>
                       </div>
                       <div>
-                        <span className="font-medium">Rating:</span>
-                        <span className="ml-2">
-                          {productData.rating}/5 ({productData.reviews})
-                        </span>
+                        <span className="font-medium">Material:</span>
+                        <span className="ml-2">{productData.specifications.Material || "N/A"}</span>
                       </div>
                     </div>
                   </div>
@@ -351,27 +487,29 @@ const ProductActionView = () => {
                       Description
                     </h3>
                     <p className="text-gray-700 leading-relaxed">
-                      {productData.description}
+                      {productData.description || "No description available"}
                     </p>
                   </div>
 
                   {/* Features */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                      Key Features
-                    </h3>
-                    <ul className="space-y-2">
-                      {productData.features.map((feature, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start text-gray-700"
-                        >
-                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2 flex-shrink-0"></span>
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  {productData.features.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                        Key Features
+                      </h3>
+                      <ul className="space-y-2">
+                        {productData.features.map((feature, index) => (
+                          <li
+                            key={index}
+                            className="flex items-start text-gray-700"
+                          >
+                            <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2 flex-shrink-0"></span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   {/* Specifications */}
                   <div>
@@ -389,7 +527,7 @@ const ProductActionView = () => {
                               {key}:
                             </span>
                             <span className="text-gray-900 text-right">
-                              {value}
+                              {value || "N/A"}
                             </span>
                           </div>
                         )
@@ -421,45 +559,54 @@ const ProductActionView = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Brand
+                        Description
                       </label>
-                      <input
-                        type="text"
-                        value={productData.brand}
+                      <textarea
+                        rows="4"
+                        value={productData.description}
                         onChange={(e) =>
-                          handleInputChange("brand", e.target.value)
+                          handleInputChange("description", e.target.value)
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Price
+                          Selling Price
                         </label>
                         <input
                           type="number"
-                          step="0.01"
                           value={productData.price}
                           onChange={(e) =>
-                            handleInputChange(
-                              "price",
-                              parseFloat(e.target.value)
-                            )
+                            handleInputChange("price", e.target.value)
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Stock
+                          Original Price
                         </label>
                         <input
                           type="number"
-                          value={productData.stock}
+                          value={productData.originalPrice}
                           onChange={(e) =>
-                            handleInputChange("stock", parseInt(e.target.value))
+                            handleInputChange("originalPrice", e.target.value)
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Actual Price
+                        </label>
+                        <input
+                          type="number"
+                          value={productData.actualPrice}
+                          onChange={(e) =>
+                            handleInputChange("actualPrice", e.target.value)
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
@@ -468,13 +615,13 @@ const ProductActionView = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Description
+                        Stock
                       </label>
-                      <textarea
-                        rows="4"
-                        value={productData.description}
+                      <input
+                        type="number"
+                        value={productData.stock}
                         onChange={(e) =>
-                          handleInputChange("description", e.target.value)
+                          handleInputChange("stock", e.target.value)
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -502,38 +649,39 @@ const ProductActionView = () => {
                         Specifications
                       </label>
                       <div className="space-y-3">
-                        {Object.entries(productData.specifications).map(
-                          ([key, value]) => (
-                            <div key={key} className="grid grid-cols-2 gap-3">
-                              <input
-                                type="text"
-                                value={key}
-                                onChange={(e) => {
-                                  const newSpecs = {
-                                    ...productData.specifications,
-                                  };
-                                  delete newSpecs[key];
-                                  newSpecs[e.target.value] = value;
-                                  setProductData((prev) => ({
-                                    ...prev,
-                                    specifications: newSpecs,
-                                  }));
-                                }}
-                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Specification name"
-                              />
-                              <input
-                                type="text"
-                                value={value}
-                                onChange={(e) =>
-                                  handleSpecificationChange(key, e.target.value)
-                                }
-                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Specification value"
-                              />
-                            </div>
-                          )
-                        )}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">
+                              Material
+                            </label>
+                            <input
+                              type="text"
+                              value={productData.specifications.Material}
+                              onChange={(e) =>
+                                handleSpecificationChange("Material", e.target.value)
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="e.g., Cotton, Silk"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">
+                              Size
+                            </label>
+                            <input
+                              type="text"
+                              value={productData.specifications.Size}
+                              onChange={(e) =>
+                                handleSpecificationChange("Size", e.target.value)
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="e.g., S,M,L"
+                            />
+                            <p className="text-xs text-red-500 mt-1">
+                              Add sizes separated by commas (e.g., S,M,L)
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -612,9 +760,8 @@ const ProductActionView = () => {
                   <div className="flex justify-between">
                     <span>Status:</span>
                     <span
-                      className={`font-medium ${
-                        images.length > 0 ? "text-green-600" : "text-orange-600"
-                      }`}
+                      className={`font-medium ${images.length > 0 ? "text-green-600" : "text-orange-600"
+                        }`}
                     >
                       {images.length > 0 ? "Ready" : "Needs Images"}
                     </span>

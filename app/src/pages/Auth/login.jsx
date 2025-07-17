@@ -51,13 +51,7 @@ const JewelryAuthPage = () => {
             } else if (authData.status == 200) {
                 toast.success(authData.data.message);
                 setIsLoading(false)
-                setFormData({
-                    email: '',
-                    password: '',
-                    confirmPassword: '',
-                    name: '',
-                    Mobile: ''
-                });
+                navigate('/auth-otp')
             } else if (authData.status == 202 && authData.data.message == "ADMLGN") {
                 localStorage.setItem('adminCode', JSON.stringify(authData.data.Code));
                 navigate(authData.data.navigate)
