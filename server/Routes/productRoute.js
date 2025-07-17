@@ -8,6 +8,7 @@ router.get('/get/all', productController.getAllProducts);
 router.get('/get/:id', productController.getProductById);
 router.post('/post/product', productController.postComments);
 router.get('/get/product/comments/:id', productController.getComments);
-router.get('/get/random/product', productController.getRandomSixProduct)
+router.get('/get/random/product', productController.getRandomSixProduct);
+router.put('/change/image/:id', productController.changeProductImage);
 
 module.exports = router;

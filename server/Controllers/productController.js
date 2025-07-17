@@ -56,10 +56,10 @@ exports.createProduct = async (req, res) => {
 
     await imageModel.insertMany(imageDocs);
     sendNotify({
-      productId : productData.ProductId,
-      productName : productData.ProductName,
-      Qty : productData.Quantity,
-      Price : product.OfferPrice
+      productId: productData.ProductId,
+      productName: productData.ProductName,
+      Qty: productData.Quantity,
+      Price: product.OfferPrice
     }, 'PRDAD');
 
     return res.status(201).json({
@@ -88,14 +88,14 @@ exports.getProductOrderedByCollection = async (req, res) => {
     }
 
     // 2. Find products in this collection
-    const products = await productModel.find({ 
-      CollectionName: collection.CollectionName 
+    const products = await productModel.find({
+      CollectionName: collection.CollectionName
     });
 
     // 3. Get images for all products
     const productIds = products.map(p => p._id);
-    const images = await imageModel.find({ 
-      imageId: { $in: productIds } 
+    const images = await imageModel.find({
+      imageId: { $in: productIds }
     });
 
     // 4. Structure the response (using string comparison)
@@ -104,7 +104,7 @@ exports.getProductOrderedByCollection = async (req, res) => {
       products: products.map(product => {
         return {
           ...product.toObject(),
-          images: images.filter(img => 
+          images: images.filter(img =>
             img.imageId.toString() === product._id.toString()
           )
         };
@@ -113,7 +113,7 @@ exports.getProductOrderedByCollection = async (req, res) => {
 
     return res.status(200).json(response);
 
-  } catch(err) {
+  } catch (err) {
     console.error("Error in getProductOrderedByCollection:", err);
     return res.status(500).json({
       message: "Internal Server Error",
@@ -122,33 +122,33 @@ exports.getProductOrderedByCollection = async (req, res) => {
   }
 }
 
-exports.getAllProducts = async(req, res) => {
-  try{
+exports.getAllProducts = async (req, res) => {
+  try {
     const products = await productModel.find({});
     return res.status(200).json({
       products
     })
-  } catch(err){
+  } catch (err) {
     return res.status(404).json({
-      message : "Internal Server Error"
+      message: "Internal Server Error"
     })
   }
 }
 
-exports.getProductById = async(req, res) => {
-  try{
+exports.getProductById = async (req, res) => {
+  try {
     const { id } = req.params;
-    if(!id)
-      return res.status(404).json({ message : "Invalid Id or No Id"})
+    if (!id)
+      return res.status(404).json({ message: "Invalid Id or No Id" })
     const product = await productModel.findById(id);
-    const images = await imageModel.find({imageId : product._id});
+    const images = await imageModel.find({ imageId: product._id });
     return res.status(200).json({
       product,
       images
     })
-  } catch(err){
+  } catch (err) {
     return res.status(404).json({
-      message : "Internal Server Error"
+      message: "Internal Server Error"
     })
   }
 }
@@ -156,32 +156,32 @@ exports.getProductById = async(req, res) => {
 exports.postComments = async (req, res) => {
   try {
     const { Avatar, Comment, ProductId, Rating, UserId, Date } = req.body;
-    
+
     // Validate required fields
     if (!UserId) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: "User ID is required" 
+        message: "User ID is required"
       });
     }
-    
+
     if (!Comment || Comment.trim().length === 0) {
-      return res.status(201).json({ 
+      return res.status(201).json({
         success: false,
-        message: "Comment text is required" 
+        message: "Comment text is required"
       });
     }
-    
+
     if (!ProductId) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: "Product ID is required" 
+        message: "Product ID is required"
       });
     }
-    
+
     // Validate rating (1-5)
     const validatedRating = Math.min(Math.max(Number(Rating) || 0, 1), 5);
-    
+
     // Create comment data with current timestamp
     const commentsData = {
       ProductId,
@@ -192,13 +192,13 @@ exports.postComments = async (req, res) => {
       Comment: Comment.trim(),
       Avatar: Avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(UserId)}&background=random`
     };
-    
+
     // Save to database
     const newComment = await commentModel.create(commentsData);
 
-    const productData = await productModel.findById({ _id : commentsData.ProductId })
-    sendNotify({UserId, productName : productData.ProductId}, "CMTPST");
-    
+    const productData = await productModel.findById({ _id: commentsData.ProductId })
+    sendNotify({ UserId, productName: productData.ProductId }, "CMTPST");
+
     return res.status(200).json({
       success: true,
       message: "Comment posted successfully",
@@ -211,7 +211,7 @@ exports.postComments = async (req, res) => {
         Avatar: newComment.Avatar
       }
     });
-    
+
   } catch (err) {
     console.error("Error posting comment:", err);
     return res.status(500).json({
@@ -304,4 +304,28 @@ exports.getAllProducts = async (req, res) => {
     });
   }
 };
+
+exports.changeProductImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!await productModel.findById(id))
+      return res.status(404).json({ message: "NoInvalidId" })
+
+    const imageData = {
+      imageId: id,
+      from: "PRDIMG",
+      ImageUrl: req.body.imageURL
+    }
+    await imageModel.create(imageData);
+    return res.status(200).json({
+      message: "Image Updated..."
+    })
+
+  } catch (err) {
+    return res.status(404).json({
+      message: "Internal Server Error"
+    })
+  }
+}
 

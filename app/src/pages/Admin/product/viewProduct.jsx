@@ -15,6 +15,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import UnauthorizedPage from "../../../components/unauthorized Alert/unAuth";
 import axios from "axios";
 import baseUrl from "../../../url";
+import toast, { Toaster } from 'react-hot-toast';
 
 const ProductActionView = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -96,7 +97,6 @@ const ProductActionView = () => {
       // Optionally show success message
     } catch (err) {
       console.error("Error updating product:", err);
-      // Optionally show error message
     }
   };
 
@@ -133,14 +133,22 @@ const ProductActionView = () => {
     }));
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     setSelectedFiles((prev) => [...prev, ...files]);
-
     files.forEach((file) => {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setImages((prev) => [...prev, e.target.result]);
+      reader.onload = async (e) => {
+        const image = e.target.result;
+        const responce = await axios.put(`${baseUrl}/product/change/image/${id}`, {
+          imageURL: image
+        })
+        if (responce.status === 200) {
+          toast.success(responce.data.message);
+          setImages((prev) => [...prev, e.target.result]);
+        } else {
+          toast.error("Something went Wrong");
+        }
       };
       reader.readAsDataURL(file);
     });
@@ -374,8 +382,8 @@ const ProductActionView = () => {
                         <button
                           onClick={() => setCurrentImageIndex(index)}
                           className={`w-full aspect-square rounded-md overflow-hidden border-2 transition-all ${currentImageIndex === index
-                              ? "border-blue-500 ring-2 ring-blue-200"
-                              : "border-gray-200 hover:border-gray-300"
+                            ? "border-blue-500 ring-2 ring-blue-200"
+                            : "border-gray-200 hover:border-gray-300"
                             }`}
                         >
                           <img
@@ -446,12 +454,12 @@ const ProductActionView = () => {
                       <span className="font-medium">Stock:</span>
                       <span
                         className={`ml-2 text-[20px] font-semibold ${productData.stock === 0
-                            ? "text-gray-500"
-                            : productData.stock <= 4
-                              ? "text-red-600"
-                              : productData.stock <= 7
-                                ? "text-yellow-500"
-                                : "text-green-600"
+                          ? "text-gray-500"
+                          : productData.stock <= 4
+                            ? "text-red-600"
+                            : productData.stock <= 7
+                              ? "text-yellow-500"
+                              : "text-green-600"
                           }`}
                       >
                         {productData.stock === 0 ? "Out of Stock" : `${productData.stock} units`}
@@ -785,6 +793,7 @@ const ProductActionView = () => {
           </div>
         </div>
       </main>
+      <Toaster />
     </div>
   );
 };
