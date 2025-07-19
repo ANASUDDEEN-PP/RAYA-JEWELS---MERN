@@ -1,9 +1,9 @@
 const userModel = require("../Models/userModel");
 const profileModel = require("../Models/profileModel");
-const cartModel = require("../Models/addToChart");
-const notifyModel = require("../Models/notificationModel");
+const otpModel = require("../Models/OTPModel")
 const DateFormat = require("../utils/dateFormat");
 const sendNotify = require("../utils/sendNotify");
+const sendMail = require("../utils/sendMail");
 
 exports.userRegister = async (req, res) => {
     try {
@@ -93,7 +93,11 @@ exports.userRegister = async (req, res) => {
             }
             await profileModel.create(profileData)
             sendNotify({name, email, Mobile}, "USRG");
-            return res.status(200).json({ message: "User created successfully" });
+            sendMail("OTP", email)
+            return res.status(200).json({
+                message: "User created successfully",
+                userPushData
+            });
         } else {
             return res.status(400).json({ message: "Invalid request" });
         }
@@ -202,6 +206,62 @@ exports.editUserProfileData = async(req, res) => {
         })
         // console.log(req.body)
     } catch(err){
+        return res.status(404).json({ message : "Internal Server Error" });
+    }
+}
+
+exports.verifyOTP = async(req, res) => {
+    try{
+        const { email, otp } = req.body;
+        
+        const isUserEmail = await userModel.findOne({ Email: email });
+        if(!isUserEmail) return res.status(404).json({ message : "NoUserOnThisMail" });
+
+        const isOtpAvail = await otpModel.findOne({ email });
+        if(!isOtpAvail){
+            sendMail("OTP", email)
+            return res.status(201).json({ message : "OTP Expired or Invalid OTP."});
+        }
+
+        if(isOtpAvail.otp === otp){
+            await userModel.findByIdAndUpdate(
+                isUserEmail._id,
+                { $set: {
+                    isEmailVerified: true
+                }},
+                { new: true }
+            )
+
+            await otpModel.findByIdAndDelete(isOtpAvail._id);
+
+            return res.status(200).json({
+                message : "OTP Verified..",
+                verified: true
+            });
+        } else
+            return res.status(201).json({ message : "Invalid OTP" })
+
+    } catch(err){
+        return res.status(404).json({ message : "Internal Server Error" });
+    }
+}
+
+exports.resendOTP = async(req, res) => {
+    try{
+        
+        const { email } = req.body;
+        console.log(email);
+
+        const isUserExist = await userModel.findOne({ Email : email });
+        if(!isUserExist)
+            return res.status(404).json({ message :"InvalidID" });
+        
+        const isOTPExist = await otpModel.findOne({email});
+        if(isOTPExist)
+            await otpModel.findByIdAndDelete(isOTPExist._id)
+        sendMail("OTP", email);
+        return res.status(200).json({ message : `OTP Resended to the ${email}.`})
+    } catch(err) {
         return res.status(404).json({ message : "Internal Server Error" });
     }
 }
