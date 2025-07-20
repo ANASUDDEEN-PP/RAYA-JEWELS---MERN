@@ -212,10 +212,12 @@ exports.editUserProfileData = async(req, res) => {
 
 exports.verifyOTP = async(req, res) => {
     try{
-        const { email, otp } = req.body;
+        const { email, otp, screen } = req.body;
+        console.log(email, otp, screen)
         
         const isUserEmail = await userModel.findOne({ Email: email });
         if(!isUserEmail) return res.status(404).json({ message : "NoUserOnThisMail" });
+        if(isUserEmail.isEmailVerified === "false") return res.status(201).json({ message : "Email is not Verified "});
 
         const isOtpAvail = await otpModel.findOne({ email });
         if(!isOtpAvail){
@@ -224,13 +226,15 @@ exports.verifyOTP = async(req, res) => {
         }
 
         if(isOtpAvail.otp === otp){
-            await userModel.findByIdAndUpdate(
+            if( screen === "register" ){
+                await userModel.findByIdAndUpdate(
                 isUserEmail._id,
                 { $set: {
                     isEmailVerified: true
                 }},
                 { new: true }
             )
+            }
 
             await otpModel.findByIdAndDelete(isOtpAvail._id);
 
@@ -272,8 +276,10 @@ exports.forgetOTPRequest = async (req, res) => {
         console.log("OTP request received for email:", email);
 
         const isUser = await userModel.findOne({ Email: email });
-        console.log(isUser)
         const isOTPAvail = await otpModel.findOne({ email });
+
+        if(isUser.isEmailVerified === "false")
+            return res.status(201).json({ message : "Email is not verified. Please verify using profile section" });
 
         if (!isUser)
             return res.status(202).json({ message: "This Email doesn't have any account. Please create an account" });
@@ -289,3 +295,30 @@ exports.forgetOTPRequest = async (req, res) => {
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+exports.changePassword = async(req, res) => {
+    try{
+        const { email, password } = req.body;
+        const isUserExist = await userModel.findOne({ Email: email });
+
+        if(!isUserExist)
+            return res.status(404).json({ message : "InvalidUser" });
+
+        if(isUserExist.isEmailVerified === "false")
+            return res.status(202).json({ message : "Email is not verified" });
+
+        await userModel.findByIdAndUpdate(
+            isUserExist._id,
+            { $set: {
+                Password: password
+            }},
+            { new: true }
+        )
+        return res.status(200).json({
+            message : "Password changed successfully"
+        })
+
+    } catch(err){
+        return res.status(404).json({ message : "Internal Server Error" })
+    }
+}

@@ -77,10 +77,10 @@ const JewelryOTPPage = () => {
     const bodyValues = {
       otp: otpValue,
       email: userEmail,
-      resend: false,
+      screen: "register",
     };
 
-    console.log(bodyValues);
+    // console.log(bodyValues);
 
     try {
       const response = await axios.post(`${baseUrl}/auth/post/otp`, bodyValues);

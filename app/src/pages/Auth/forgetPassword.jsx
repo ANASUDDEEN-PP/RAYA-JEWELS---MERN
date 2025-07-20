@@ -121,15 +121,22 @@ const JewelryForgetPasswordPage = () => {
 
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const response = await axios.post(`${baseUrl}/auth/post/otp`,{
+        email: formData.email,
+        otp: otpValue,
+        screen: "forget-Pass"
+      })
+      console.log(response);
 
       // For demo purposes, accept "123456" as valid OTP
-      if (otpValue === "123456") {
+      if (response.status === 200) {
         setIsOtpVerified(true);
-        alert("OTP verified successfully!");
+        toast.success(response.data.message);
+      } else if( response.status === 201){
+        setIsLoading(false);
+        toast.error(response.data.message);
       } else {
-        alert("Invalid OTP. Please try again.");
+        toast.error("Invalid OTP. Please try again.");
       }
     } catch (err) {
       console.error(err);
@@ -158,10 +165,18 @@ const JewelryForgetPasswordPage = () => {
     setIsLoading(true);
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      alert("Password reset successfully!");
-      // navigate("/auth");
-      console.log("Navigate back to auth page after password reset");
+      const responce = await axios.put(`${baseUrl}/auth/change/password`,{
+        email: formData.email,
+        password: formData.password,
+      })
+      if( responce.status === 200 ){
+        toast.success(responce.data.message);
+        navigate('/auth')
+      } else if( responce.status === 202){
+        toast.error(responce.data.message);
+      } else {
+        toast.error("Failed to reset password");
+      }
     } catch (err) {
       console.error(err);
       alert("Failed to reset password. Please try again.");
