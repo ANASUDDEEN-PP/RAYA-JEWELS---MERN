@@ -12,5 +12,6 @@ router.get('/get/profile/image/:id', AuthController.getProfileImage);
 router.put('/edit/profile/:id', AuthController.editUserProfileData);
 router.post('/post/otp', AuthController.verifyOTP);
 router.post('/resend/otp', AuthController.resendOTP);
+router.post('/forget/otp/request', AuthController.forgetOTPRequest)
 
 module.exports = router;

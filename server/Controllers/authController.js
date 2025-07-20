@@ -265,3 +265,27 @@ exports.resendOTP = async(req, res) => {
         return res.status(404).json({ message : "Internal Server Error" });
     }
 }
+
+exports.forgetOTPRequest = async (req, res) => {
+    try {
+        const { email } = req.body;
+        console.log("OTP request received for email:", email);
+
+        const isUser = await userModel.findOne({ Email: email });
+        console.log(isUser)
+        const isOTPAvail = await otpModel.findOne({ email });
+
+        if (!isUser)
+            return res.status(202).json({ message: "This Email doesn't have any account. Please create an account" });
+
+        if (isOTPAvail)
+            await otpModel.findByIdAndDelete(isOTPAvail._id);
+
+        await sendMail("OTP", email);
+
+        return res.status(200).json({ message: `An OTP sended to ${email}` });
+    } catch (err) {
+        console.error("Error in forgetOTPRequest:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};

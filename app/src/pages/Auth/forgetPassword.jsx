@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Eye, EyeOff, Gem, Crown, Diamond, X, Mail, Lock, Shield } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Gem,
+  Crown,
+  Diamond,
+  X,
+  Mail,
+  Lock,
+  Shield,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import baseUrl from "../../url";
+import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 
 const JewelryForgetPasswordPage = () => {
   const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Reset Password
@@ -10,7 +23,7 @@ const JewelryForgetPasswordPage = () => {
   const [otpTimer, setOtpTimer] = useState(0);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
     email: "",
     otp: ["", "", "", "", "", ""],
@@ -46,10 +59,10 @@ const JewelryForgetPasswordPage = () => {
 
   const handleOtpChange = (index, value) => {
     if (value.length > 1) return;
-    
+
     const newOtp = [...formData.otp];
     newOtp[index] = value;
-    
+
     setFormData({
       ...formData,
       otp: newOtp,
@@ -63,7 +76,7 @@ const JewelryForgetPasswordPage = () => {
   };
 
   const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !formData.otp[index] && index > 0) {
+    if (e.key === "Backspace" && !formData.otp[index] && index > 0) {
       const prevInput = document.getElementById(`otp-${index - 1}`);
       if (prevInput) prevInput.focus();
     }
@@ -71,47 +84,56 @@ const JewelryForgetPasswordPage = () => {
 
   const handleSendOtp = async () => {
     if (!formData.email) {
-      alert('Please enter your email address');
+      alert("Please enter your email address");
       return;
     }
-    
+
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setStep(2);
-      setOtpTimer(120); // 2 minutes
-      alert('OTP sent to your email!');
+      const response = await axios.post(`${baseUrl}/auth/forget/otp/request`, {
+        email: formData.email,
+      });
+      if( response.status === 202 ) {
+        setIsLoading(false);
+        toast.error(response.data.message)
+      } else if( response.status === 200) {
+        setStep(2);
+        setOtpTimer(120)
+        toast.success(response.data.message);
+      } else {
+        setIsLoading(false);
+        toast.error(response.data.message);
+      }
     } catch (err) {
       console.error(err);
-      alert('Failed to send OTP. Please try again.');
+      toast.error("Failed to send OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleVerifyOtp = async () => {
-    const otpValue = formData.otp.join('');
+    const otpValue = formData.otp.join("");
     if (otpValue.length !== 6) {
-      alert('Please enter complete OTP');
+      alert("Please enter complete OTP");
       return;
     }
 
     setIsLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       // For demo purposes, accept "123456" as valid OTP
       if (otpValue === "123456") {
         setIsOtpVerified(true);
-        alert('OTP verified successfully!');
+        alert("OTP verified successfully!");
       } else {
-        alert('Invalid OTP. Please try again.');
+        alert("Invalid OTP. Please try again.");
       }
     } catch (err) {
       console.error(err);
-      alert('Failed to verify OTP. Please try again.');
+      alert("Failed to verify OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -119,30 +141,30 @@ const JewelryForgetPasswordPage = () => {
 
   const handleResetPassword = async () => {
     if (!formData.password) {
-      alert('Please enter new password');
+      alert("Please enter new password");
       return;
     }
-    
+
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      alert("Passwords do not match");
       return;
     }
 
     if (formData.password.length < 6) {
-      alert('Password must be at least 6 characters long');
+      alert("Password must be at least 6 characters long");
       return;
     }
 
     setIsLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      alert('Password reset successfully!');
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      alert("Password reset successfully!");
       // navigate("/auth");
       console.log("Navigate back to auth page after password reset");
     } catch (err) {
       console.error(err);
-      alert('Failed to reset password. Please try again.');
+      alert("Failed to reset password. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -151,14 +173,16 @@ const JewelryForgetPasswordPage = () => {
   const handleResendOtp = async () => {
     setIsLoading(true);
     try {
+      console.log("Running");
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       setOtpTimer(120);
       setFormData({ ...formData, otp: ["", "", "", "", "", ""] });
-      alert('OTP resent to your email!');
+      console.log(formData);
+      alert("OTP resent to your email!");
     } catch (err) {
       console.error(err);
-      alert('Failed to resend OTP. Please try again.');
+      alert("Failed to resend OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +192,7 @@ const JewelryForgetPasswordPage = () => {
     <div className="relative">
       {/* Close Button - Top Left */}
       <button
-        onClick={() => navigate('/auth')}
+        onClick={() => navigate("/auth")}
         className="absolute top-4 left-4 z-10 flex items-center space-x-2 bg-white/80 backdrop-blur-sm hover:bg-white px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 group"
       >
         <X size={20} className="text-gray-600 group-hover:text-gray-800" />
@@ -211,7 +235,7 @@ const JewelryForgetPasswordPage = () => {
                     strokeWidth="6"
                     opacity="0.3"
                   />
-                  
+
                   {/* Main lock body */}
                   <rect
                     x="70"
@@ -222,7 +246,7 @@ const JewelryForgetPasswordPage = () => {
                     fill="#6366f1"
                     opacity="0.9"
                   />
-                  
+
                   {/* Lock shackle */}
                   <path
                     d="M 80 110 Q 80 80 100 80 Q 120 80 120 110"
@@ -231,11 +255,11 @@ const JewelryForgetPasswordPage = () => {
                     strokeWidth="8"
                     strokeLinecap="round"
                   />
-                  
+
                   {/* Keyhole */}
                   <circle cx="100" cy="135" r="8" fill="#ffffff" />
                   <rect x="96" y="135" width="8" height="15" fill="#ffffff" />
-                  
+
                   {/* Reset arrows around lock */}
                   <path
                     d="M 60 100 Q 60 60 100 60 Q 140 60 140 100"
@@ -245,8 +269,12 @@ const JewelryForgetPasswordPage = () => {
                     strokeLinecap="round"
                     opacity="0.7"
                   />
-                  <polygon points="55,95 65,90 65,105" fill="#ff6b9d" opacity="0.7" />
-                  
+                  <polygon
+                    points="55,95 65,90 65,105"
+                    fill="#ff6b9d"
+                    opacity="0.7"
+                  />
+
                   {/* Decorative gems */}
                   <circle cx="50" cy="50" r="6" fill="#9d4edd" />
                   <circle cx="150" cy="50" r="6" fill="#06ffa5" />
@@ -254,10 +282,18 @@ const JewelryForgetPasswordPage = () => {
                   <circle cx="150" cy="150" r="6" fill="#ffd60a" />
 
                   {/* Sparkles */}
-                  <text x="40" y="30" fontSize="16" fill="#ffd700">✨</text>
-                  <text x="160" y="40" fontSize="14" fill="#ff6b9d">✨</text>
-                  <text x="30" y="180" fontSize="18" fill="#9d4edd">✨</text>
-                  <text x="170" y="170" fontSize="16" fill="#06ffa5">✨</text>
+                  <text x="40" y="30" fontSize="16" fill="#ffd700">
+                    ✨
+                  </text>
+                  <text x="160" y="40" fontSize="14" fill="#ff6b9d">
+                    ✨
+                  </text>
+                  <text x="30" y="180" fontSize="18" fill="#9d4edd">
+                    ✨
+                  </text>
+                  <text x="170" y="170" fontSize="16" fill="#06ffa5">
+                    ✨
+                  </text>
                 </svg>
               </div>
             </div>
@@ -309,7 +345,10 @@ const JewelryForgetPasswordPage = () => {
                       placeholder="Enter your email"
                       required
                     />
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <Mail
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      size={20}
+                    />
                   </div>
                 </div>
               )}
@@ -321,7 +360,8 @@ const JewelryForgetPasswordPage = () => {
                     Enter OTP
                   </label>
                   <p className="text-sm text-gray-600 mb-4">
-                    OTP sent to <span className="font-semibold">{formData.email}</span>
+                    OTP sent to{" "}
+                    <span className="font-semibold">{formData.email}</span>
                   </p>
                   <div className="flex justify-center space-x-2 mb-4">
                     {formData.otp.map((digit, index) => (
@@ -337,10 +377,11 @@ const JewelryForgetPasswordPage = () => {
                       />
                     ))}
                   </div>
-                  
+
                   {otpTimer > 0 ? (
                     <p className="text-center text-sm text-gray-600">
-                      Resend OTP in {Math.floor(otpTimer / 60)}:{(otpTimer % 60).toString().padStart(2, '0')}
+                      Resend OTP in {Math.floor(otpTimer / 60)}:
+                      {(otpTimer % 60).toString().padStart(2, "0")}
                     </p>
                   ) : (
                     <div className="text-center">
@@ -378,7 +419,11 @@ const JewelryForgetPasswordPage = () => {
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                       >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -399,10 +444,16 @@ const JewelryForgetPasswordPage = () => {
                       />
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                       >
-                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showConfirmPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -415,10 +466,18 @@ const JewelryForgetPasswordPage = () => {
                   onClick={() => {
                     if (isOtpVerified) {
                       setIsOtpVerified(false);
-                      setFormData({ ...formData, otp: ["", "", "", "", "", ""], password: "", confirmPassword: "" });
+                      setFormData({
+                        ...formData,
+                        otp: ["", "", "", "", "", ""],
+                        password: "",
+                        confirmPassword: "",
+                      });
                     } else if (step === 2) {
                       setStep(1);
-                      setFormData({ ...formData, otp: ["", "", "", "", "", ""] });
+                      setFormData({
+                        ...formData,
+                        otp: ["", "", "", "", "", ""],
+                      });
                       setOtpTimer(0);
                     }
                   }}
@@ -426,7 +485,9 @@ const JewelryForgetPasswordPage = () => {
                 >
                   <div className="flex items-center justify-center">
                     <X className="mr-2" size={20} />
-                    {isOtpVerified ? "Back to OTP Verification" : "Back to Email"}
+                    {isOtpVerified
+                      ? "Back to OTP Verification"
+                      : "Back to Email"}
                   </div>
                 </button>
               )}
@@ -434,11 +495,11 @@ const JewelryForgetPasswordPage = () => {
               {/* Submit Button */}
               <button
                 onClick={
-                  step === 1 
-                    ? handleSendOtp 
-                    : !isOtpVerified 
-                      ? handleVerifyOtp 
-                      : handleResetPassword
+                  step === 1
+                    ? handleSendOtp
+                    : !isOtpVerified
+                    ? handleVerifyOtp
+                    : handleResetPassword
                 }
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white py-4 px-6 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
@@ -481,7 +542,7 @@ const JewelryForgetPasswordPage = () => {
               <p className="text-gray-600">
                 Remember your password?
                 <button
-                  onClick={() => navigate('/auth')}
+                  onClick={() => navigate("/auth")}
                   className="ml-2 text-purple-600 hover:text-purple-800 font-semibold transition-colors duration-200"
                 >
                   Back to Login
@@ -499,6 +560,7 @@ const JewelryForgetPasswordPage = () => {
           </div>
         </div>
       </div>
+      <Toaster />
     </div>
   );
 };
