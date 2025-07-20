@@ -217,7 +217,6 @@ exports.verifyOTP = async(req, res) => {
         
         const isUserEmail = await userModel.findOne({ Email: email });
         if(!isUserEmail) return res.status(404).json({ message : "NoUserOnThisMail" });
-        if(isUserEmail.isEmailVerified === "false") return res.status(201).json({ message : "Email is not Verified "});
 
         const isOtpAvail = await otpModel.findOne({ email });
         if(!isOtpAvail){
@@ -264,7 +263,7 @@ exports.resendOTP = async(req, res) => {
         if(isOTPExist)
             await otpModel.findByIdAndDelete(isOTPExist._id)
         sendMail("OTP", email);
-        return res.status(200).json({ message : `OTP Resended to the ${email}.`})
+        return res.status(200).json({ message : `OTP Sended to the ${email}.`})
     } catch(err) {
         return res.status(404).json({ message : "Internal Server Error" });
     }

@@ -1,9 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { UserX, User, LogOut, X, ChevronDown, Package, Settings, MapPin, CreditCard, Edit2, Save, Camera, Loader2 } from "lucide-react";
+import {
+  UserX,
+  User,
+  LogOut,
+  X,
+  ChevronDown,
+  Package,
+  Settings,
+  MapPin,
+  CreditCard,
+  Edit2,
+  Save,
+  Camera,
+  Loader2,
+  MailCheck,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import UserAddress from "./profileAddress";
 import axios from "axios";
 import baseUrl from "../../url";
+import toast, { Toaster } from "react-hot-toast";
 
 const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -13,9 +29,9 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
   const [imageLoading, setImageLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editedProfile, setEditedProfile] = useState({
-    Name: '',
-    Email: '',
-    Mobile: ''
+    Name: "",
+    Email: "",
+    Mobile: "",
   });
   const navigate = useNavigate();
   const loginUser = JSON.parse(localStorage.getItem("userProfile")) || null;
@@ -23,55 +39,60 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
   useEffect(() => {
     if (userProfile) {
       setEditedProfile({
-        Name: userProfile.Name || '',
-        Email: userProfile.Email || '',
-        Mobile: userProfile.Mobile || ''
+        Name: userProfile.Name || "",
+        Email: userProfile.Email || "",
+        Mobile: userProfile.Mobile || "",
       });
     }
   }, [userProfile]);
 
   useEffect(() => {
-    const fetchUserProfile = async() => {
+    const fetchUserProfile = async () => {
       if (!loginUser) {
         setImageLoading(false);
         return;
       }
-      
+
       setImageLoading(true);
       try {
-        const response = await axios.get(`${baseUrl}/auth/get/profile/image/${loginUser._id}`);
+        const response = await axios.get(
+          `${baseUrl}/auth/get/profile/image/${loginUser._id}`
+        );
         if (response.data.isProfile) {
-          localStorage.setItem('userProfileImg', JSON.stringify(response.data.isProfile));
+          localStorage.setItem(
+            "userProfileImg",
+            JSON.stringify(response.data.isProfile)
+          );
           setProfileImage(response.data.isProfile.ImageUrl);
         } else {
           setProfileImage(null);
         }
-      } catch(err) {
+      } catch (err) {
         console.log(err);
         setProfileImage(null);
       } finally {
         setImageLoading(false);
       }
-    }
+    };
     fetchUserProfile();
   }, [loginUser?._id]);
 
   const getInitials = (name) => {
-    if (!name) return '';
-    
-    const names = name.split(' ');
+    if (!name) return "";
+
+    const names = name.split(" ");
     let initials = names[0].substring(0, 1).toUpperCase();
-    
+
     if (names.length > 1) {
       initials += names[names.length - 1].substring(0, 1).toUpperCase();
     }
-    
+
     return initials;
   };
 
   const handleImageChange = async (e) => {
     if (!loginUser) return;
-    
+
     const file = e.target.files[0];
     if (file) {
       setUploadingImage(true);
@@ -79,11 +100,17 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
         const reader = new FileReader();
         reader.onload = async (event) => {
           try {
-            const response = await axios.post(`${baseUrl}/auth/set/profile/img/${loginUser._id}`, {
-              profileImage: event.target.result
-            });
+            const response = await axios.post(
+              `${baseUrl}/auth/set/profile/img/${loginUser._id}`,
+              {
+                profileImage: event.target.result,
+              }
+            );
             if (response.data.isProfile) {
-              localStorage.setItem('userProfileImg', JSON.stringify(response.data.isProfile));
+              localStorage.setItem(
+                "userProfileImg",
+                JSON.stringify(response.data.isProfile)
+              );
               setProfileImage(response.data.isProfile.ImageUrl);
             }
           } catch (error) {
@@ -103,36 +130,57 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
   const handleEditToggle = () => {
     if (isEditing) {
       setEditedProfile({
-        Name: userProfile?.Name || '',
-        Email: userProfile?.Email || '',
-        Mobile: userProfile?.Mobile || ''
+        Name: userProfile?.Name || "",
+        Email: userProfile?.Email || "",
+        Mobile: userProfile?.Mobile || "",
       });
     }
     setIsEditing(!isEditing);
   };
 
   const handleInputChange = (field, value) => {
-    setEditedProfile(prev => ({
+    setEditedProfile((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
-  const handleSubmit = async() => {
+  const handleSubmit = async () => {
     if (!loginUser) return;
-    
+
     try {
-      const response = await axios.put(`${baseUrl}/auth/edit/profile/${loginUser._id}`, editedProfile);
-      if(response.status === 200){
-        localStorage.setItem('userProfile', JSON.stringify(response.data.userWithoutPassword));
+      const response = await axios.put(
+        `${baseUrl}/auth/edit/profile/${loginUser._id}`,
+        editedProfile
+      );
+      if (response.status === 200) {
+        localStorage.setItem(
+          "userProfile",
+          JSON.stringify(response.data.userWithoutPassword)
+        );
         window.location.reload();
       }
     } catch (error) {
       alert("Something Went Wrong");
       console.error(error);
     }
-    
+
     setIsEditing(false);
+  };
+
+  const handleVerifyEmail = async (email) => {
+    const response = await axios.post(`${baseUrl}/auth/resend/otp`, {
+      email,
+    });
+    if (response.status === 200) {
+      toast.success(response.data.message);
+      localStorage.clear();
+      navigate("/auth-otp", {
+        state: { email },
+      });
+    } else {
+      toast.error(response.data.message);
+    }
   };
 
   const handleAddressClick = () => {
@@ -145,10 +193,22 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
   };
 
   const dropdownItems = [
-    { icon: Package, label: "My Orders", action: () => navigate('/all/orders') },
+    {
+      icon: Package,
+      label: "My Orders",
+      action: () => navigate("/all/orders"),
+    },
     { icon: MapPin, label: "Addresses", action: handleAddressClick },
-    { icon: CreditCard, label: "Payment Methods", action: () => console.log("Navigate to Payment Methods") },
-    { icon: Settings, label: "Account Settings", action: () => console.log("Navigate to Settings") }
+    {
+      icon: CreditCard,
+      label: "Payment Methods",
+      action: () => console.log("Navigate to Payment Methods"),
+    },
+    {
+      icon: Settings,
+      label: "Account Settings",
+      action: () => console.log("Navigate to Settings"),
+    },
   ];
 
   return (
@@ -178,7 +238,10 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                 {userProfile ? (
                   <div className="mt-8">
                     {showAddresses ? (
-                      <UserAddress onBack={handleBackFromAddresses} user={loginUser} />
+                      <UserAddress
+                        onBack={handleBackFromAddresses}
+                        user={loginUser}
+                      />
                     ) : (
                       <div className="flex flex-col items-center">
                         <div className="mb-4 relative group">
@@ -197,7 +260,7 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                               {getInitials(userProfile.Name)}
                             </div>
                           )}
-                          
+
                           {!imageLoading && userProfile && (
                             <label className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all cursor-pointer">
                               <input
@@ -214,43 +277,74 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                               )}
                             </label>
                           )}
-                          
-                          {!isEditing && !imageLoading && !uploadingImage && userProfile && (
-                            <button
-                              onClick={handleEditToggle}
-                              className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1.5 hover:bg-blue-600 transition-colors"
-                            >
-                              <Edit2 className="h-3 w-3" />
-                            </button>
-                          )}
+
+                          {!isEditing &&
+                            !imageLoading &&
+                            !uploadingImage &&
+                            userProfile && (
+                              <button
+                                onClick={handleEditToggle}
+                                className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1.5 hover:bg-blue-600 transition-colors"
+                              >
+                                <Edit2 className="h-3 w-3" />
+                              </button>
+                            )}
                         </div>
 
                         {isEditing ? (
                           <div className="w-full max-w-sm space-y-4">
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Name
+                              </label>
                               <input
                                 type="text"
                                 value={editedProfile.Name}
-                                onChange={(e) => handleInputChange('Name', e.target.value)}
+                                onChange={(e) =>
+                                  handleInputChange("Name", e.target.value)
+                                }
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               />
                             </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                              <input
+                            <div className="relative">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Email
+                              </label>
+                              <p className="w-full px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                {editedProfile.Email}
+                              </p>
+                              {/* <input
                                 type="email"
                                 value={editedProfile.Email}
-                                onChange={(e) => handleInputChange('Email', e.target.value)}
+                                onChange={(e) =>
+                                  handleInputChange("Email", e.target.value)
+                                }
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              />
+                              /> */}
+                              {userProfile.isEmailVerified === "false" && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleVerifyEmail(editedProfile.Email)
+                                  }
+                                  className="absolute right-2 top-8 flex items-center text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded hover:bg-yellow-200 transition-colors"
+                                  title="Verify your email"
+                                >
+                                  <MailCheck className="h-3 w-3 mr-1" />
+                                  Verify
+                                </button>
+                              )}
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Mobile</label>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Mobile
+                              </label>
                               <input
                                 type="tel"
                                 value={editedProfile.Mobile}
-                                onChange={(e) => handleInputChange('Mobile', e.target.value)}
+                                onChange={(e) =>
+                                  handleInputChange("Mobile", e.target.value)
+                                }
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               />
                             </div>
@@ -278,6 +372,11 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                             </h1>
                             <p className="mt-1 text-sm text-gray-900">
                               {userProfile.Email}
+                              {userProfile.isEmailVerified === "false" && (
+                                <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                                  Not Verified
+                                </span>
+                              )}
                             </p>
                             <p className="mt-1 text-sm text-gray-900">
                               {userProfile.Mobile}
@@ -291,10 +390,16 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
                                 onClick={() => setShowDropdown(!showDropdown)}
                                 className="w-full flex items-center justify-between px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                               >
-                                <span className="text-sm font-medium text-gray-700">Quick Actions</span>
-                                <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+                                <span className="text-sm font-medium text-gray-700">
+                                  Quick Actions
+                                </span>
+                                <ChevronDown
+                                  className={`h-4 w-4 text-gray-500 transition-transform ${
+                                    showDropdown ? "rotate-180" : ""
+                                  }`}
+                                />
                               </button>
-                              
+
                               {showDropdown && (
                                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10">
                                   {dropdownItems.map((item, index) => (
@@ -360,6 +465,7 @@ const ProfilePanel = ({ userProfile, onClose, onLogout }) => {
           </div>
         </div>
       </div>
+      <Toaster />
     </div>
   );
 };
